@@ -1,0 +1,100 @@
+/* ============================================================
+   ADORA & ALORA — DESIGN TOKENS
+   Single source of truth.
+   Never invent new colors, fonts, or spacing outside this file.
+   Every phase uses only what is declared here.
+   ============================================================ */
+
+:root {
+  /* ── Color Palette (extracted verbatim from mockup) ── */
+  --cream:        #F7EFE1;
+  --paper:        #FCF8F0;
+  --ink:          #2B2015;
+  --cocoa:        #4A3527;
+  --cocoa-deep:   #2A1D14;
+  --taupe:        #9C8770;
+  --taupe-light:  #DCCBB2;
+  --line:         #E3D3B8;
+  --rust:         #A4451F;
+  --rust-dark:    #822F10;
+  --forest:       #414F36;
+  --gold:         #C89B4A;
+  --rose:         #B0644F;
+
+  /* ── Semantic Aliases ── */
+  --color-bg:          var(--cream);
+  --color-bg-elevated: var(--paper);
+  --color-text:        var(--ink);
+  --color-text-muted:  var(--taupe);
+  --color-border:      var(--line);
+  --color-accent:      var(--rust);
+  --color-accent-dark: var(--rust-dark);
+
+  /* ── Typography ── */
+  --f-display: 'Fraunces', Georgia, serif;
+  --f-script:  'Beau Rivage', cursive;
+  --f-body:    'Jost', system-ui, sans-serif;
+
+  /* ── Type Scale ── */
+  --text-xs:   0.75rem;    /* 12px  */
+  --text-sm:   0.8125rem;  /* 13px  */
+  --text-base: 1rem;       /* 16px  */
+  --text-md:   1.03rem;    /* 16.5px */
+  --text-lg:   1.25rem;    /* 20px  */
+  --text-xl:   1.5rem;     /* 24px  */
+  --text-2xl:  1.75rem;    /* 28px  */
+  --text-3xl:  2.5rem;     /* 40px  */
+  --text-4xl:  3.5rem;     /* 56px  */
+  --text-5xl:  5rem;       /* 80px  */
+  --text-hero: clamp(2.5rem, 6.4vw, 5.375rem);  /* 40–86px hero headline */
+
+  /* ── Spacing Scale ── */
+  --sp-1:   0.25rem;
+  --sp-2:   0.5rem;
+  --sp-3:   0.75rem;
+  --sp-4:   1rem;
+  --sp-5:   1.25rem;
+  --sp-6:   1.5rem;
+  --sp-8:   2rem;
+  --sp-10:  2.5rem;
+  --sp-12:  3rem;
+  --sp-14:  3.5rem;
+  --sp-16:  4rem;
+  --sp-20:  5rem;
+  --sp-24:  6rem;
+  --sp-32:  8rem;
+
+  /* ── Border Radius ── */
+  --radius-sm:   2px;
+  --radius-md:   4px;
+  --radius-lg:   8px;
+  --radius-xl:   16px;
+  --radius-full: 9999px;
+
+  /* ── Shadows (from mockup) ── */
+  --shadow:    0 18px 40px -20px rgba(42, 29, 20, 0.35);
+  --shadow-sm: 0 4px 12px -4px rgba(42, 29, 20, 0.15);
+  --shadow-lg: 0 32px 64px -24px rgba(42, 29, 20, 0.45);
+
+  /* ── Transitions ── */
+  --ease:          cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out:      cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast:      150ms;
+  --dur-normal:    350ms;
+  --dur-slow:      550ms;
+
+  /* ── Layout ── */
+  --max-width:   1180px;
+  --nav-height:  64px;
+  --gutter:      32px;
+  --section-pad: var(--sp-24);
+}
+
+/* ── Responsive overrides ── */
+@media (max-width: 768px) {
+  :root {
+    --gutter:      20px;
+    --section-pad: var(--sp-16);
+    --text-hero:   clamp(2rem, 9vw, 3rem);
+  }
+}

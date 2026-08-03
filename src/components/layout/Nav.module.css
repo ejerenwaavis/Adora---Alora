@@ -1,0 +1,238 @@
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 500;
+  background: rgba(247, 239, 225, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  transition: box-shadow var(--dur-normal) var(--ease);
+}
+.header.scrolled {
+  box-shadow: 0 4px 24px -8px rgba(42, 29, 20, 0.12);
+}
+
+/* ── Nav inner ───────────────────────────────────────────────────────────────── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px var(--gutter);
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+
+/* ── Brand ───────────────────────────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--cocoa-deep);
+}
+.sealCircle {
+  stroke: var(--cocoa-deep);
+  stroke-dasharray: 2 4;
+  fill: none;
+}
+.wordmark {
+  font-family: var(--f-script);
+  font-size: 28px;
+  color: var(--cocoa-deep);
+  line-height: 1;
+}
+
+/* ── Desktop nav links ───────────────────────────────────────────────────────── */
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  list-style: none;
+}
+.navLink {
+  font-size: var(--text-sm);
+  letter-spacing: 0.04em;
+  color: var(--cocoa);
+  position: relative;
+  padding: 4px 0;
+  transition: color var(--dur-fast) var(--ease);
+}
+.navLink::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 0; height: 1px;
+  background: var(--rust);
+  transition: width var(--dur-normal) var(--ease);
+}
+.navLink:hover,
+.navLinkActive { color: var(--cocoa-deep); }
+.navLink:hover::after,
+.navLinkActive::after { width: 100%; }
+
+/* ── Right side ──────────────────────────────────────────────────────────────── */
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.navUtil {
+  font-size: 12px;
+  color: var(--taupe);
+  letter-spacing: 0.05em;
+}
+
+/* ── User menu ───────────────────────────────────────────────────────────────── */
+.userMenu { position: relative; }
+.userBtn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--cocoa-deep);
+  color: var(--cream);
+  font-family: var(--f-body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  transition: background var(--dur-fast);
+}
+.userBtn:hover { background: var(--rust); }
+.userInitial { text-transform: uppercase; }
+.userDropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 600;
+}
+.userInfo {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.userInfo strong {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 15px;
+  color: var(--cocoa-deep);
+  font-weight: 500;
+}
+.userInfo span { font-size: 12px; color: var(--taupe); }
+.userDropdown a,
+.logoutBtn {
+  display: block;
+  padding: 12px 20px;
+  font-size: var(--text-sm);
+  color: var(--cocoa);
+  transition: background var(--dur-fast);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+.userDropdown a:hover,
+.logoutBtn:hover { background: var(--cream); color: var(--rust); }
+.logoutBtn { border-top: 1px solid var(--line); color: var(--taupe); }
+
+/* ── Hamburger (mobile) ──────────────────────────────────────────────────────── */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  width: 24px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 0;
+}
+.hamburger span {
+  height: 1.5px;
+  background: var(--cocoa-deep);
+  width: 100%;
+  border-radius: 1px;
+  transition: all var(--dur-normal) var(--ease);
+  display: block;
+}
+.hamburgerOpen span:nth-child(1) { transform: rotate(45deg) translate(4.5px, 4.5px); }
+.hamburgerOpen span:nth-child(2) { opacity: 0; }
+.hamburgerOpen span:nth-child(3) { transform: rotate(-45deg) translate(4.5px, -4.5px); }
+
+/* ── Mobile drawer ───────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(42, 29, 20, 0.5);
+  z-index: 800;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-normal) var(--ease);
+}
+.overlayOpen { opacity: 1; pointer-events: all; }
+
+.drawer {
+  position: fixed;
+  top: 0; right: 0;
+  height: 100%;
+  width: min(340px, 90vw);
+  background: var(--paper);
+  z-index: 900;
+  transform: translateX(100%);
+  transition: transform var(--dur-normal) var(--ease-out);
+  display: flex;
+  flex-direction: column;
+  padding: 80px 32px 40px;
+}
+.drawerOpen { transform: translateX(0); }
+
+.drawerLinks { list-style: none; flex: 1; }
+.drawerLink {
+  display: block;
+  font-family: var(--f-display);
+  font-size: var(--text-xl);
+  font-weight: 500;
+  color: var(--cocoa-deep);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  transition: color var(--dur-fast);
+}
+.drawerLink:hover { color: var(--rust); }
+.drawerFooter { margin-top: 32px; }
+
+/* ── Announcement bar ─────────────────────────────────────────────────────────── */
+.announce {
+  background: var(--cocoa-deep);
+  color: var(--taupe-light);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 9px 48px 9px 16px;
+  position: relative;
+}
+.announceClose {
+  position: absolute; right: 16px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--taupe-light);
+  font-size: 18px; opacity: 0.6;
+  cursor: pointer;
+  background: none; border: none;
+  line-height: 1;
+  transition: opacity var(--dur-fast);
+}
+.announceClose:hover { opacity: 1; }
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .navLinks { display: none; }
+  .hamburger { display: flex; }
+}
+@media (max-width: 600px) {
+  .wordmark { display: none; }
+}

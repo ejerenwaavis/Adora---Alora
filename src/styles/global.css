@@ -1,0 +1,191 @@
+/* ============================================================
+   ADORA & ALORA — GLOBAL STYLES
+   Base resets + utility classes ported from the mockup.
+   ============================================================ */
+
+/* ── Reset ── */
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+}
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-weight: 300;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── Paper Grain Overlay (from mockup) ── */
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+a   { color: inherit; text-decoration: none; }
+ul  { list-style: none; }
+img, svg { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; }
+
+/* ── Layout ── */
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.section  { padding: var(--section-pad) 0; }
+.section-lg { padding: calc(var(--section-pad) * 1.33) 0; }
+
+/* ── Eyebrow label (from mockup) ── */
+.eyebrow {
+  font-family: var(--f-body);
+  font-size: var(--text-xs);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--rust);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.eyebrow .num {
+  font-family: var(--f-display);
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--taupe);
+}
+.eyebrow::after {
+  content: "";
+  height: 1px; width: 38px;
+  background: var(--rust);
+  display: inline-block;
+  opacity: 0.5;
+}
+.eyebrow.centered { justify-content: center; }
+.eyebrow.centered::after { display: none; }
+
+/* ── Headings ── */
+h1, h2, h3 {
+  font-family: var(--f-display);
+  color: var(--cocoa-deep);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.script {
+  font-family: var(--f-script);
+  font-weight: 400;
+  color: var(--rust);
+  line-height: 1;
+}
+
+/* ── Button system (from mockup) ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--f-body);
+  font-size: var(--text-sm);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 15px 28px;
+  border-radius: var(--radius-sm);
+  transition: all var(--dur-normal) var(--ease);
+  white-space: nowrap;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary {
+  background: var(--rust);
+  color: var(--paper);
+  box-shadow: 0 10px 24px -10px rgba(164, 69, 31, 0.55);
+}
+.btn-primary:hover { background: var(--rust-dark); transform: translateY(-2px); }
+.btn-outline {
+  border: 1px solid var(--cocoa);
+  color: var(--cocoa);
+  background: transparent;
+}
+.btn-outline:hover { background: var(--cocoa); color: var(--paper); }
+.btn-ghost {
+  color: var(--rust);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  padding: 0;
+  gap: 6px;
+}
+.btn-gold {
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  background: transparent;
+  font-size: var(--text-xs);
+  padding: 12px 20px;
+}
+.btn-gold:hover { background: var(--gold); color: var(--cocoa-deep); }
+.btn-arrow { transition: transform var(--dur-normal) var(--ease); }
+.btn:hover .btn-arrow { transform: translateX(4px); }
+
+/* ── Chip / Badge ── */
+.chip {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: var(--cocoa);
+}
+
+/* ── Card base ── */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+/* ── Section heading block ── */
+.section-head { text-align: center; margin-bottom: 52px; }
+.section-head h2 { font-size: clamp(1.875rem, 4vw, 2.75rem); margin-top: 10px; }
+
+/* ── Divider ── */
+hr { height: 1px; border: none; background: var(--line); }
+
+/* ── Reveal animation ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity var(--dur-slow) var(--ease-out),
+              transform var(--dur-slow) var(--ease-out);
+}
+.reveal.in-view { opacity: 1; transform: translateY(0); }
+
+/* ── Skeleton loading ── */
+.skeleton {
+  background: linear-gradient(90deg, var(--line) 25%, var(--taupe-light) 50%, var(--line) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Responsive helpers ── */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}
+@media (min-width: 769px) {
+  .hide-desktop { display: none !important; }
+}

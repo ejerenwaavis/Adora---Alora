@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Build output — committed via local build workflow
+public_html/
+
+# Namecheap Passenger — auto-managed, never edit by hand
+.htaccess
+
+# Setup / planning workspace — not source code
+/setup/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Vite cache
+.vite/
