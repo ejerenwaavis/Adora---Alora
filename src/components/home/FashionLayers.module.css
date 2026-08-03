@@ -1,0 +1,36 @@
+.fashionLayers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin: 44px 0 40px;
+}
+.layerCard {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 28px 22px;
+}
+.tag {
+  font-size: 10.5px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+  display: block;
+}
+.layerCard h4 {
+  font-family: var(--f-display);
+  font-size: 19px;
+  margin-bottom: 8px;
+  color: var(--cocoa-deep);
+  font-weight: 500;
+}
+.layerCard p {
+  font-size: 13px;
+  color: var(--taupe);
+  line-height: 1.55;
+}
+
+@media (max-width: 980px) {
+  .fashionLayers { grid-template-columns: 1fr; }
+}

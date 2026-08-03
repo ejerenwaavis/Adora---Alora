@@ -1,0 +1,73 @@
+.doorGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+
+.doorCard {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 30px 18px 24px;
+  text-align: center;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s;
+  position: relative;
+  overflow: hidden;
+  display: block;
+}
+
+.doorCard::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent, var(--rust));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s;
+}
+
+.doorCard:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow);
+}
+
+.doorCard:hover::before {
+  transform: scaleX(1);
+}
+
+.iconWrap {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 16px;
+  color: var(--accent, var(--rust));
+}
+
+.doorCard h3 {
+  font-size: 17px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.doorCard p {
+  font-size: 12.5px;
+  color: var(--taupe);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.go {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent, var(--rust));
+}
+
+@media (max-width: 980px) {
+  .doorGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .doorGrid { grid-template-columns: 1fr; }
+}
