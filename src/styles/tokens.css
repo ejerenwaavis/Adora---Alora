@@ -20,6 +20,10 @@
   --forest:       #414F36;
   --gold:         #C89B4A;
   --rose:         #B0644F;
+  
+  /* ── Basics ── */
+  --white:        #ffffff;
+  --black:        #000000;
 
   /* ── Semantic Aliases ── */
   --color-bg:          var(--cream);

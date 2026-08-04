@@ -1,0 +1,155 @@
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  padding: var(--gutter);
+}
+
+.card {
+  background: white;
+  padding: 3rem;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 420px;
+}
+
+.title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--cocoa-deep);
+}
+
+.error {
+  background: rgba(164, 69, 31, 0.1);
+  color: var(--rust);
+  padding: 1rem;
+  border-radius: 2px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.field label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--taupe);
+  font-weight: 500;
+}
+
+.textLink {
+  font-size: 0.75rem;
+  color: var(--gold);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.textLink:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordWrapper input {
+  width: 100%;
+  padding-right: 4rem; /* room for the toggle button */
+}
+
+.toggleBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--taupe);
+  cursor: pointer;
+  padding: 0.5rem;
+}
+.toggleBtn:hover {
+  color: var(--cocoa-deep);
+}
+
+.field input {
+  width: 100%;
+  padding: 0.875rem;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 2px;
+  font-family: var(--f-body);
+  font-size: 1rem;
+  color: var(--cocoa-deep);
+  background: #fafafa;
+  transition: border-color 0.2s;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: white;
+}
+
+.btn {
+  background: var(--gold);
+  color: white;
+  border: none;
+  padding: 1rem;
+  font-family: var(--f-body);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: opacity 0.2s;
+  margin-top: 1rem;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--taupe);
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+.footer .textLink {
+  font-size: 0.875rem;
+  margin-left: 0.25rem;
+}

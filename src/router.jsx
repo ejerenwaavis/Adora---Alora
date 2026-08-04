@@ -14,10 +14,26 @@ import VenueHire    from './pages/VenueHire.jsx';
 import Events       from './pages/Events.jsx';
 import Visit        from './pages/Visit.jsx';
 
-// Protected shells (implemented in later phases)
-import UserDashboard    from './user/UserDashboard.jsx';
-import AdminDashboard   from './admin/Dashboard.jsx';
-import ClerkDashboard   from './clerk/ClerkDashboard.jsx';
+// Auth Pages
+import Login           from './pages/Login.jsx';
+import Register        from './pages/Register.jsx';
+import ForgotPassword  from './pages/ForgotPassword.jsx';
+import ResetPassword   from './pages/ResetPassword.jsx';
+
+// Account Dashboard
+import AccountLayout   from './pages/account/AccountLayout.jsx';
+import Dashboard       from './pages/account/Dashboard.jsx';
+import ProfileSettings from './pages/account/ProfileSettings.jsx';
+
+// Admin CMS
+import AdminLayout     from './admin/AdminLayout.jsx';
+import AdminDashboard  from './admin/Dashboard.jsx';
+import AnnouncementCMS from './admin/AnnouncementCMS.jsx';
+import FaqCMS          from './admin/FaqCMS.jsx';
+import MenuCMS         from './admin/MenuCMS.jsx';
+import ClassesCMS      from './admin/ClassesCMS.jsx';
+import FashionCMS      from './admin/FashionCMS.jsx';
+import EventsCMS       from './admin/EventsCMS.jsx';
 
 // ── Route Guards ──────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
@@ -51,37 +67,46 @@ export const router = createBrowserRouter([
       { path: 'events',                 element: <Events /> },
       { path: 'events/:slug',           element: <Events detail /> },
       { path: 'visit',                  element: <Visit /> },
+      
+      // Public Auth routes inside PageShell so they get the main nav/footer
+      { path: 'login',                  element: <Login /> },
+      { path: 'register',               element: <Register /> },
+      { path: 'forgot-password',        element: <ForgotPassword /> },
+      { path: 'reset-password',         element: <ResetPassword /> },
     ],
   },
 
   // ── Protected: member account ──
   {
-    path:    '/account',
-    element: <RequireAuth><UserDashboard /></RequireAuth>,
-  },
-  {
-    path:    '/account/*',
-    element: <RequireAuth><UserDashboard /></RequireAuth>,
+    path: '/account',
+    element: <RequireAuth><AccountLayout /></RequireAuth>,
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: 'profile', element: <ProfileSettings /> },
+      { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
+    ]
   },
 
   // ── Protected: admin panel ──
   {
     path:    '/admin',
-    element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminDashboard /></RequireRole>,
-  },
-  {
-    path:    '/admin/*',
-    element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminDashboard /></RequireRole>,
+    element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminLayout /></RequireRole>,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'announcements', element: <AnnouncementCMS /> },
+      { path: 'faqs', element: <FaqCMS /> },
+      { path: 'menu', element: <MenuCMS /> },
+      { path: 'classes', element: <ClassesCMS /> },
+      { path: 'fashion', element: <FashionCMS /> },
+      { path: 'events', element: <EventsCMS /> },
+      { path: '*', element: <AdminDashboard /> }
+    ]
   },
 
-  // ── Protected: clerk front desk ──
+  // ── Protected: clerk front desk (Stubs) ──
   {
     path:    '/clerk',
-    element: <RequireRole roles={['admin','clerk']}><ClerkDashboard /></RequireRole>,
-  },
-  {
-    path:    '/clerk/*',
-    element: <RequireRole roles={['admin','clerk']}><ClerkDashboard /></RequireRole>,
+    element: <RequireRole roles={['admin','clerk']}><div style={{padding:'2rem'}}>Clerk Dashboard coming soon</div></RequireRole>,
   },
 
   // ── 404 fallback ──

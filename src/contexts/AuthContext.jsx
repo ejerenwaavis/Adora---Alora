@@ -19,6 +19,17 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  const register = useCallback(async ({ firstName, lastName, email, password }) => {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName, email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed');
+    return data;
+  }, []);
+
   const login = useCallback(async ({ email, password, totpCode }) => {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -103,7 +114,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      login, logout, authFetch,
+      login, logout, register, authFetch,
       isAdmin, isClerk, isContentEditor, isInstructor, isFinance, isMember, isStaff,
     }}>
       {children}

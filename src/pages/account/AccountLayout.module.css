@@ -1,0 +1,143 @@
+.accountContainer {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--sand);
+}
+
+.sidebar {
+  width: 260px;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.brand {
+  padding: 2rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.badge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--taupe);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.nav {
+  flex: 1;
+  padding: 2rem 0;
+}
+
+.navLink, .navLinkActive {
+  display: block;
+  padding: 0.75rem 2rem;
+  text-decoration: none;
+  color: var(--black);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.navLinkActive {
+  background-color: rgba(0, 0, 0, 0.04);
+  font-weight: 500;
+  position: relative;
+}
+
+.navLinkActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--gold);
+}
+
+.userBox {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.userInfo strong {
+  font-size: 0.95rem;
+}
+
+.userInfo span {
+  font-size: 0.8rem;
+  color: var(--taupe);
+}
+
+.logoutBtn {
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 1rem;
+  width: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.main {
+  flex: 1;
+  padding: 3rem 4rem;
+  overflow-y: auto;
+  background-color: var(--white);
+}
+
+.contentWrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.pageTitle {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  color: var(--black);
+}
+
+.card {
+  background: var(--white);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  margin-bottom: 2rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px;
+  border: 1px dashed rgba(0,0,0,0.1);
+}
+
+.emptyState p {
+  color: var(--taupe);
+  margin-bottom: 1.5rem;
+}

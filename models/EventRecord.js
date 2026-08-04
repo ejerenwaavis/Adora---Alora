@@ -60,6 +60,5 @@ eventRecordSchema.pre('save', function (next) {
 });
 
 eventRecordSchema.index({ startDate: 1, status: 1 });
-eventRecordSchema.index({ slug: 1 }, { unique: true });
 
 module.exports = mongoose.model('EventRecord', eventRecordSchema);

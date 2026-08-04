@@ -116,7 +116,7 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3005;
 
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGO_URI || process.env.MONGODB_URI)
   .then(() => {
     console.log('✓ MongoDB connected');
     app.listen(PORT, () => {
