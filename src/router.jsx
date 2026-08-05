@@ -61,7 +61,7 @@ export const router = createBrowserRouter([
     element: <PageShell />,
     children: [
       { index: true,                    element: <Home /> },
-      { path: 'our-house',              element: <OurHouse /> },
+      { path: 'our-house',              element: <Home /> },
       { path: 'movement',               element: <Movement /> },
       { path: 'cafe',                   element: <Cafe /> },
       { path: 'fashion',                element: <Fashion /> },

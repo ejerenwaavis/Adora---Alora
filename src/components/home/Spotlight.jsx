@@ -15,17 +15,22 @@ export default function Spotlight({
   reverse = false, 
   visualBackground, 
   visualSvg,
+  imageSrc,
   style
 }) {
   return (
     <section className={`${styles.spotlight} ${reverse ? styles.reverse : ''}`} id={id} style={style}>
       <div className={styles.wrap}>
-        {visualBackground && (
-          <div className={`${styles.spotVisual} reveal`} style={{ background: visualBackground }}>
-            {visualSvg}
+        {(visualBackground || imageSrc) && (
+          <div className={`${styles.spotVisual} reveal`} style={visualBackground ? { background: visualBackground } : {}}>
+            {imageSrc ? (
+              <img src={imageSrc} alt={title} className={styles.spotImg} />
+            ) : (
+              visualSvg
+            )}
           </div>
         )}
-        <div className={`${styles.spotCopy} reveal`} style={!visualBackground ? { gridColumn: '1 / -1' } : {}}>
+        <div className={`${styles.spotCopy} reveal`} style={(!visualBackground && !imageSrc) ? { gridColumn: '1 / -1' } : {}}>
           <Eyebrow num={num} text={eyebrow} />
           <h2>{title}</h2>
           <p>{desc}</p>

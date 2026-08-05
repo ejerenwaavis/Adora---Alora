@@ -2,6 +2,8 @@ import SectionHead from '../components/ui/SectionHead';
 import ExploreDoors from '../components/home/ExploreDoors';
 import styles from './OurHouse.module.css';
 
+import HouseSnapshots from '../components/home/HouseSnapshots.jsx';
+
 export default function OurHouse() {
   return (
     <div className={styles.container}>
@@ -79,41 +81,8 @@ export default function OurHouse() {
         </div>
       </section>
 
-      {/* ── Wall of Memory ── */}
-      <section className={styles.memorySection}>
-        <div className="wrap">
-          <SectionHead
-            eyebrow="Wall of Memory"
-            title="Snapshots of house life."
-          />
-
-          <div className={styles.memoryGrid}>
-            <div className={styles.memoryCard}>
-              <div>
-                <div className={styles.memoryTag}>Architecture</div>
-                <div className={styles.memoryText}>&ldquo;Sunlight through high arches and custom brass detailing.&rdquo;</div>
-              </div>
-              <div className={styles.memoryMeta}>Lagos House • 2026</div>
-            </div>
-
-            <div className={styles.memoryCard}>
-              <div>
-                <div className={styles.memoryTag}>Gatherings</div>
-                <div className={styles.memoryText}>&ldquo;Intimate long-table dinners hosted inside The Loft.&rdquo;</div>
-              </div>
-              <div className={styles.memoryMeta}>House Programming</div>
-            </div>
-
-            <div className={styles.memoryCard}>
-              <div>
-                <div className={styles.memoryTag}>Movement</div>
-                <div className={styles.memoryText}>&ldquo;Morning light in the Reformer Studio before the city wakes.&rdquo;</div>
-              </div>
-              <div className={styles.memoryMeta}>Daily Practice</div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── Wall of Memory (Architectural Photo Canvas) ── */}
+      <HouseSnapshots />
 
       {/* ── Explore Doors ── */}
       <ExploreDoors />

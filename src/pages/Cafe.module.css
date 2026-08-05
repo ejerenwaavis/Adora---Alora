@@ -1,0 +1,334 @@
+.cafePage {
+  padding-top: 40px;
+}
+
+.hero {
+  position: relative;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--paper);
+  background: #1E1610;
+  overflow: hidden;
+  margin-bottom: 50px;
+}
+
+.heroBg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  filter: contrast(1.05) brightness(0.85);
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(30,22,16,0.3) 0%, rgba(30,22,16,0.85) 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  padding: 0 var(--gutter);
+}
+
+.heroContent h1 {
+  font-size: clamp(40px, 5.5vw, 64px);
+  font-weight: 500;
+  margin: 12px 0 18px;
+  line-height: 1.05;
+  color: var(--paper);
+}
+
+.heroContent p {
+  font-size: var(--text-md);
+  color: rgba(240, 228, 204, 0.9);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+/* Hours & Format Bar */
+.serviceBar {
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+  margin-bottom: 60px;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 30px;
+  text-align: center;
+}
+
+.serviceItem h4 {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin-bottom: 6px;
+}
+
+.serviceItem p {
+  font-size: 15px;
+  color: var(--cocoa-deep);
+  font-weight: 500;
+}
+
+/* Chin Chin Feature Card */
+.chinChinCard {
+  background: linear-gradient(135deg, #2B2015 0%, #4A3527 100%);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius-sm);
+  padding: 40px 48px;
+  color: var(--paper);
+  margin-bottom: 70px;
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  box-shadow: var(--shadow-lg);
+}
+
+.chinChinIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(200, 155, 74, 0.15);
+  border: 1px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  flex-shrink: 0;
+}
+
+.chinChinText h3 {
+  font-size: 22px;
+  color: var(--gold);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.chinChinText p {
+  font-size: var(--text-sm);
+  color: rgba(240, 228, 204, 0.88);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* Menu Section */
+.menuSection {
+  padding-bottom: 90px;
+}
+
+.menuHeader {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 40px;
+}
+
+.menuHeader h2 {
+  font-size: clamp(30px, 3.8vw, 44px);
+  margin-top: 8px;
+}
+
+/* Category Filter Tabs */
+.categoryTabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 50px;
+}
+
+.tabBtn {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--cocoa);
+  padding: 10px 20px;
+  border-radius: 24px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: all 0.3s var(--ease);
+  cursor: pointer;
+}
+
+.tabBtn:hover {
+  border-color: var(--rust);
+  color: var(--rust);
+}
+
+.tabBtnActive {
+  background: var(--rust) !important;
+  color: #fff !important;
+  border-color: var(--rust) !important;
+  box-shadow: 0 4px 14px rgba(164, 69, 31, 0.35);
+}
+
+/* Category Display Block */
+.categoryBlock {
+  margin-bottom: 60px;
+}
+
+.categoryTitle {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--cocoa-deep);
+  border-bottom: 2px solid var(--gold);
+  padding-bottom: 10px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.categoryIcon {
+  font-size: 22px;
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px 48px;
+}
+
+.menuItemCard {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 24px 28px;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.menuItemCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+  border-color: var(--gold);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.itemName {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--cocoa-deep);
+}
+
+.itemPrice {
+  font-family: var(--f-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--rust);
+}
+
+.itemDesc {
+  font-size: 14px;
+  color: var(--cocoa);
+  line-height: 1.5;
+  font-weight: 300;
+  margin-bottom: 12px;
+}
+
+.itemBadges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badgePill {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: rgba(164, 69, 31, 0.1);
+  color: var(--rust);
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+.dietPill {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 600;
+  background: rgba(65, 79, 54, 0.1);
+  color: #414F36;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+/* Dietary Key Footer */
+.dietaryNotice {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 24px 32px;
+  margin-top: 40px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--cocoa);
+}
+
+.dietaryNotice strong {
+  color: var(--cocoa-deep);
+}
+
+/* Private Hire Prompt Banner */
+.hireBanner {
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 50px 48px;
+  margin: 70px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
+}
+
+.hireText h3 {
+  font-size: 26px;
+  margin-bottom: 8px;
+}
+
+.hireText p {
+  font-size: var(--text-sm);
+  color: var(--cocoa);
+  font-weight: 300;
+}
+
+@media (max-width: 900px) {
+  .menuGrid {
+    grid-template-columns: 1fr;
+  }
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+  .chinChinCard {
+    flex-direction: column;
+    text-align: center;
+  }
+  .hireBanner {
+    flex-direction: column;
+    text-align: center;
+  }
+}

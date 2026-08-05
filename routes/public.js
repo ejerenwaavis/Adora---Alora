@@ -1,12 +1,85 @@
 const express = require('express');
 const router  = express.Router();
 
-// Public read-only data for the React frontend
-// These fire during Phase 2 (static pages) and Phase 3 (CMS content)
+const MenuCategory = require('../models/MenuCategory');
+const MenuItem     = require('../models/MenuItem');
 
+const INITIAL_MENU = [
+  {
+    category: { name: 'Coffee', slug: 'coffee', icon: '☕' },
+    items: [
+      { name: 'Espresso Classic', description: 'Double shot of single-origin roasted beans.', price: '₦3,500', dietaryTags: [], badge: 'House Blend', isAvailable: true },
+      { name: 'Spanish Latte', description: 'Espresso with textured milk and sweetened condensed milk.', price: '₦4,800', dietaryTags: [], badge: 'Popular', isAvailable: true },
+      { name: 'White Chocolate Mocha', description: 'Rich espresso, velvety white chocolate, and steamed milk.', price: '₦5,200', dietaryTags: [], isAvailable: true },
+      { name: 'Cold Brew Signature', description: '24-hour slow-steeped artisan cold brew served over ice.', price: '₦4,500', dietaryTags: ['vegan'], isAvailable: true },
+    ]
+  },
+  {
+    category: { name: 'Matcha', slug: 'matcha', icon: '🍵' },
+    items: [
+      { name: 'Classic Iced Matcha', description: 'Ceremonial grade Uji matcha whisked over fresh milk.', price: '₦5,500', dietaryTags: ['vegetarian'], badge: 'Signature', isAvailable: true },
+      { name: 'Strawberry Cloud Matcha', description: 'Ceremonial matcha with house-made fresh strawberry puree layer.', price: '₦6,200', dietaryTags: ['vegetarian'], badge: 'Popular', isAvailable: true },
+      { name: 'White Chocolate Matcha', description: 'Ceremonial matcha folded with silky white chocolate.', price: '₦6,000', dietaryTags: [], isAvailable: true },
+      { name: 'Vanilla Bean Matcha', description: 'Madagascar vanilla bean syrup with ceremonial whisked matcha.', price: '₦5,800', dietaryTags: [], isAvailable: true },
+    ]
+  },
+  {
+    category: { name: 'Food', slug: 'food', icon: '🥪' },
+    items: [
+      { name: 'Pesto Chicken Focaccia', description: 'Herbed grilled chicken, house pesto, mozzarella, and sun-dried tomatoes.', price: '₦8,500', dietaryTags: [], badge: 'Bestseller', isAvailable: true },
+      { name: 'Coastal Grain Bowl', description: 'Quinoa, roasted sweet potato, avocado, wild greens, and tahini drizzle.', price: '₦7,800', dietaryTags: ['vegan', 'gluten-free'], badge: 'Healthy', isAvailable: true },
+      { name: 'Artisanal Breakfast Plate', description: 'Poached eggs, smoked turkey sausage, sourdough, avocado, and grilled vine tomatoes.', price: '₦9,200', dietaryTags: [], isAvailable: true },
+      { name: 'House Wing Trio', description: 'Crispy glazed wings served in suya spiced, honey garlic, and habanero glaze.', price: '₦8,200', dietaryTags: [], isAvailable: true },
+      { name: 'Savory Waffle & Chicken', description: 'Golden buttermilk waffle topped with crispy chicken tenders and hot honey syrup.', price: '₦8,800', dietaryTags: [], isAvailable: true },
+    ]
+  },
+  {
+    category: { name: 'Dessert', slug: 'dessert', icon: '🍰' },
+    items: [
+      { name: 'Chin-Chin Blueberry Cheesecake', description: 'Creamy New York cheesecake with an artisanal chin-chin crust and blueberry reduction.', price: '₦6,500', dietaryTags: ['vegetarian'], badge: 'House Special', isAvailable: true },
+      { name: 'Classic Tiramisu', description: 'Espresso-soaked ladyfingers layered with whipped mascarpone cocoa cream.', price: '₦6,000', dietaryTags: ['vegetarian'], isAvailable: true },
+      { name: 'Warm Skillet Cookie', description: 'Freshly baked chocolate chip skillet cookie with vanilla bean gelato.', price: '₦5,800', dietaryTags: ['vegetarian'], isAvailable: true },
+    ]
+  },
+  {
+    category: { name: 'Pastry', slug: 'pastry', icon: '🥐' },
+    items: [
+      { name: 'Butter Croissant', description: 'Flaky 81-layer French butter croissant.', price: '₦3,200', dietaryTags: ['vegetarian'], isAvailable: true },
+      { name: 'Chocolate Croissant (Pain au Chocolat)', description: 'Classic croissant filled with Valrhona dark chocolate bars.', price: '₦3,800', dietaryTags: ['vegetarian'], badge: 'Popular', isAvailable: true },
+      { name: 'Almond Croissant', description: 'Double-baked croissant filled with almond frangipane cream.', price: '₦4,200', dietaryTags: ['vegetarian'], isAvailable: true },
+      { name: 'Cardamom & Cinnamon Knot', description: 'Warm Scandinavian cardamom spice knot.', price: '₦3,600', dietaryTags: ['vegetarian'], isAvailable: true },
+      { name: 'Pistachio Pinwheel', description: 'Artisanal pastry spiral filled with roasted pistachio cream.', price: '₦4,500', dietaryTags: ['vegetarian'], isAvailable: true },
+    ]
+  },
+  {
+    category: { name: 'Wellness Drinks', slug: 'wellness', icon: '🥤' },
+    items: [
+      { name: 'Green Glow Cold-Pressed Juice', description: 'Kale, green apple, cucumber, celery, ginger, and lemon.', price: '₦5,000', dietaryTags: ['vegan', 'gluten-free'], badge: 'Detox', isAvailable: true },
+      { name: 'Sunshine Citrus Smoothie', description: 'Mango, passionfruit, pineapple, coconut water, and chia seeds.', price: '₦5,200', dietaryTags: ['vegan', 'gluten-free'], isAvailable: true },
+    ]
+  }
+];
+
+// Public read-only data for the React frontend
 router.get('/site/announcements', (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
 router.get('/site/faqs',          (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
-router.get('/menu',               (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
+
+router.get('/menu', async (req, res) => {
+  try {
+    const categories = await MenuCategory.find({ isActive: true }).sort('sortOrder');
+    if (categories && categories.length > 0) {
+      const result = await Promise.all(categories.map(async cat => {
+        const items = await MenuItem.find({ category: cat._id, isAvailable: true }).sort('sortOrder');
+        return { category: cat, items };
+      }));
+      return res.json(result);
+    }
+  } catch (e) {
+    // Fallback to initial menu structure
+  }
+  res.json(INITIAL_MENU);
+});
+
 router.get('/fashion',            (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
 router.get('/venue/spaces',       (req, res) => res.json({ status: 'Phase 9 — pending implementation' }));
 router.get('/events',             (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));

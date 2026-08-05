@@ -27,9 +27,9 @@ function Seal() {
 
 /* ─── Nav Links ─────────────────────────────────────────────────────────────── */
 const NAV_LINKS = [
-  { to: '/movement',    label: 'Movement'    },
   { to: '/our-house',   label: 'Our House'   },
   { to: '/cafe',        label: 'Café'        },
+  { to: '/movement',    label: 'Movement'    },
   { to: '/fashion',     label: 'Fashion'     },
   { to: '/venue-hire',  label: 'Venue Hire'  },
   { to: '/events',      label: 'Events'      },

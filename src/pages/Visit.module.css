@@ -1,0 +1,160 @@
+.visitPage {
+  padding-top: 50px;
+}
+
+.heroHeader {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 60px;
+  padding: 0 var(--gutter);
+}
+
+.heroHeader h1 {
+  font-size: clamp(38px, 5vw, 64px);
+  margin: 10px 0 18px;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.heroHeader p {
+  font-size: var(--text-md);
+  color: var(--cocoa);
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.amenities {
+  padding: 80px 0;
+  background: var(--paper);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-top: 60px;
+}
+
+.sectionTitle {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto 50px;
+}
+
+.sectionTitle h2 {
+  font-size: clamp(28px, 3.2vw, 40px);
+  margin-top: 8px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.card {
+  background: var(--cream);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 40px 26px 34px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.35s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--gold);
+}
+
+.card:hover::before {
+  background: linear-gradient(90deg, var(--rust), var(--gold));
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.num {
+  font-family: var(--f-serif);
+  font-size: 26px;
+  color: var(--taupe);
+  font-style: italic;
+}
+
+.iconWrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(164, 69, 31, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rust);
+}
+
+.card h3 {
+  font-size: 20px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: var(--cocoa-deep);
+}
+
+.card p {
+  font-size: var(--text-sm);
+  color: var(--cocoa);
+  font-weight: 300;
+  line-height: 1.65;
+}
+
+.faqSection {
+  padding: 90px 0;
+}
+
+.faqGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.faqItem {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 28px 30px;
+}
+
+.faqItem h4 {
+  font-size: 17px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--cocoa-deep);
+}
+
+.faqItem p {
+  font-size: 14px;
+  color: var(--cocoa);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+@media (max-width: 800px) {
+  .faqGrid {
+    grid-template-columns: 1fr;
+  }
+}
