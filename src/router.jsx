@@ -32,8 +32,11 @@ import AnnouncementCMS from './admin/AnnouncementCMS.jsx';
 import FaqCMS          from './admin/FaqCMS.jsx';
 import MenuCMS         from './admin/MenuCMS.jsx';
 import ClassesCMS      from './admin/ClassesCMS.jsx';
+import ScheduleCMS     from './admin/ScheduleCMS.jsx';
 import FashionCMS      from './admin/FashionCMS.jsx';
 import EventsCMS       from './admin/EventsCMS.jsx';
+import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
+import SettingsCMS     from './admin/SettingsCMS.jsx';
 
 // ── Route Guards ──────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
@@ -97,8 +100,11 @@ export const router = createBrowserRouter([
       { path: 'faqs', element: <FaqCMS /> },
       { path: 'menu', element: <MenuCMS /> },
       { path: 'classes', element: <ClassesCMS /> },
+      { path: 'timetable', element: <ScheduleCMS /> },
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
+      { path: 'credit-packs', element: <CreditPacksCMS /> },
+      { path: 'settings', element: <SettingsCMS /> },
       { path: '*', element: <AdminDashboard /> }
     ]
   },

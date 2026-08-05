@@ -138,7 +138,7 @@ export default function Nav() {
                 )}
               </div>
             ) : (
-              <Link to="/account" className={styles.navUtil}>Sign In</Link>
+              <Link to="/login" className={styles.navSignIn}>Sign In</Link>
             )}
 
             {/* Mobile hamburger */}

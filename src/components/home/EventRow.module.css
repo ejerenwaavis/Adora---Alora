@@ -1,5 +1,9 @@
 .events {
-  padding: 90px 0;
+  padding: 100px 0 90px;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  scroll-margin-top: 80px;
 }
 .eventRow {
   display: grid;

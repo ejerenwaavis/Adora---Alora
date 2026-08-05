@@ -80,25 +80,30 @@ export function AuthProvider({ children }) {
   // Authorised fetch helper — auto-refreshes on 401
   const authFetch = useCallback(async (url, options = {}) => {
     const token = localStorage.getItem('aa_access_token');
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const isFormData = options.body instanceof FormData;
+    
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    };
+    if (!isFormData && !headers['Content-Type']) {
+      headers['Content-Type'] = 'application/json';
+    }
+
+    const res = await fetch(url, { ...options, headers });
     if (res.status === 401) {
       const newToken = await refreshToken();
       if (!newToken) throw new Error('Session expired');
-      return fetch(url, {
-        ...options,
-        headers: {
-          'Content-Type': 'application/json',
-          ...options.headers,
-          Authorization: `Bearer ${newToken}`,
-        },
-      });
+      
+      const retryHeaders = {
+        Authorization: `Bearer ${newToken}`,
+        ...options.headers,
+      };
+      if (!isFormData && !retryHeaders['Content-Type']) {
+        retryHeaders['Content-Type'] = 'application/json';
+      }
+
+      return fetch(url, { ...options, headers: retryHeaders });
     }
     return res;
   }, [refreshToken]);

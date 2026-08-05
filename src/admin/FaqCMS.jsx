@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css';
 
 export default function FaqCMS() {
   const { authFetch } = useAuth();
+  const { confirmAction } = useModal();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ question: '', answer: '', category: 'General', isActive: true, sortOrder: 0 });
@@ -37,12 +39,13 @@ export default function FaqCMS() {
     } catch (err) { console.error(err); }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Delete this FAQ?')) return;
-    try {
-      const res = await authFetch(`/api/cms/faqs/${id}`, { method: 'DELETE' });
-      if (res.ok) loadItems();
-    } catch (err) { console.error(err); }
+  function handleDelete(id) {
+    confirmAction('Delete FAQ', 'Are you sure you want to delete this FAQ?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/faqs/${id}`, { method: 'DELETE' });
+        if (res.ok) loadItems();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editItem(item) {

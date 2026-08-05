@@ -1,0 +1,107 @@
+.container {
+  padding: 8rem var(--gutter);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-family: var(--f-heading);
+  font-size: 4rem;
+  color: var(--black);
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: var(--cocoa);
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.timetable {
+  background: var(--white);
+  padding: 3rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border: 1px solid var(--taupe);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  border-color: var(--black);
+}
+
+.timeBlock {
+  flex: 1;
+}
+
+.date {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.time {
+  font-family: var(--f-heading);
+  font-size: 1.5rem;
+}
+
+.infoBlock {
+  flex: 2;
+}
+
+.infoBlock h3 {
+  font-family: var(--f-heading);
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.infoBlock p {
+  color: var(--cocoa);
+}
+
+.actionBlock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.availability {
+  font-size: 0.9rem;
+  color: var(--cocoa);
+}
+
+@media (max-width: 768px) {
+  .card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .actionBlock {
+    align-items: flex-start;
+    width: 100%;
+  }
+}

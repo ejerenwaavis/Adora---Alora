@@ -93,30 +93,37 @@ h1, h2, h3 {
 .btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
   font-family: var(--f-body);
   font-size: var(--text-sm);
+  font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  padding: 15px 28px;
+  padding: 14px 26px;
   border-radius: var(--radius-sm);
   transition: all var(--dur-normal) var(--ease);
   white-space: nowrap;
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
+  line-height: 1.2;
+}
+.btn:active {
+  transform: translateY(0) scale(0.98);
 }
 .btn-primary {
   background: var(--rust);
   color: var(--paper);
+  border-color: var(--rust);
   box-shadow: 0 10px 24px -10px rgba(164, 69, 31, 0.55);
 }
-.btn-primary:hover { background: var(--rust-dark); transform: translateY(-2px); }
+.btn-primary:hover { background: var(--rust-dark); border-color: var(--rust-dark); transform: translateY(-2px); }
 .btn-outline {
   border: 1px solid var(--cocoa);
   color: var(--cocoa);
   background: transparent;
 }
-.btn-outline:hover { background: var(--cocoa); color: var(--paper); }
+.btn-outline:hover { background: var(--cocoa-deep); color: var(--paper); border-color: var(--cocoa-deep); transform: translateY(-2px); }
 .btn-ghost {
   color: var(--rust);
   font-size: var(--text-xs);
@@ -161,14 +168,18 @@ h1, h2, h3 {
 /* ── Divider ── */
 hr { height: 1px; border: none; background: var(--line); }
 
-/* ── Reveal animation ── */
+/* ── Reveal animation (from mockup) ── */
 .reveal {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity var(--dur-slow) var(--ease-out),
-              transform var(--dur-slow) var(--ease-out);
+  transform: translateY(26px);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.6, 0.2, 1),
+              transform 0.8s cubic-bezier(0.2, 0.6, 0.2, 1);
 }
-.reveal.in-view { opacity: 1; transform: translateY(0); }
+.reveal.in,
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 /* ── Skeleton loading ── */
 .skeleton {

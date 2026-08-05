@@ -1,7 +1,11 @@
 .venue {
   background: var(--cocoa-deep);
   color: var(--taupe-light);
-  padding: 90px 0;
+  padding: 100px 0 90px;
+  min-height: 62vh;
+  display: flex;
+  align-items: center;
+  scroll-margin-top: 80px;
 }
 .sectionHead :global(.eyebrow) {
   color: var(--gold);

@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css';
 
 export default function MenuCMS() {
   const { authFetch } = useAuth();
+  const { confirmAction } = useModal();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const [catForm, setCatForm] = useState({ name: '', slug: '', description: '', sortOrder: 0, isActive: true });
-  const [itemForm, setItemForm] = useState({ 
+  const defaultCatForm = { name: '', slug: '', description: '', sortOrder: 0, isActive: true };
+  const defaultItemForm = { 
     name: '', slug: '', description: '', category: '', priceKobo: 0, 
-    dietaryTags: '', isFeatured: false, isAvailable: true, sortOrder: 0 
-  });
+    dietaryTags: '', isFeatured: false, isAvailable: true, sortOrder: 0,
+    image: null, existingImage: ''
+  };
+
+  const [catForm, setCatForm] = useState(defaultCatForm);
+  const [itemForm, setItemForm] = useState(defaultItemForm);
   
   const [editingCatId, setEditingCatId] = useState(null);
   const [editingItemId, setEditingItemId] = useState(null);
@@ -41,23 +47,23 @@ export default function MenuCMS() {
       const method = editingCatId ? 'PATCH' : 'POST';
       const res = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(catForm)
       });
       if (res.ok) {
-        setCatForm({ name: '', slug: '', description: '', sortOrder: 0, isActive: true });
+        setCatForm(defaultCatForm);
         setEditingCatId(null);
         loadData();
       }
     } catch (err) { console.error(err); }
   }
 
-  async function handleCatDelete(id) {
-    if (!window.confirm('Delete category AND all its items?')) return;
-    try {
-      const res = await authFetch(`/api/cms/menu-categories/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData();
-    } catch (err) { console.error(err); }
+  function handleCatDelete(id) {
+    confirmAction('Delete Category', 'Are you sure you want to delete this category AND all its items?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/menu-categories/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editCat(cat) {
@@ -72,32 +78,38 @@ export default function MenuCMS() {
     try {
       const url = editingItemId ? `/api/cms/menu-items/${editingItemId}` : '/api/cms/menu-items';
       const method = editingItemId ? 'PATCH' : 'POST';
-      const payload = {
-        ...itemForm,
-        dietaryTags: typeof itemForm.dietaryTags === 'string' 
-          ? itemForm.dietaryTags.split(',').map(s=>s.trim()).filter(Boolean) 
-          : itemForm.dietaryTags
-      };
       
+      const formData = new FormData();
+      formData.append('name', itemForm.name);
+      formData.append('slug', itemForm.slug);
+      formData.append('description', itemForm.description);
+      formData.append('category', itemForm.category);
+      formData.append('priceKobo', itemForm.priceKobo);
+      formData.append('dietaryTags', itemForm.dietaryTags);
+      formData.append('isFeatured', itemForm.isFeatured);
+      formData.append('isAvailable', itemForm.isAvailable);
+      formData.append('sortOrder', itemForm.sortOrder);
+      if (itemForm.image) formData.append('image', itemForm.image);
+
       const res = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
       });
       if (res.ok) {
-        setItemForm({ name: '', slug: '', description: '', category: '', priceKobo: 0, dietaryTags: '', isFeatured: false, isAvailable: true, sortOrder: 0 });
+        setItemForm(defaultItemForm);
         setEditingItemId(null);
         loadData();
       }
     } catch (err) { console.error(err); }
   }
 
-  async function handleItemDelete(id) {
-    if (!window.confirm('Delete this menu item?')) return;
-    try {
-      const res = await authFetch(`/api/cms/menu-items/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData();
-    } catch (err) { console.error(err); }
+  function handleItemDelete(id) {
+    confirmAction('Delete Menu Item', 'Are you sure you want to delete this menu item?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/menu-items/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editItem(item) {
@@ -106,7 +118,8 @@ export default function MenuCMS() {
       name: item.name, slug: item.slug, description: item.description || '', 
       category: item.category?._id || '', priceKobo: item.priceKobo, 
       dietaryTags: item.dietaryTags?.join(', ') || '', 
-      isFeatured: item.isFeatured, isAvailable: item.isAvailable, sortOrder: item.sortOrder 
+      isFeatured: item.isFeatured, isAvailable: item.isAvailable, sortOrder: item.sortOrder,
+      image: null, existingImage: item.image || ''
     });
     setActiveTab('items');
   }
@@ -154,7 +167,7 @@ export default function MenuCMS() {
               </div>
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingCatId ? 'Update Category' : 'Create Category'}</button>
-                {editingCatId && <button type="button" onClick={() => { setEditingCatId(null); setCatForm({name:'', slug:'', description:'', sortOrder:0, isActive:true}); }} className={styles.btnGhost}>Cancel</button>}
+                {editingCatId && <button type="button" onClick={() => { setEditingCatId(null); setCatForm(defaultCatForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
@@ -223,6 +236,23 @@ export default function MenuCMS() {
                 </div>
               </div>
 
+              {/* IMAGE UPLOAD */}
+              <div className={styles.field} style={{ borderTop: '1px solid #eaeaea', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <label>Menu Item Photo</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {(itemForm.image || itemForm.existingImage) && (
+                    <img 
+                      src={itemForm.image ? URL.createObjectURL(itemForm.image) : itemForm.existingImage} 
+                      alt="Preview" 
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} 
+                    />
+                  )}
+                  <input type="file" accept="image/*" onChange={e => {
+                    if (e.target.files[0]) setItemForm({...itemForm, image: e.target.files[0]});
+                  }} />
+                </div>
+              </div>
+
               <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
                 <div className={styles.checkboxField}>
                   <input type="checkbox" id="itemAvailable" checked={itemForm.isAvailable} onChange={e => setItemForm({...itemForm, isAvailable: e.target.checked})} />
@@ -236,7 +266,7 @@ export default function MenuCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingItemId ? 'Update Item' : 'Create Item'}</button>
-                {editingItemId && <button type="button" onClick={() => { setEditingItemId(null); setItemForm({name:'', slug:'', description:'', category:'', priceKobo:0, dietaryTags:'', isFeatured:false, isAvailable:true, sortOrder:0}); }} className={styles.btnGhost}>Cancel</button>}
+                {editingItemId && <button type="button" onClick={() => { setEditingItemId(null); setItemForm(defaultItemForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
@@ -244,12 +274,15 @@ export default function MenuCMS() {
           <div className={styles.list}>
             {items.map(item => (
               <div key={item._id} className={`${styles.listItem} ${!item.isAvailable ? styles.inactive : ''}`}>
-                <div className={styles.itemContent}>
-                  <strong>{item.name}</strong> 
-                  <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
-                    {item.category?.name} • ₦{(item.priceKobo / 100).toFixed(2)}
-                  </span>
-                  {item.isFeatured && <span className={styles.badge} style={{marginLeft: '0.5rem'}}>Featured</span>}
+                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {item.image && <img src={item.image} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                  <div>
+                    <strong>{item.name}</strong> 
+                    <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
+                      {item.category?.name} • ₦{(item.priceKobo / 100).toFixed(2)}
+                    </span>
+                    {item.isFeatured && <span className={styles.badge} style={{marginLeft: '0.5rem'}}>Featured</span>}
+                  </div>
                 </div>
                 <div className={styles.itemActions}>
                   <button onClick={() => editItem(item)} className={styles.btnOutline}>Edit</button>

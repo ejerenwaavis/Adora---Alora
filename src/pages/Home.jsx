@@ -1,4 +1,5 @@
 import Hero from '../components/home/Hero.jsx';
+import Intro from '../components/home/Intro.jsx';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import Spotlight from '../components/home/Spotlight.jsx';
 import FashionLayers from '../components/home/FashionLayers.jsx';
@@ -10,6 +11,7 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <Intro />
       <ExploreDoors />
 
       {/* Movement Spotlight */}

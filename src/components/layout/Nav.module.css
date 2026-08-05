@@ -81,6 +81,32 @@
   color: var(--taupe);
   letter-spacing: 0.05em;
 }
+.navSignIn {
+  font-family: var(--f-body);
+  font-size: var(--text-sm);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--cocoa);
+  position: relative;
+  padding: 4px 0;
+  transition: color var(--dur-fast) var(--ease);
+}
+.navSignIn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: var(--rust);
+  transition: width var(--dur-normal) var(--ease);
+}
+.navSignIn:hover {
+  color: var(--rust);
+}
+.navSignIn:hover::after {
+  width: 100%;
+}
 
 /* ── User menu ───────────────────────────────────────────────────────────────── */
 .userMenu { position: relative; }

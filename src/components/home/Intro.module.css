@@ -1,0 +1,42 @@
+.intro {
+  padding: 65px 0 45px;
+}
+
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+  text-align: center;
+  position: relative;
+}
+
+.quoteMark {
+  font-family: var(--f-script);
+  font-size: 64px;
+  color: var(--gold);
+  display: block;
+  margin-bottom: -6px;
+}
+
+.text {
+  font-family: var(--f-display);
+  font-size: clamp(21px, 2.6vw, 28px);
+  line-height: 1.55;
+  color: var(--cocoa-deep);
+  font-weight: 400;
+}
+
+.sign {
+  margin-top: 26px;
+  font-family: var(--f-script);
+  font-size: 24px;
+  color: var(--rust);
+}
+
+.signSub {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin-top: 4px;
+}

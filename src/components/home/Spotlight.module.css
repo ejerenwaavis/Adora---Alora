@@ -1,5 +1,9 @@
 .spotlight {
-  padding: 60px 0;
+  padding: 95px 0 80px;
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  scroll-margin-top: 80px;
 }
 .wrap {
   max-width: var(--max-width);

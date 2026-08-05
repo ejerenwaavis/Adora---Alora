@@ -14,6 +14,8 @@ const VenueSpace      = require('../models/VenueSpace');
 const EventRecord     = require('../models/EventRecord');
 const ClassType       = require('../models/ClassType');
 const Instructor      = require('../models/Instructor');
+const Setting         = require('../models/Setting');
+const CreditPack      = require('../models/CreditPack');
 
 // CMS routes — content_editor or admin
 router.use(requireAuth);
@@ -48,6 +50,74 @@ router.patch('/announcements/:id', async (req, res) => {
 router.delete('/announcements/:id', async (req, res) => {
   try {
     const item = await AnnouncementBar.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ==========================================================================
+   SETTINGS
+   ========================================================================== */
+router.get('/settings', async (req, res) => {
+  try {
+    const items = await Setting.find().sort({ key: 1 });
+    res.json(items);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/settings', async (req, res) => {
+  try {
+    const item = new Setting(req.body);
+    await item.save();
+    res.status(201).json(item);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.patch('/settings/:id', async (req, res) => {
+  try {
+    const item = await Setting.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json(item);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.delete('/settings/:id', async (req, res) => {
+  try {
+    const item = await Setting.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Deleted successfully' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ==========================================================================
+   CREDIT PACKS
+   ========================================================================== */
+router.get('/credit-packs', async (req, res) => {
+  try {
+    const items = await CreditPack.find().sort({ priceKobo: 1 });
+    res.json(items);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/credit-packs', async (req, res) => {
+  try {
+    const item = new CreditPack(req.body);
+    await item.save();
+    res.status(201).json(item);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.patch('/credit-packs/:id', async (req, res) => {
+  try {
+    const item = await CreditPack.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!item) return res.status(404).json({ error: 'Not found' });
+    res.json(item);
+  } catch (err) { res.status(400).json({ error: err.message }); }
+});
+
+router.delete('/credit-packs/:id', async (req, res) => {
+  try {
+    const item = await CreditPack.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -172,23 +242,52 @@ router.get('/fashion-items', async (req, res) => {
   try { res.json(await FashionItem.find().populate('layer').sort({ sortOrder: 1 })); } 
   catch (err) { res.status(500).json({ error: err.message }); }
 });
-router.post('/fashion-items', upload.single('image'), async (req, res) => {
+router.post('/fashion-items', upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.file) data.image = req.file.path;
-    if (data.sizes) data.sizes = data.sizes.split(',').map(s => s.trim());
-    if (data.colors) data.colors = data.colors.split(',').map(c => c.trim());
+    if (req.files && req.files.length > 0) {
+      data.images = req.files.map(f => f.path);
+    }
+    if (data.sizes && typeof data.sizes === 'string') data.sizes = data.sizes.split(',').map(s => s.trim());
+    if (data.colors && typeof data.colors === 'string') data.colors = data.colors.split(',').map(c => c.trim());
+    if (data.existingImages) {
+      const existing = Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages];
+      data.images = [...(data.images || []), ...existing];
+    }
+    const existingItem = await FashionItem.findOne({ slug: data.slug });
+    if (existingItem) {
+      return res.status(400).json({ error: 'A fashion item with this slug already exists.' });
+    }
+
     const item = new FashionItem(data);
     await item.save();
     res.status(201).json(await item.populate('layer'));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
-router.patch('/fashion-items/:id', upload.single('image'), async (req, res) => {
+router.patch('/fashion-items/:id', upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.file) data.image = req.file.path;
+    
+    // Combine existing images (URLs) + newly uploaded images (files)
+    let finalImages = [];
+    if (data.existingImages) {
+      finalImages = Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages];
+    }
+    if (req.files && req.files.length > 0) {
+      finalImages = finalImages.concat(req.files.map(f => f.path));
+    }
+    data.images = finalImages;
+
     if (data.sizes && typeof data.sizes === 'string') data.sizes = data.sizes.split(',').map(s => s.trim());
     if (data.colors && typeof data.colors === 'string') data.colors = data.colors.split(',').map(c => c.trim());
+    
+    if (data.slug) {
+      const existingItem = await FashionItem.findOne({ slug: data.slug, _id: { $ne: req.params.id } });
+      if (existingItem) {
+        return res.status(400).json({ error: 'A fashion item with this slug already exists.' });
+      }
+    }
+
     const item = await FashionItem.findByIdAndUpdate(req.params.id, data, { new: true }).populate('layer');
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }

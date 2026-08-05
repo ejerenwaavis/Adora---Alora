@@ -10,6 +10,7 @@ export default defineConfig({
 
   // Vite root is /src — index.html lives there
   root: './src',
+  publicDir: 'public',
 
   build: {
     outDir: '../public_html',

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css'; // We will create this shared css module next
 
 export default function AnnouncementCMS() {
   const { authFetch } = useAuth();
+  const { confirmAction } = useModal();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ message: '', linkText: '', linkUrl: '', isActive: true });
@@ -37,12 +39,13 @@ export default function AnnouncementCMS() {
     } catch (err) { console.error(err); }
   }
 
-  async function handleDelete(id) {
-    if (!window.confirm('Delete this announcement?')) return;
-    try {
-      const res = await authFetch(`/api/cms/announcements/${id}`, { method: 'DELETE' });
-      if (res.ok) loadItems();
-    } catch (err) { console.error(err); }
+  function handleDelete(id) {
+    confirmAction('Delete Announcement', 'Are you sure you want to delete this announcement?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/announcements/${id}`, { method: 'DELETE' });
+        if (res.ok) loadItems();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editItem(item) {

@@ -1,22 +1,28 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css';
 
 export default function EventsCMS() {
   const { authFetch } = useAuth();
+  const { confirmAction } = useModal();
   const [venues, setVenues] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const [venueForm, setVenueForm] = useState({ name: '', slug: '', description: '', capacity: 0, hourlyRateKobo: 0, features: '', sortOrder: 0, isActive: true });
-  const [eventForm, setEventForm] = useState({ 
+  const defaultVenueForm = { name: '', slug: '', description: '', capacity: 0, hourlyRateKobo: 0, features: '', sortOrder: 0, isActive: true, newGallery: [], existingGallery: [] };
+  const defaultEventForm = { 
     title: '', slug: '', description: '', shortDescription: '', 
     organiser: 'Adora & Alora', bookingDestination: 'internal', externalUrl: '', externalOrganizerCta: '',
     startDate: '', endDate: '', location: '', venueSpace: '',
     capacity: 0, ticketsSold: 0, priceKobo: 0, isFree: false,
-    status: 'draft', isFeatured: false
-  });
+    status: 'draft', isFeatured: false,
+    coverImage: null, existingCoverImage: ''
+  };
+
+  const [venueForm, setVenueForm] = useState(defaultVenueForm);
+  const [eventForm, setEventForm] = useState(defaultEventForm);
   
   const [editingVenueId, setEditingVenueId] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
@@ -42,30 +48,39 @@ export default function EventsCMS() {
     try {
       const url = editingVenueId ? `/api/cms/venue-spaces/${editingVenueId}` : '/api/cms/venue-spaces';
       const method = editingVenueId ? 'PATCH' : 'POST';
-      const payload = {
-        ...venueForm,
-        features: typeof venueForm.features === 'string' ? venueForm.features.split(',').map(s=>s.trim()).filter(Boolean) : venueForm.features
-      };
       
+      const formData = new FormData();
+      formData.append('name', venueForm.name);
+      formData.append('slug', venueForm.slug);
+      formData.append('description', venueForm.description);
+      formData.append('capacity', venueForm.capacity);
+      formData.append('hourlyRateKobo', venueForm.hourlyRateKobo);
+      formData.append('features', venueForm.features);
+      formData.append('sortOrder', venueForm.sortOrder);
+      formData.append('isActive', venueForm.isActive);
+
+      venueForm.existingGallery.forEach(img => formData.append('existingGallery', img));
+      venueForm.newGallery.forEach(file => formData.append('gallery', file));
+
       const res = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
       });
       if (res.ok) {
-        setVenueForm({ name: '', slug: '', description: '', capacity: 0, hourlyRateKobo: 0, features: '', sortOrder: 0, isActive: true });
+        setVenueForm(defaultVenueForm);
         setEditingVenueId(null);
         loadData();
       }
     } catch (err) { console.error(err); }
   }
 
-  async function handleVenueDelete(id) {
-    if (!window.confirm('Delete venue space?')) return;
-    try {
-      const res = await authFetch(`/api/cms/venue-spaces/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData();
-    } catch (err) { console.error(err); }
+  function handleVenueDelete(id) {
+    confirmAction('Delete Venue Space', 'Are you sure you want to delete this venue space?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/venue-spaces/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editVenue(venue) {
@@ -73,9 +88,30 @@ export default function EventsCMS() {
     setVenueForm({ 
       name: venue.name, slug: venue.slug, description: venue.description || '', 
       capacity: venue.capacity, hourlyRateKobo: venue.hourlyRateKobo, 
-      features: venue.features?.join(', ') || '', sortOrder: venue.sortOrder, isActive: venue.isActive 
+      features: venue.features?.join(', ') || '', sortOrder: venue.sortOrder, isActive: venue.isActive,
+      existingGallery: venue.gallery || [], newGallery: []
     });
     setActiveTab('venues');
+  }
+
+  function moveVenueExistingImage(index, dir) {
+    const newEx = [...venueForm.existingGallery];
+    if (dir === -1 && index > 0) {
+      [newEx[index-1], newEx[index]] = [newEx[index], newEx[index-1]];
+    } else if (dir === 1 && index < newEx.length - 1) {
+      [newEx[index], newEx[index+1]] = [newEx[index+1], newEx[index]];
+    }
+    setVenueForm({...venueForm, existingGallery: newEx});
+  }
+
+  function moveVenueNewImage(index, dir) {
+    const newImg = [...venueForm.newGallery];
+    if (dir === -1 && index > 0) {
+      [newImg[index-1], newImg[index]] = [newImg[index], newImg[index-1]];
+    } else if (dir === 1 && index < newImg.length - 1) {
+      [newImg[index], newImg[index+1]] = [newImg[index+1], newImg[index]];
+    }
+    setVenueForm({...venueForm, newGallery: newImg});
   }
 
   // Events
@@ -85,37 +121,54 @@ export default function EventsCMS() {
       const url = editingEventId ? `/api/cms/events/${editingEventId}` : '/api/cms/events';
       const method = editingEventId ? 'PATCH' : 'POST';
       
-      const payload = { ...eventForm };
-      // Handle the external URL dependency
-      if (payload.bookingDestination === 'internal') {
-        payload.externalUrl = '';
-        payload.externalOrganizerCta = '';
-      }
+      const formData = new FormData();
+      formData.append('title', eventForm.title);
+      formData.append('slug', eventForm.slug);
+      formData.append('description', eventForm.description);
+      formData.append('shortDescription', eventForm.shortDescription);
+      formData.append('organiser', eventForm.organiser);
+      formData.append('bookingDestination', eventForm.bookingDestination);
       
+      if (eventForm.bookingDestination === 'external_url') {
+        formData.append('externalUrl', eventForm.externalUrl);
+        formData.append('externalOrganizerCta', eventForm.externalOrganizerCta);
+      } else {
+        formData.append('externalUrl', '');
+        formData.append('externalOrganizerCta', '');
+      }
+
+      formData.append('startDate', eventForm.startDate);
+      formData.append('endDate', eventForm.endDate);
+      formData.append('location', eventForm.location);
+      formData.append('venueSpace', eventForm.venueSpace);
+      formData.append('capacity', eventForm.capacity);
+      formData.append('ticketsSold', eventForm.ticketsSold);
+      formData.append('priceKobo', eventForm.priceKobo);
+      formData.append('isFree', eventForm.isFree);
+      formData.append('status', eventForm.status);
+      formData.append('isFeatured', eventForm.isFeatured);
+      
+      if (eventForm.coverImage) formData.append('coverImage', eventForm.coverImage);
+
       const res = await authFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: formData
       });
       if (res.ok) {
-        setEventForm({ 
-          title: '', slug: '', description: '', shortDescription: '', 
-          organiser: 'Adora & Alora', bookingDestination: 'internal', externalUrl: '', externalOrganizerCta: '',
-          startDate: '', endDate: '', location: '', venueSpace: '',
-          capacity: 0, ticketsSold: 0, priceKobo: 0, isFree: false, status: 'draft', isFeatured: false
-        });
+        setEventForm(defaultEventForm);
         setEditingEventId(null);
         loadData();
       }
     } catch (err) { console.error(err); }
   }
 
-  async function handleEventDelete(id) {
-    if (!window.confirm('Delete this event?')) return;
-    try {
-      const res = await authFetch(`/api/cms/events/${id}`, { method: 'DELETE' });
-      if (res.ok) loadData();
-    } catch (err) { console.error(err); }
+  function handleEventDelete(id) {
+    confirmAction('Delete Event', 'Are you sure you want to delete this event?', async () => {
+      try {
+        const res = await authFetch(`/api/cms/events/${id}`, { method: 'DELETE' });
+        if (res.ok) loadData();
+      } catch (err) { console.error(err); }
+    });
   }
 
   function editEvent(evt) {
@@ -127,7 +180,8 @@ export default function EventsCMS() {
       endDate: evt.endDate ? new Date(evt.endDate).toISOString().slice(0, 16) : '', 
       location: evt.location || '', venueSpace: evt.venueSpace?._id || '',
       capacity: evt.capacity || 0, ticketsSold: evt.ticketsSold || 0, priceKobo: evt.priceKobo || 0, 
-      isFree: evt.isFree || false, status: evt.status, isFeatured: evt.isFeatured || false
+      isFree: evt.isFree || false, status: evt.status, isFeatured: evt.isFeatured || false,
+      existingCoverImage: evt.coverImage || '', coverImage: null
     });
     setActiveTab('events');
   }
@@ -192,9 +246,57 @@ export default function EventsCMS() {
                 </div>
               </div>
 
+              {/* GALLERY UPLOAD */}
+              <div className={styles.field} style={{ borderTop: '1px solid #eaeaea', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <label>Venue Gallery (Up to 5 images)</label>
+                <p style={{fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem'}}>
+                  The first image will be used as the main cover photo for the space.
+                </p>
+                <input type="file" multiple accept="image/*" onChange={e => {
+                  const files = Array.from(e.target.files).slice(0, 5 - venueForm.existingGallery.length - venueForm.newGallery.length);
+                  setVenueForm({...venueForm, newGallery: [...venueForm.newGallery, ...files]});
+                }} />
+                
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+                  {venueForm.existingGallery.map((url, i) => (
+                    <div key={`existing-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: i === 0 ? '2px solid var(--gold)' : '1px solid #ccc' }}>
+                      <img src={url} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                      {i === 0 && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>MAIN</span>}
+                      
+                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
+                        <button type="button" onClick={() => moveVenueExistingImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
+                        <button type="button" onClick={() => {
+                          const newEx = [...venueForm.existingGallery];
+                          newEx.splice(i, 1);
+                          setVenueForm({...venueForm, existingGallery: newEx});
+                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
+                        <button type="button" onClick={() => moveVenueExistingImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {venueForm.newGallery.map((file, i) => (
+                    <div key={`new-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: (i === 0 && venueForm.existingGallery.length === 0) ? '2px solid var(--gold)' : '1px solid #ccc', opacity: 0.8 }}>
+                      <img src={URL.createObjectURL(file)} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                      {(i === 0 && venueForm.existingGallery.length === 0) && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>MAIN</span>}
+                      
+                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
+                        <button type="button" onClick={() => moveVenueNewImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
+                        <button type="button" onClick={() => {
+                            const newImg = [...venueForm.newGallery];
+                            newImg.splice(i, 1);
+                            setVenueForm({...venueForm, newGallery: newImg});
+                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
+                        <button type="button" onClick={() => moveVenueNewImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingVenueId ? 'Update Venue' : 'Create Venue'}</button>
-                {editingVenueId && <button type="button" onClick={() => { setEditingVenueId(null); setVenueForm({name:'', slug:'', description:'', capacity:0, hourlyRateKobo:0, features:'', sortOrder:0, isActive:true}); }} className={styles.btnGhost}>Cancel</button>}
+                {editingVenueId && <button type="button" onClick={() => { setEditingVenueId(null); setVenueForm(defaultVenueForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
@@ -202,8 +304,11 @@ export default function EventsCMS() {
           <div className={styles.list}>
             {venues.map(v => (
               <div key={v._id} className={`${styles.listItem} ${!v.isActive ? styles.inactive : ''}`}>
-                <div className={styles.itemContent}>
-                  <strong>{v.name}</strong> <span className={styles.meta}>(Cap: {v.capacity})</span>
+                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {v.gallery && v.gallery.length > 0 && <img src={v.gallery[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                  <div>
+                    <strong>{v.name}</strong> <span className={styles.meta}>(Cap: {v.capacity})</span>
+                  </div>
                 </div>
                 <div className={styles.itemActions}>
                   <button onClick={() => editVenue(v)} className={styles.btnOutline}>Edit</button>
@@ -282,6 +387,23 @@ export default function EventsCMS() {
                   <input type="text" value={eventForm.location} onChange={e => setEventForm({...eventForm, location: e.target.value})} placeholder="e.g. Lagos, Nigeria" />
                 </div>
               </div>
+
+              {/* EVENT COVER IMAGE */}
+              <div className={styles.field} style={{ borderTop: '1px solid #eaeaea', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+                <label>Event Cover Image</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {(eventForm.coverImage || eventForm.existingCoverImage) && (
+                    <img 
+                      src={eventForm.coverImage ? URL.createObjectURL(eventForm.coverImage) : eventForm.existingCoverImage} 
+                      alt="Preview" 
+                      style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '4px' }} 
+                    />
+                  )}
+                  <input type="file" accept="image/*" onChange={e => {
+                    if (e.target.files[0]) setEventForm({...eventForm, coverImage: e.target.files[0]});
+                  }} />
+                </div>
+              </div>
               
               <div className={styles.row}>
                 <div className={styles.field}>
@@ -303,7 +425,7 @@ export default function EventsCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingEventId ? 'Update Event' : 'Create Event'}</button>
-                {editingEventId && <button type="button" onClick={() => { setEditingEventId(null); setEventForm({...eventForm, title:''}); }} className={styles.btnGhost}>Cancel</button>}
+                {editingEventId && <button type="button" onClick={() => { setEditingEventId(null); setEventForm(defaultEventForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
@@ -311,12 +433,15 @@ export default function EventsCMS() {
           <div className={styles.list}>
             {events.map(evt => (
               <div key={evt._id} className={`${styles.listItem} ${evt.status === 'draft' ? styles.inactive : ''}`}>
-                <div className={styles.itemContent}>
-                  <strong>{evt.title}</strong> 
-                  <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
-                    {new Date(evt.startDate).toLocaleDateString()} • {evt.organiser}
-                  </span>
-                  <span className={styles.badge} style={{marginLeft: '0.5rem'}}>{evt.status}</span>
+                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {evt.coverImage && <img src={evt.coverImage} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                  <div>
+                    <strong>{evt.title}</strong> 
+                    <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
+                      {new Date(evt.startDate).toLocaleDateString()} • {evt.organiser}
+                    </span>
+                    <span className={styles.badge} style={{marginLeft: '0.5rem'}}>{evt.status}</span>
+                  </div>
                 </div>
                 <div className={styles.itemActions}>
                   <button onClick={() => editEvent(evt)} className={styles.btnOutline}>Edit</button>
