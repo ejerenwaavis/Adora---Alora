@@ -15,7 +15,7 @@ const fashionItemSchema = new mongoose.Schema({
   currency:         { type: String, default: 'NGN' },
   isAvailableInStore:{ type: Boolean, default: true },
   availabilityNote: { type: String },       // "In-store only", "Limited stock"
-  collection:       { type: String },
+  collectionName:   { type: String },
   sortOrder:        { type: Number, default: 0 },
   isFeatured:       { type: Boolean, default: false },
   isActive:         { type: Boolean, default: true },

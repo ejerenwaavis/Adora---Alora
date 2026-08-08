@@ -1,246 +1,120 @@
 .hero {
-  padding: 78px 0 40px;
   position: relative;
-  overflow: hidden;
-}
-
-/* ── Background Video Wrap ── */
-.videoWrap {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 74%;
-  min-height: 520px;
-  z-index: 1;
-  overflow: hidden;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 98%);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 82%, rgba(0, 0, 0, 0) 98%);
-}
-
-.bgVideo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-  filter: none;
-  transform: none;
-}
-
-.videoOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    rgba(15, 10, 6, 0.60) 0%,
-    rgba(15, 10, 6, 0.30) 35%,
-    transparent 60%,
-    transparent 100%
-  );
-}
-
-/* ── Left-Aligned Content ── */
-.heroContent {
-  text-align: left;
-  max-width: 680px;
-  margin-bottom: 50px;
-  position: relative;
-  z-index: 2;
-}
-
-.heroScript {
-  font-family: var(--f-script);
-  font-size: 34px;
-  color: var(--gold);
-  margin-bottom: 4px;
-  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.8);
-}
-
-.heroTitle {
-  font-size: clamp(38px, 5.2vw, 76px);
-  line-height: 1.04;
-  max-width: 680px;
-  margin: 6px 0 22px;
-  font-weight: 500;
-  color: var(--paper);
-  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.85);
-  text-align: left;
-}
-
-.heroTitle em {
-  font-style: italic;
-  color: var(--gold);
-  font-weight: 400;
-}
-
-.keyword {
-  position: relative;
-  display: inline-block;
-  color: var(--paper);
-  transition: color 0.4s ease, text-shadow 0.4s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.keyword::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0px;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--gold), #f7e0b5);
-  border-radius: 2px;
-  opacity: 0;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-  box-shadow: 0 0 14px rgba(200, 155, 74, 0.9);
-}
-
-.activeKeyword {
-  color: var(--gold) !important;
-  text-shadow: 0 0 24px rgba(200, 155, 74, 0.85), 0 4px 30px rgba(0, 0, 0, 0.95) !important;
-  transform: translateY(-1px) scale(1.03);
-}
-
-.activeKeyword::after {
-  opacity: 1;
-  transform: scaleX(1);
-}
-
-.heroSub {
-  max-width: 520px;
-  margin: 0 0 32px;
-  color: rgba(252, 248, 240, 0.95);
-  font-size: var(--text-md);
-  font-weight: 300;
-  line-height: 1.6;
-  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.85);
-  text-align: left;
-}
-
-.heroCtas {
-  display: flex;
-  gap: 16px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-
-.exploreBtn {
-  border-color: rgba(252, 248, 240, 0.45) !important;
-  color: var(--paper) !important;
-}
-
-.exploreBtn:hover {
-  background: var(--paper) !important;
-  color: var(--cocoa-deep) !important;
-}
-
-.scrollIndicator {
-  position: absolute;
-  right: 16px;
-  bottom: 340px;
-  z-index: 3;
-  font-family: var(--f-body);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(252, 248, 240, 0.7);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 20px;
+  padding: 80px var(--gutter) 90px;
+  max-width: var(--max-width);
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {
-  .scrollIndicator { display: none; }
+  .hero {
+    grid-template-columns: 1fr;
+    padding-bottom: 60px;
+  }
 }
 
-.doorsStage {
-  background: rgba(252, 248, 240, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 44px 20px 30px;
-  box-shadow: var(--shadow-lg);
-  position: relative;
-  z-index: 3;
+.heroCopy h1 {
+  font-family: var(--f-display);
+  font-size: clamp(38px, 5vw, 60px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  max-width: 560px;
+  font-weight: 500;
+  color: var(--cocoa);
 }
-.doorsCaption {
-  text-align: center;
-  font-size: var(--text-xs);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--taupe);
-  margin-top: 18px;
-}
-.doorsCaption .script {
-  font-family: var(--f-script);
+
+.heroCopy p {
+  color: var(--cocoa-deep);
+  max-width: 420px;
+  margin: 22px 0 32px;
   font-size: var(--text-base);
-  letter-spacing: 0;
-  text-transform: none;
-  margin-left: 6px;
 }
 
-/* ── Interactive 3D SVG Door Animations ── */
-.doorLink {
-  cursor: pointer;
-  display: inline-block;
-  outline: none;
+.eyebrow {
+  font-family: var(--f-display);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: .03em;
+  color: var(--forest);
+  font-size: var(--text-sm);
+  margin-bottom: 10px;
+  display: block;
 }
 
-.doorGroup {
-  transition: all 0.3s var(--ease);
+.heroActions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
-.doorLabel {
-  font-family: var(--f-body);
+.heroVisual {
+  position: relative;
+  height: 520px;
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(65,79,54,0.35), transparent 55%),
+    linear-gradient(155deg, #C9B792 0%, #A98F65 45%, #6E5A3E 100%);
+  overflow: hidden;
+}
+
+.heroVisual::after {
+  content: attr(data-caption);
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
   font-size: 11px;
-  letter-spacing: 2px;
-  fill: #2B2015;
-  text-anchor: middle;
-  transition: all 0.3s var(--ease);
-}
-
-.enterText {
+  color: rgba(248, 242, 231, 0.75);
+  letter-spacing: 0.03em;
   font-family: var(--f-body);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  fill: var(--paper);
-  text-anchor: middle;
-  font-weight: 600;
-  opacity: 0.95;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.doorLeafWrap1,
-.doorLeafWrap2,
-.doorLeafWrap3,
-.doorLeafWrap4 {
-  transition: transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s var(--ease);
+.heroImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.doorLeafWrap1 { transform-origin: 103px 180px; }
-.doorLeafWrap2 { transform-origin: 263px 180px; }
-.doorLeafWrap3 { transform-origin: 423px 180px; }
-.doorLeafWrap4 { transform-origin: 583px 180px; }
-
-/* Hover Effects — 3D Door Swing & Glow */
-.doorLink:hover .doorLeafWrap1,
-.doorLink:hover .doorLeafWrap2,
-.doorLink:hover .doorLeafWrap3,
-.doorLink:hover .doorLeafWrap4 {
-  transform: perspective(600px) rotateY(-68deg) scaleX(0.92);
-  filter: drop-shadow(-6px 4px 12px rgba(42, 29, 20, 0.38));
+@media (max-width: 900px) {
+  .heroVisual {
+    height: 320px;
+  }
 }
 
-.doorLink:hover .doorLabel {
-  fill: var(--rust);
-  font-weight: 600;
+/* Local buttons, to match the simple template perfectly */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border: 1px solid var(--cocoa);
+  transition: all .25s ease;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--f-body);
 }
 
-.doorLink:hover .archFrame {
-  stroke: var(--rust);
-  stroke-width: 3px;
+.btnSolid {
+  background: var(--cocoa);
+  color: var(--cream);
 }
 
-@media (max-width: 560px) {
-  .hero { padding-top: 50px; }
+.btnSolid:hover {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--cream);
+}
+
+.btnOutline {
+  background: transparent;
+  color: var(--cocoa);
+}
+
+.btnOutline:hover {
+  background: var(--cocoa);
+  color: var(--cream);
 }
