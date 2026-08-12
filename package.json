@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "Adora & Alora — curated lifestyle house. Full-stack enterprise website.",
   "main": "app.js",
-  "type": "module",
   "scripts": {
     "start": "node app.js",
     "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"node --watch app.js\" \"node node_modules/vite/bin/vite.js --port 5175\"",
