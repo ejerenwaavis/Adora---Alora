@@ -1,10 +1,308 @@
-// Phase 2 implementation
+import React, { useState, useEffect } from 'react';
+import styles from './Fashion.module.css';
+
+// Utility to determine if a color is light or dark to set text contrast
+function getLuminance(hex) {
+  if (!hex) return 0.5;
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const r = parseInt(hex.substring(0, 2), 16) / 255;
+  const g = parseInt(hex.substring(2, 4), 16) / 255;
+  const b = parseInt(hex.substring(4, 6), 16) / 255;
+  
+  const a = [r, g, b].map(v => {
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+}
+
 export default function Fashion() {
+  const [data, setData] = useState([]);
+  const [activeLayer, setActiveLayer] = useState(null);
+  const [activeItem, setActiveItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [displayItem, setDisplayItem] = useState(null);
+  const [displayImageIndex, setDisplayImageIndex] = useState(0);
+  const [animState, setAnimState] = useState('idle');
+  const [showCatalog, setShowCatalog] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/fashion')
+      .then(res => res.json())
+      .then(json => {
+        setData(json);
+        if (json.length > 0) {
+          setActiveLayer(json[0].layer);
+          if (json[0].items && json[0].items.length > 0) {
+            setActiveItem(json[0].items[0]);
+          }
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch fashion data', err);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleTabClick = (layerObj) => {
+    setActiveLayer(layerObj.layer);
+    setShowCatalog(false); // Reset catalog view when switching tabs
+    if (layerObj.items && layerObj.items.length > 0) {
+      setActiveItem(layerObj.items[0]);
+    } else {
+      setActiveItem(null);
+    }
+  };
+
+  const currentLayerData = data.find(d => d.layer._id === activeLayer?._id);
+  const items = currentLayerData ? currentLayerData.items : [];
+
+  // Dynamic colors
+  const primaryColor = activeItem?.colors?.[0] || '#111111';
+  const luminance = getLuminance(primaryColor);
+  const isLightColor = luminance > 0.5;
+  
+  // High contrast text mapping
+  const textColor = isLightColor ? '#1a1a1a' : '#ffffff';
+  const inverseTextColor = isLightColor ? '#ffffff' : '#1a1a1a';
+  const textColorMuted = isLightColor ? 'rgba(20,20,20,0.6)' : 'rgba(220,203,178,0.7)';
+  const borderMuted = isLightColor ? 'rgba(20,20,20,0.2)' : 'rgba(220,203,178,0.2)';
+  const bgMuted = isLightColor ? 'rgba(20,20,20,0.05)' : 'rgba(220,203,178,0.1)';
+
+  const bgGradient = isLightColor 
+    ? `linear-gradient(160deg, ${primaryColor} 0%, rgba(240,240,240,0.9) 50%, rgba(220,220,220,0.95) 100%)`
+    : `linear-gradient(160deg, ${primaryColor} 0%, rgba(20,20,20,0.9) 50%, rgba(10,10,10,0.95) 100%)`;
+
+  const triggerItemChange = (item) => {
+    if (activeItem?._id === item._id) return;
+    
+    // Update the shell state immediately for background change
+    setActiveItem(item);
+    
+    // Animate the image out, then update image, then animate in
+    setAnimState('out');
+    setTimeout(() => {
+      setDisplayItem(item);
+      setDisplayImageIndex(0); // Reset to first image
+      setAnimState('in');
+      setTimeout(() => setAnimState('idle'), 500);
+    }, 400); // Wait for flyOut to complete
+  };
+
+  const formatPrice = (kobo) => {
+    const naira = kobo / 100;
+    return `₦${(naira / 1000)}k`; // e.g. N129k
+  };
+
+  if (loading) {
+    return <div style={{ padding: '120px', textAlign: 'center', color: '#111', background: '#F6EEE0', minHeight: '100vh' }}>Loading collections...</div>;
+  }
+
+  // Use a fallback for the very first load when animating
+  const currentRenderItem = displayItem || activeItem;
+
   return (
-    <div style={{ padding: '8rem var(--gutter)', textAlign: 'center' }}>
-      <div className="eyebrow centered">Phase 2</div>
-      <h1 style={{ fontSize: '3rem', marginTop: '1rem' }}>Fashion</h1>
-      <p style={{ color: 'var(--cocoa)', marginTop: '1rem' }}>Full page implementation in Phase 2.</p>
+    <div className={styles.fashionPage}>
+      <div className={styles.contentWrap}>
+        {activeItem ? (
+          <>
+            <div 
+              className={styles.vcShell}
+              style={{ 
+                '--accent-color': primaryColor,
+                '--bg-gradient': bgGradient,
+                '--text-color': textColor,
+                '--inverse-text-color': inverseTextColor,
+                '--text-muted': textColorMuted,
+                '--border-muted': borderMuted,
+                '--bg-muted': bgMuted
+              }}
+            >
+              <div className={styles.vcGlow} />
+              <div className={styles.vcGlow2} />
+              
+              <div className={styles.vcTabs}>
+                {data.map((d) => (
+                  <button 
+                    key={d.layer._id}
+                    className={`${styles.vcTab} ${activeLayer?._id === d.layer._id ? styles.vcTabActive : ''}`}
+                    onClick={() => handleTabClick(d)}
+                  >
+                    {d.layer.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className={styles.vcBody}>
+                {/* Left Column: Info */}
+                <div className={styles.vcInfo}>
+                  <div className={styles.vcSeller}>{currentRenderItem?.brand || currentRenderItem?.sellerName} — Adora Archive</div>
+                  <h2 className={styles.vcName}>{currentRenderItem?.name}</h2>
+                  <div className={styles.vcLayerBadge}>
+                    <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
+                    {activeLayer?.name || 'Archive'} Layer
+                  </div>
+                  <p className={styles.vcDesc}>{currentRenderItem?.description}</p>
+                  <div className={styles.vcTagline}>"Confidence, wrapped in warmth."</div>
+                  
+                  <div className={styles.vcPriceRow}>
+                    <div className={styles.vcPrice}>{currentRenderItem ? formatPrice(currentRenderItem.displayPriceKobo) : ''}</div>
+                    <div className={styles.vcPriceSub}>in-store price</div>
+                  </div>
+                  
+                  {currentRenderItem?.raireListingUrl ? (
+                    <a href={currentRenderItem.raireListingUrl} target="_blank" rel="noopener noreferrer" className={styles.vcBtn}>
+                      View on Raireapp &rarr;
+                    </a>
+                  ) : (
+                    <button className={styles.vcBtn}>
+                      Reserve Item &rarr;
+                    </button>
+                  )}
+                </div>
+
+                {/* Center Column: Image (Arch Frame) */}
+                <div className={styles.vcCenter}>
+                  <div className={styles.vcHeroFrame}>
+                    <div className={styles.vcFrameGlow} />
+                    {currentRenderItem?.images && (
+                      <img 
+                        src={currentRenderItem.images[displayImageIndex]} 
+                        alt={currentRenderItem.name} 
+                        className={`${styles.mainImage} ${animState === 'out' ? styles.flyOut : ''} ${animState === 'in' ? styles.flyIn : ''}`} 
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Image thumbnails (if multiple) */}
+                  <div className={styles.vcCaption}>
+                    {currentRenderItem?.images && currentRenderItem.images.length > 1 ? (
+                      currentRenderItem.images.map((img, idx) => (
+                        <img 
+                          key={idx}
+                          src={img} 
+                          className={`${styles.subThumb} ${displayImageIndex === idx ? styles.subThumbOn : ''}`}
+                          onClick={() => setDisplayImageIndex(idx)}
+                          alt="angle"
+                        />
+                      ))
+                    ) : (
+                      <span>"Confidence, wrapped in warmth."</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column: Thumbs & Sizes */}
+                <div className={styles.vcRight}>
+                  <div className={styles.vcThumbsTitle}>Also in this drop</div>
+                  <div className={styles.vcThumbRow}>
+                    {items.map(item => (
+                      <div key={item._id} className={styles.thumbWrapper}>
+                        <div 
+                          className={`${styles.vcThumb} ${activeItem._id === item._id ? styles.vcThumbOn : ''}`}
+                          onClick={() => {
+                            triggerItemChange(item);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                        >
+                          <img src={item.images?.[0]} alt={item.name} className={styles.thumbImg} />
+                        </div>
+                        <div className={styles.vcThumbName}>{item.name}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {currentRenderItem?.sizes && currentRenderItem.sizes.length > 0 && (
+                    <div className={styles.vcSizesBlock}>
+                      <div className={styles.vcSizeLbl2}>Choose size</div>
+                      <div className={styles.vcSzRow}>
+                        {currentRenderItem.sizes.map((size, idx) => (
+                          <div key={idx} className={styles.vcSz2}>{size}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* View Full Catalog Section */}
+            <div className={styles.catalogSection}>
+              <button 
+                className={styles.catalogBtn}
+                onClick={() => setShowCatalog(!showCatalog)}
+              >
+                {showCatalog ? 'Hide Collection ↑' : 'View Full Collection ↓'}
+              </button>
+
+              {showCatalog && (
+                <div className={styles.catalogGrid}>
+                  {items.map(item => (
+                    <div 
+                      key={item._id} 
+                      className={styles.catalogItem}
+                      onClick={() => {
+                        triggerItemChange(item);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      <div className={styles.catalogImgWrapper}>
+                        <img src={item.images?.[0]} alt={item.name} className={styles.catalogImg} />
+                      </div>
+                      <div className={styles.catalogInfo}>
+                        <span className={styles.catalogName}>{item.name}</span>
+                        <span className={styles.catalogPrice}>{formatPrice(item.displayPriceKobo)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Editorial Information Sections */}
+            <div className={styles.infoSections}>
+              {/* Raire Featured Sellers */}
+              <div className={styles.raireSection}>
+                <div className={styles.raireHeader}>
+                  <div>
+                    <h2 className={styles.raireTitle}>Raire Featured Sellers</h2>
+                    <p className={styles.raireSub}>
+                      Up to five rotating independent sellers, selected through our monthly quota 
+                      and strict curation criteria. Discover the leading voices in our marketplace.
+                    </p>
+                  </div>
+                  <a href="https://raireapp.com/sell" target="_blank" rel="noopener noreferrer" className={styles.raireCta}>
+                    Become a Featured Seller &rarr;
+                  </a>
+                </div>
+
+                <div className={styles.sellersGrid}>
+                  {[
+                    { name: "Oasis Collective", tag: "Contemporary", initial: "O" },
+                    { name: "Terra Vintage", tag: "Archive", initial: "T" },
+                    { name: "Lumina", tag: "Eveningwear", initial: "L" },
+                    { name: "Nova Supply", tag: "Street", initial: "N" },
+                    { name: "Aura Studio", tag: "Jewelry", initial: "A" }
+                  ].map((seller, idx) => (
+                    <div key={idx} className={styles.sellerCard}>
+                      <div className={styles.sellerAvatar}>{seller.initial}</div>
+                      <div>
+                        <div className={styles.sellerName}>{seller.name}</div>
+                        <div className={styles.sellerTag}>{seller.tag}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div style={{ textAlign: 'center', marginTop: '100px', opacity: 0.5 }}>
+            No items available for this collection.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

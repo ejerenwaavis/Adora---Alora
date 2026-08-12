@@ -1,50 +1,33 @@
-import Eyebrow from '../ui/Eyebrow.jsx';
-import Button from '../ui/Button.jsx';
-import Chip from '../ui/Chip.jsx';
+import { Link } from 'react-router-dom';
 import styles from './Spotlight.module.css';
 
 export default function Spotlight({ 
   id, 
-  num, 
   eyebrow, 
   title, 
   desc, 
-  chips = [], 
   ctaTo, 
   ctaText, 
   reverse = false, 
-  visualBackground, 
-  visualSvg,
   imageSrc,
-  style
+  caption
 }) {
   return (
-    <section className={`${styles.spotlight} ${reverse ? styles.reverse : ''}`} id={id} style={style}>
-      <div className={styles.wrap}>
-        {(visualBackground || imageSrc) && (
-          <div className={`${styles.spotVisual} reveal`} style={visualBackground ? { background: visualBackground } : {}}>
-            {imageSrc ? (
-              <img src={imageSrc} alt={title} className={styles.spotImg} />
-            ) : (
-              visualSvg
-            )}
-          </div>
+    <section className={`${styles.spotlight} ${reverse ? styles.reverse : ''}`} id={id}>
+      <div className={styles.spotVisual} data-caption={caption}>
+        {imageSrc ? (
+          <img src={imageSrc} alt={title} className={styles.spotImg} />
+        ) : (
+          <div className={styles.placeholderBg}></div>
         )}
-        <div className={`${styles.spotCopy} reveal`} style={(!visualBackground && !imageSrc) ? { gridColumn: '1 / -1' } : {}}>
-          <Eyebrow num={num} text={eyebrow} />
-          <h2>{title}</h2>
-          <p>{desc}</p>
-          {chips.length > 0 && (
-            <div className={styles.chipRow}>
-              {chips.map((chip, idx) => (
-                <Chip key={idx}>{chip}</Chip>
-              ))}
-            </div>
-          )}
-          {ctaTo && (
-            <Button to={ctaTo} arrow>{ctaText}</Button>
-          )}
-        </div>
+      </div>
+      <div className={styles.spotCopy}>
+        <span className={styles.eyebrow}>{eyebrow}</span>
+        <h3>{title}</h3>
+        <p>{desc}</p>
+        {ctaTo && (
+          <Link to={ctaTo} className={`${styles.btn} ${styles.btnOutline}`}>{ctaText}</Link>
+        )}
       </div>
     </section>
   );

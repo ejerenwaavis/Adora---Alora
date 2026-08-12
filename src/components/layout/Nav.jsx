@@ -4,26 +4,7 @@ import { useAuth }                           from '../../contexts/AuthContext.js
 import styles                                from './Nav.module.css';
 
 /* ─── Monogram Seal (from mockup) ─────────────────────────────────────────── */
-function Seal() {
-  return (
-    <svg width="38" height="38" viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="44" strokeWidth="1.5"
-        className={styles.sealCircle} />
-      <text x="50" y="40" fontFamily="Jost, sans-serif" fontSize="9"
-        letterSpacing="5" textAnchor="middle" fill="currentColor" opacity=".7">
-        ADORA
-      </text>
-      <text x="50" y="57" fontFamily="Beau Rivage, cursive" fontSize="28"
-        textAnchor="middle" fill="currentColor">
-        &amp;
-      </text>
-      <text x="50" y="71" fontFamily="Jost, sans-serif" fontSize="9"
-        letterSpacing="5" textAnchor="middle" fill="currentColor" opacity=".7">
-        ALORA
-      </text>
-    </svg>
-  );
-}
+
 
 /* ─── Nav Links ─────────────────────────────────────────────────────────────── */
 const NAV_LINKS = [
@@ -79,8 +60,7 @@ export default function Nav() {
         <nav className={styles.nav}>
           {/* Brand */}
           <Link to="/" className={styles.brand} aria-label="Adora & Alora — Home">
-            <Seal />
-            <span className={styles.wordmark}>Adora &amp; Alora</span>
+            <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
           </Link>
 
           {/* Desktop nav links */}

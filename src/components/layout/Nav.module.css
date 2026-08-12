@@ -30,16 +30,17 @@
   gap: 12px;
   color: var(--cocoa-deep);
 }
-.sealCircle {
-  stroke: var(--cocoa-deep);
-  stroke-dasharray: 2 4;
-  fill: none;
+.logo { 
+  font-family: var(--f-display); 
+  font-size: 22px; 
+  font-weight: 500; 
+  letter-spacing: .01em; 
+  color: var(--cocoa); 
 }
-.wordmark {
-  font-family: var(--f-script);
-  font-size: 28px;
-  color: var(--cocoa-deep);
-  line-height: 1;
+.logo em { 
+  font-style: italic; 
+  font-weight: 400; 
+  color: var(--forest); 
 }
 
 /* ── Desktop nav links ───────────────────────────────────────────────────────── */
@@ -260,5 +261,5 @@
   .hamburger { display: flex; }
 }
 @media (max-width: 600px) {
-  .wordmark { display: none; }
+  .logo { font-size: 18px; }
 }

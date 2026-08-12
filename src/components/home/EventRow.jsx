@@ -37,7 +37,7 @@ export default function EventRow() {
     <section className={styles.events} id="events">
       <div className="wrap">
         <SectionHead
-          eyebrow="05"
+          eyebrow="Upcoming Events"
           title="Where the house comes together."
         />
 
