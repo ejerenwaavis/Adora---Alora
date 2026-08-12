@@ -20,7 +20,7 @@ const ITEMS = [
     sizes: ['20', '20', '30', '40'],
     colors: ['#A4451F'], // Terracotta / Rust
     brand: 'Numen',
-    images: ['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=600&auto=format&fit=crop'], // Placeholder vest-like
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 12900,
   },
   {
@@ -31,7 +31,7 @@ const ITEMS = [
     sizes: ['S', 'M', 'L'],
     colors: ['#2B3A42'], // Dark Slate
     brand: 'Numen',
-    images: ['https://images.unsplash.com/photo-1551028719-00167b16eac5?q=80&w=600&auto=format&fit=crop'], // Placeholder jacket
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 25000,
   },
   {
@@ -42,7 +42,7 @@ const ITEMS = [
     sizes: ['M', 'L', 'XL'],
     colors: ['#5E5A54'], // Ash Grey
     brand: 'Numen',
-    images: ['https://images.unsplash.com/photo-1520975954732-57dd22299614?q=80&w=600&auto=format&fit=crop'],
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 18900,
   },
   // Terra Items
@@ -54,7 +54,7 @@ const ITEMS = [
     sizes: ['S', 'M', 'L'],
     colors: ['#E3D3B8'], // Beige
     brand: 'Terra',
-    images: ['https://images.unsplash.com/photo-1495385794356-15371f348c31?q=80&w=600&auto=format&fit=crop'],
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 9500,
   },
   // Adora & Alora Items
@@ -66,7 +66,7 @@ const ITEMS = [
     sizes: ['OS'],
     colors: ['#414F36'], // Forest Green
     brand: 'Adora & Alora',
-    images: ['https://images.unsplash.com/photo-1606293926075-69a00dbfde81?q=80&w=600&auto=format&fit=crop'],
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 4500,
   },
   // Raireapp Items
@@ -79,7 +79,7 @@ const ITEMS = [
     colors: ['#6B5240'], // Cocoa
     sellerName: 'LeatherCraft NG',
     raireListingUrl: 'https://raireapp.com/listing/vintage-tote',
-    images: ['https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=600&auto=format&fit=crop'],
+    images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 32000,
   },
 ];

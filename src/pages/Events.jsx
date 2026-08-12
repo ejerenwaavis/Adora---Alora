@@ -12,7 +12,7 @@ const UPCOMING_EVENTS = [
     description: 'Join us for a morning of mindfulness, somatic movement, and a curated plant-based brunch. Connect with like-minded individuals in an intimate setting designed to rejuvenate your spirit.',
     capacity: 20,
     price: '$75',
-    image: 'https://images.unsplash.com/photo-1490818387583-1b5ba45227fa?auto=format&fit=crop&q=80&w=1000'
+    image: '/assets/cafe.jpg'
   },
   {
     slug: 'styling-conversation-archive',
@@ -23,7 +23,7 @@ const UPCOMING_EVENTS = [
     description: 'An exclusive evening exploring the history and styling of vintage archive pieces. Learn how to integrate timeless garments into a modern wardrobe.',
     capacity: 35,
     price: 'Free for Members, $25 Non-Members',
-    image: 'https://images.unsplash.com/photo-1550614000-4b95d4ebf0ae?auto=format&fit=crop&q=80&w=1000'
+    image: '/assets/fashion-1.jpg'
   },
   {
     slug: 'journaling-night',
@@ -34,15 +34,15 @@ const UPCOMING_EVENTS = [
     description: 'A guided journaling session focusing on self-discovery and goal setting for the upcoming season, accompanied by soothing herbal teas and ambient sounds.',
     capacity: 15,
     price: '$30',
-    image: 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&q=80&w=1000'
+    image: '/assets/gathering-2.jpg'
   }
 ];
 
 const PAST_EVENTS = [
-  'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1478147424116-24cb34898ce0?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800',
-  'https://images.unsplash.com/photo-1505236858219-8373dd707522?auto=format&fit=crop&q=80&w=800'
+  '/assets/movement.jpg',
+  '/assets/cafe-2.jpg',
+  '/assets/gathering-2.jpg',
+  '/assets/cafe.jpg'
 ];
 
 export default function Events({ detail }) {
