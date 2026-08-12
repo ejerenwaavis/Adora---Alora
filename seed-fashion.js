@@ -1,4 +1,3 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const FashionLayer = require('./models/FashionLayer');
 const FashionItem = require('./models/FashionItem');
