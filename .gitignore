@@ -29,3 +29,7 @@ Thumbs.db
 
 # Vite cache
 .vite/
+
+node_modules
+public/.well-known/
+tmp/
