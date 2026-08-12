@@ -1,6 +1,8 @@
 import Hero from '../components/home/Hero.jsx';
 import HouseSection from '../components/home/HouseSection.jsx';
 import Spotlight from '../components/home/Spotlight.jsx';
+import FashionLayers from '../components/home/FashionLayers.jsx';
+import VenueGrid from '../components/home/VenueGrid.jsx';
 import EventRow from '../components/home/EventRow.jsx';
 import VisitPanel from '../components/home/VisitPanel.jsx';
 
@@ -43,6 +45,7 @@ export default function Home() {
         caption="photography — the current edit"
         imageSrc="/assets/fashion-1.jpg"
       />
+      <FashionLayers />
 
       <Spotlight
         id="venue"
@@ -55,6 +58,7 @@ export default function Home() {
         caption="photography — The Loft, theatre layout"
         imageSrc="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80"
       />
+      <VenueGrid />
 
       <EventRow />
       <VisitPanel />

@@ -16,7 +16,7 @@
   }
 }
 
-.heroCopy h1 {
+.heroHeadline {
   font-family: var(--f-display);
   font-size: clamp(38px, 5vw, 60px);
   line-height: 1.08;
@@ -24,6 +24,71 @@
   max-width: 560px;
   font-weight: 500;
   color: var(--cocoa);
+  margin-bottom: 0;
+}
+
+.staticLine {
+  display: block;
+}
+
+.reelRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 2px;
+}
+
+.reelWindow {
+  height: 1.1em;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.reelTrack {
+  display: flex;
+  flex-direction: column;
+}
+
+.reelWord {
+  font-style: italic;
+  font-weight: 400;
+  color: #A4451F;
+  white-space: nowrap;
+  display: block;
+  line-height: 1.1;
+}
+
+/* Progress Pips */
+.wordProgress {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.progressPip {
+  width: 2px;
+  height: 18px;
+  background: rgba(248, 242, 231, 0.2);
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progressPipActive {
+  background: rgba(248, 242, 231, 0.4);
+}
+
+.progressFill {
+  width: 100%;
+  background: var(--cream, #f8f2e7);
+  border-radius: 1px;
+  transition: height 0.1s linear;
 }
 
 .heroCopy p {

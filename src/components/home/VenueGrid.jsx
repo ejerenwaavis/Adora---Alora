@@ -40,7 +40,7 @@ export default function VenueGrid() {
     <section className={styles.venue} id="venue">
       <div className="wrap">
         <SectionHead
-          eyebrow="04"
+          eyebrow="Venue Hire"
           title="Host your event at Adora & Alora."
           subtitle="Beautifully designed, versatile spaces for learning, connection, celebration and community."
           className={styles.sectionHead}

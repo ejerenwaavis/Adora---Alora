@@ -80,7 +80,24 @@ router.get('/menu', async (req, res) => {
   res.json(INITIAL_MENU);
 });
 
-router.get('/fashion',            (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
+const FashionLayer = require('../models/FashionLayer');
+const FashionItem  = require('../models/FashionItem');
+
+router.get('/fashion', async (req, res) => {
+  try {
+    const layers = await FashionLayer.find({ isActive: true }).sort('sortOrder');
+    if (layers && layers.length > 0) {
+      const result = await Promise.all(layers.map(async layer => {
+        const items = await FashionItem.find({ layer: layer._id, isActive: true }).sort('sortOrder');
+        return { layer, items };
+      }));
+      return res.json(result);
+    }
+    res.json([]);
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch fashion data' });
+  }
+});
 router.get('/venue/spaces',       (req, res) => res.json({ status: 'Phase 9 — pending implementation' }));
 router.get('/events',             (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
 router.get('/events/:slug',       (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
