@@ -1,11 +1,10 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 
 async function seedAdmin() {
   if (!process.env.MONGO_URI || process.env.MONGO_URI.includes('<password>')) {
-    console.error('❌ Missing or invalid MONGO_URI in .env');
+    console.error('❌ Missing or invalid MONGO_URI environment variable');
     process.exit(1);
   }
 
