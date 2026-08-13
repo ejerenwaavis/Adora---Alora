@@ -7,7 +7,6 @@ node_modules/
 .env.*.local
 
 # Build output — committed via local build workflow
-public_html/
 
 # Namecheap Passenger — auto-managed, never edit by hand
 .htaccess
