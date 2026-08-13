@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect }            from 'react';
 import Nav    from './Nav.jsx';
 import Footer from './Footer.jsx';
+import AnnouncementBar from './AnnouncementBar.jsx';
 
 // Scroll to top and trigger scroll reveal on route change
 function ScrollHandler() {
@@ -40,6 +41,7 @@ export default function PageShell() {
   return (
     <>
       <ScrollHandler />
+      <AnnouncementBar />
       <Nav />
       <main>
         <Outlet />

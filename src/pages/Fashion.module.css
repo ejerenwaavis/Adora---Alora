@@ -21,7 +21,7 @@
 
 /* Variant C Shell */
 .vcShell {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   position: relative;
   min-height: 420px;

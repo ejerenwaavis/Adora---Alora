@@ -51,7 +51,7 @@ export default function Movement() {
                   <div className={styles.availability}>
                     {session.bookedCount >= session.maxCapacity ? 'Waitlist Only' : `${session.maxCapacity - session.bookedCount} Spots Left`}
                   </div>
-                  <button onClick={() => setSelectedSession(session)} className="btn">Book</button>
+                  <button onClick={() => setSelectedSession(session)} className="btn btn-outline">Book</button>
                 </div>
               </div>
             ))}

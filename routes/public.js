@@ -60,9 +60,29 @@ const INITIAL_MENU = [
   }
 ];
 
+const AnnouncementBar = require('../models/AnnouncementBar');
+const FAQ             = require('../models/FAQ');
+const EventRecord     = require('../models/EventRecord');
+const VenueSpace      = require('../models/VenueSpace');
+
 // Public read-only data for the React frontend
-router.get('/site/announcements', (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
-router.get('/site/faqs',          (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
+router.get('/site/announcements', async (req, res) => {
+  try {
+    const announcements = await AnnouncementBar.find({ isActive: true }).sort('sortOrder');
+    res.json(announcements);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch announcements' });
+  }
+});
+
+router.get('/site/faqs', async (req, res) => {
+  try {
+    const faqs = await FAQ.find({ isActive: true }).sort('sortOrder');
+    res.json(faqs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch FAQs' });
+  }
+});
 
 router.get('/menu', async (req, res) => {
   try {
@@ -98,9 +118,35 @@ router.get('/fashion', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch fashion data' });
   }
 });
-router.get('/venue/spaces',       (req, res) => res.json({ status: 'Phase 9 — pending implementation' }));
-router.get('/events',             (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
-router.get('/events/:slug',       (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
+
+router.get('/venue/spaces', async (req, res) => {
+  try {
+    const spaces = await VenueSpace.find({ isActive: true }).sort('sortOrder');
+    res.json(spaces);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch venue spaces' });
+  }
+});
+
+router.get('/events', async (req, res) => {
+  try {
+    const events = await EventRecord.find({ status: 'published' }).sort('startDate');
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+router.get('/events/:slug', async (req, res) => {
+  try {
+    const event = await EventRecord.findOne({ slug: req.params.slug, status: 'published' });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch event details' });
+  }
+});
+
 router.get('/classes/timetable',  (req, res) => res.json({ status: 'Phase 5 — pending implementation' }));
 
 module.exports = router;

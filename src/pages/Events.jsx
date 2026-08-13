@@ -1,41 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 import styles from './Events.module.css';
 
-const UPCOMING_EVENTS = [
-  {
-    slug: 'wellness-brunch-august',
-    title: 'Adora Wellness Brunch',
-    organiser: 'Adora & Alora',
-    date: 'August 24, 2026',
-    time: '10:00 AM - 1:00 PM',
-    description: 'Join us for a morning of mindfulness, somatic movement, and a curated plant-based brunch. Connect with like-minded individuals in an intimate setting designed to rejuvenate your spirit.',
-    capacity: 20,
-    price: '$75',
-    image: '/assets/cafe.jpg'
-  },
-  {
-    slug: 'styling-conversation-archive',
-    title: 'Styling Conversation: The Archive',
-    organiser: 'Adora Archive Team',
-    date: 'September 5, 2026',
-    time: '6:30 PM - 8:30 PM',
-    description: 'An exclusive evening exploring the history and styling of vintage archive pieces. Learn how to integrate timeless garments into a modern wardrobe.',
-    capacity: 35,
-    price: 'Free for Members, $25 Non-Members',
-    image: '/assets/fashion-1.jpg'
-  },
-  {
-    slug: 'journaling-night',
-    title: 'Introspective Journaling Night',
-    organiser: 'Wellness Collective',
-    date: 'September 12, 2026',
-    time: '7:00 PM - 9:00 PM',
-    description: 'A guided journaling session focusing on self-discovery and goal setting for the upcoming season, accompanied by soothing herbal teas and ambient sounds.',
-    capacity: 15,
-    price: '$30',
-    image: '/assets/gathering-2.jpg'
-  }
+const GRADIENTS = [
+  'linear-gradient(180deg, #EAE0CD 0%, transparent 100%)',
+  'linear-gradient(180deg, #DFD4C1 0%, transparent 100%)',
+  'linear-gradient(180deg, #E2DDD5 0%, transparent 100%)'
 ];
 
 const PAST_EVENTS = [
@@ -48,9 +19,45 @@ const PAST_EVENTS = [
 export default function Events({ detail }) {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await axios.get('/api/events');
+        const mapped = res.data.map((e, idx) => {
+          const d = new Date(e.startDate);
+          return {
+            ...e,
+            eventType: e.bookingDestination === 'internal' ? 'house' : 'partner',
+            badge: { 
+              mon: d.toLocaleString('default', { month: 'short' }).toUpperCase(), 
+              day: d.getDate().toString() 
+            },
+            date: d.toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' }),
+            time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            priceText: e.isFree ? 'Free' : (e.priceKobo > 0 ? `₦${(e.priceKobo / 100).toLocaleString()}` : 'External'),
+            gradient: GRADIENTS[idx % 3]
+          };
+        });
+        setEvents(mapped);
+      } catch (err) {
+        console.error('Failed to load events:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  if (loading) {
+    return <div className={styles.ev} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading events...</p></div>;
+  }
 
   if (detail && slug) {
-    const event = UPCOMING_EVENTS.find(e => e.slug === slug);
+    const event = events.find(e => e.slug === slug);
     if (!event) {
       return (
         <div className={styles.notFound}>
@@ -65,8 +72,8 @@ export default function Events({ detail }) {
         <div className={styles.detailHero}>
           <button onClick={() => navigate('/events')} className={styles.backBtn}>&larr; All Events</button>
           <div className={styles.detailGrid}>
-            <div className={styles.detailImageWrapper}>
-              <img src={event.image} alt={event.title} className={styles.detailImg} />
+            <div className={styles.detailImageWrapper} style={{ background: event.gradient }}>
+              {/* In the detail view we could render a real image or just the gradient */}
             </div>
             <div className={styles.detailContent}>
               <div className={styles.eventMeta}>
@@ -102,40 +109,102 @@ export default function Events({ detail }) {
     );
   }
 
-  return (
-    <div className={styles.eventsPage}>
-      {/* Header */}
-      <header className={styles.header}>
-        <h1 className={styles.pageTitle}>Adora &amp; Alora Events</h1>
-        <p className={styles.pageDesc}>
-          Join us for Adora Evenings, styling conversations, wellness brunches, journaling nights, 
-          and exclusive brand collaborations.
-        </p>
-      </header>
+  const filteredEvents = events.filter(e => {
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'house' && e.eventType === 'house') return true;
+    if (activeFilter === 'partner' && e.eventType === 'partner') return true;
+    if (activeFilter === 'month' && e.badge.mon === new Date().toLocaleString('default', { month: 'short' }).toUpperCase()) return true;
+    return false;
+  });
 
-      {/* Upcoming Events Grid */}
-      <section className={styles.upcomingSection}>
-        <h2 className={styles.sectionTitle}>Upcoming Events</h2>
-        <div className={styles.eventsGrid}>
-          {UPCOMING_EVENTS.map(event => (
-            <Link to={`/events/${event.slug}`} key={event.slug} className={styles.eventCard}>
-              <div className={styles.cardImageWrapper}>
-                <img src={event.image} alt={event.title} className={styles.cardImg} />
-                <div className={styles.priceTag}>{event.price}</div>
+  const heroEvent = filteredEvents.length > 0 ? filteredEvents[0] : null;
+  const remainingEvents = filteredEvents.slice(1);
+  const gridEvents = remainingEvents.slice(0, 3);
+  const pairEvents = remainingEvents.slice(3, 5);
+
+  return (
+    <div className={styles.ev}>
+      <div className={styles.evHead}>
+        <div className={styles.evEyebrow}>Upcoming Events</div>
+        <div className={styles.evH1}>Where the house <em>comes together.</em></div>
+      </div>
+
+      <div className={styles.evFilter}>
+        <div className={`${styles.evPill} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All events</div>
+        <div className={`${styles.evPill} ${activeFilter === 'house' ? styles.on : ''}`} onClick={() => setActiveFilter('house')}>House events</div>
+        <div className={`${styles.evPill} ${activeFilter === 'partner' ? styles.on : ''}`} onClick={() => setActiveFilter('partner')}>Partner events</div>
+        <div className={`${styles.evPill} ${activeFilter === 'month' ? styles.on : ''}`} onClick={() => setActiveFilter('month')}>This month</div>
+      </div>
+
+      <div className={styles.evLegend}>
+        <div className={styles.evLeg}><div className={styles.evLegDot} style={{ background: 'var(--rust)' }}></div>House event</div>
+        <div className={styles.evLeg}><div className={styles.evLegDot} style={{ background: 'var(--olive)' }}></div>Partner event</div>
+      </div>
+
+      {/* HERO FEATURED */}
+      {heroEvent && (
+        <Link to={`/events/${heroEvent.slug}`} className={`${styles.evHero} ${styles.fadeIn}`}>
+          <div className={styles.evHeroImg} style={{ background: heroEvent.gradient }}></div>
+          <div className={styles.evHeroBody}>
+            <div className={styles.evHeroTop}>
+              <div className={styles.evHeroHostRow}>
+                <span className={`${styles.evHostBadge} ${heroEvent.eventType === 'house' ? styles.evHostHouse : styles.evHostPartner}`}>
+                  {heroEvent.organiser}
+                </span>
               </div>
-              <div className={styles.cardContent}>
-                <div className={styles.cardDate}>{event.date} • {event.time}</div>
-                <h3 className={styles.cardTitle}>{event.title}</h3>
-                <p className={styles.cardDesc}>{event.description}</p>
-                <div className={styles.cardFooter}>
-                  <span>{event.capacity} Spots Available</span>
-                  <span className={styles.arrow}>&rarr;</span>
+              <div className={styles.evHeroDateBlock}>
+                <div className={styles.evDateLine}>{heroEvent.date}</div>
+                <div className={styles.evDateTime}>{heroEvent.time}</div>
+              </div>
+              <div className={styles.evHeroName}>{heroEvent.title}</div>
+              <div className={styles.evCta}>
+                {heroEvent.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.evCtaArrow}>&rarr;</span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      )}
+
+
+      {/* 3 CARD GRID */}
+      {gridEvents.length > 0 && (
+        <div className={styles.evGrid}>
+          {gridEvents.map((ev, idx) => (
+            <Link to={`/events/${ev.slug}`} key={ev.slug} className={`${styles.evCard} ${ev.eventType === 'partner' ? styles.partner : ''} ${styles.fadeIn}`} style={{ animationDelay: `${idx * 0.05}s` }}>
+              <div className={styles.evCardImg} style={{ background: ev.gradient }}>
+                <div className={styles.evDateBadge}><span className={styles.mon}>{ev.badge.mon}</span><span className={styles.day}>{ev.badge.day}</span></div>
+              </div>
+              <div className={styles.evCardBody}>
+                <div className={styles.evCardHost}>{ev.organiser}</div>
+                <div className={styles.evCardName}>{ev.title}</div>
+                <div className={styles.evCardLink} style={{ marginTop: '12px' }}>
+                  {ev.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.arr}>&rarr;</span>
                 </div>
               </div>
             </Link>
           ))}
         </div>
-      </section>
+      )}
+
+      {/* 2 CARD BOTTOM ROW */}
+      {pairEvents.length > 0 && (
+        <div className={styles.evPair}>
+          {pairEvents.map((ev, idx) => (
+            <Link to={`/events/${ev.slug}`} key={ev.slug} className={`${styles.evCard} ${ev.eventType === 'partner' ? styles.partner : ''} ${styles.fadeIn}`} style={{ animationDelay: `${0.2 + (idx * 0.02)}s` }}>
+              <div className={styles.evCardImg} style={{ background: ev.gradient }}>
+                <div className={styles.evDateBadge}><span className={styles.mon}>{ev.badge.mon}</span><span className={styles.day}>{ev.badge.day}</span></div>
+              </div>
+              <div className={styles.evCardBody}>
+                <div className={styles.evCardHost}>{ev.organiser}</div>
+                <div className={styles.evCardName}>{ev.title}</div>
+                <div className={styles.evCardLink} style={{ marginTop: '12px' }}>
+                  {ev.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.arr}>&rarr;</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Past Events Gallery */}
       <section className={styles.pastSection}>

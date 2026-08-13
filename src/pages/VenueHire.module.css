@@ -78,7 +78,7 @@
 
 .tourDisplay {
   background: #fff;
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 20px 40px rgba(0,0,0,0.05);
   display: grid;
@@ -262,7 +262,7 @@
   margin: 0 auto;
   padding: 60px;
   background: #fff;
-  border-radius: 24px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 10px 30px rgba(0,0,0,0.03);
 }
 
@@ -315,7 +315,7 @@
 .inputGroup input, .inputGroup select, .inputGroupFull input, .inputGroupFull textarea {
   padding: 14px 16px;
   border: 1px solid rgba(20,20,20,0.15);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-family: var(--f-body, sans-serif);
   font-size: 15px;
   background: #fafafa;
@@ -337,7 +337,7 @@
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: .15em;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
   margin-top: 20px;
   transition: background 0.3s ease;

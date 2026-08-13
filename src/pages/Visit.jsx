@@ -1,9 +1,25 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import VisitPanel from '../components/home/VisitPanel.jsx';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import Eyebrow from '../components/ui/Eyebrow.jsx';
 import styles from './Visit.module.css';
 
 export default function Visit() {
+  const [faqs, setFaqs] = useState([]);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const res = await axios.get('/api/site/faqs');
+        setFaqs(res.data);
+      } catch (err) {
+        console.error('Failed to load FAQs:', err);
+      }
+    };
+    fetchFaqs();
+  }, []);
+
   return (
     <div className={styles.visitPage}>
       {/* Hero Header */}
@@ -94,25 +110,12 @@ export default function Visit() {
           </div>
 
           <div className={styles.faqGrid}>
-            <div className={styles.faqItem}>
-              <h4>Do I need a membership to visit Adora &amp; Alora?</h4>
-              <p>No, the house is open to everyone! All our rituals — Café dining, Reformer classes, Fashion pop-ups, and cultural events — are open for non-members.</p>
-            </div>
-
-            <div className={styles.faqItem}>
-              <h4>How early should I arrive for a class or reservation?</h4>
-              <p>We recommend arriving 15 minutes prior to studio movement sessions to change comfortably. Café tables are held for 15 minutes past reservation times.</p>
-            </div>
-
-            <div className={styles.faqItem}>
-              <h4>What is the dress code inside the house?</h4>
-              <p>We embrace elevated, effortless everyday style. Grip socks are required in the Reformer Pilates studio (available for purchase at reception).</p>
-            </div>
-
-            <div className={styles.faqItem}>
-              <h4>Can I host a private event or photoshoot?</h4>
-              <p>Yes, our courtyard, loft, and private dining rooms are available for private venue hire. Submit an enquiry via our Venue Hire page.</p>
-            </div>
+            {faqs.map((faq) => (
+              <div key={faq._id} className={styles.faqItem}>
+                <h4>{faq.question}</h4>
+                <p>{faq.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const menuItemSchema = new mongoose.Schema({
   category:    { type: mongoose.Schema.Types.ObjectId, ref: 'MenuCategory', required: true },
   name:        { type: String, required: true, trim: true },
+  slug:        { type: String, lowercase: true, trim: true },
   description: { type: String },
   priceKobo:   { type: Number },
   dietaryTags: [{

@@ -195,6 +195,12 @@ router.post('/menu-items', upload.single('image'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.image = req.file.path;
+    
+    // Parse dietaryTags from comma-separated string to array
+    if (typeof data.dietaryTags === 'string') {
+      data.dietaryTags = data.dietaryTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    }
+
     const item = new MenuItem(data);
     await item.save();
     res.status(201).json(await item.populate('category'));
@@ -204,6 +210,12 @@ router.patch('/menu-items/:id', upload.single('image'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.image = req.file.path;
+    
+    // Parse dietaryTags from comma-separated string to array
+    if (typeof data.dietaryTags === 'string') {
+      data.dietaryTags = data.dietaryTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    }
+
     const item = await MenuItem.findByIdAndUpdate(req.params.id, data, { new: true }).populate('category');
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }

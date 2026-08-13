@@ -8,6 +8,7 @@ import styles from './Cafe.module.css';
 export default function Cafe() {
   const [menuData, setMenuData] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
+  const [activeItem, setActiveItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,6 +17,10 @@ export default function Cafe() {
       .then(data => {
         if (Array.isArray(data)) {
           setMenuData(data);
+          // Set initial active item
+          if (data.length > 0 && data[0].items?.length > 0) {
+            setActiveItem({ ...data[0].items[0], categoryName: data[0].category?.name });
+          }
         }
         setLoading(false);
       })
@@ -27,9 +32,26 @@ export default function Cafe() {
 
   const categories = menuData.map(group => group.category?.name || 'Category');
 
-  const filteredData = activeTab === 'all'
-    ? menuData
-    : menuData.filter(group => group.category?.name?.toLowerCase() === activeTab.toLowerCase());
+  // Flatten for the new layout
+  const allItems = menuData.flatMap(group => 
+    group.items?.map(item => ({ ...item, categoryName: group.category?.name || 'Category' })) || []
+  );
+
+  const filteredItems = activeTab === 'all'
+    ? allItems
+    : allItems.filter(item => item.categoryName?.toLowerCase() === activeTab.toLowerCase());
+
+  const handleTabClick = (catName) => {
+    setActiveTab(catName);
+    const newFiltered = catName === 'all' 
+      ? allItems 
+      : allItems.filter(item => item.categoryName?.toLowerCase() === catName.toLowerCase());
+    
+    // Auto-select first item of the new category if current activeItem is not in it
+    if (newFiltered.length > 0 && (!activeItem || !newFiltered.find(i => i._id === activeItem._id))) {
+      setActiveItem(newFiltered[0]);
+    }
+  };
 
   return (
     <div className={styles.cafePage}>
@@ -83,67 +105,137 @@ export default function Cafe() {
           </div>
         </div>
 
-        {/* 4. Menu Section (CMS Driven) */}
-        <section className={styles.menuSection} id="menu">
-          <div className={styles.menuHeader}>
-            <Eyebrow text="Daily Offerings" centered />
-            <h2>The Café Menu</h2>
-          </div>
-
-          {/* Category Tabs */}
-          <div className={styles.categoryTabs}>
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`${styles.tabBtn} ${activeTab === 'all' ? styles.tabBtnActive : ''}`}
-            >
-              All Offerings
-            </button>
-            {categories.map((cat, idx) => (
+        {/* 4. Menu Section (CMS Driven - World Class Redesign) */}
+        <section className={styles.cm} id="menu">
+          
+          <div className={styles.cmHeader}>
+            <div className={styles.cmTitleBlock}>
+              <div className={styles.cmEyebrow}>The Café at Adora &amp; Alora</div>
+              <div className={styles.cmTitle}>What's <em>on</em> today.</div>
+            </div>
+            
+            <div className={styles.cmCats}>
               <button
-                key={idx}
-                onClick={() => setActiveTab(cat)}
-                className={`${styles.tabBtn} ${activeTab.toLowerCase() === cat.toLowerCase() ? styles.tabBtnActive : ''}`}
+                onClick={() => handleTabClick('all')}
+                className={`${styles.cmCat} ${activeTab === 'all' ? styles.cmCatOn : ''}`}
               >
-                {cat}
+                All
               </button>
-            ))}
+              {categories.map((cat, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleTabClick(cat)}
+                  className={`${styles.cmCat} ${activeTab.toLowerCase() === cat.toLowerCase() ? styles.cmCatOn : ''}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Menu Items Grid */}
-          {loading ? (
-            <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--taupe)' }}>Loading menu offerings...</p>
-          ) : (
-            filteredData.map((group, idx) => (
-              <div key={idx} className={styles.categoryBlock}>
-                <h3 className={styles.categoryTitle}>
-                  <span className={styles.categoryIcon}>{group.category?.icon}</span>
-                  {group.category?.name}
-                </h3>
+          <div className={styles.cmDivider}></div>
 
-                <div className={styles.menuGrid}>
-                  {group.items?.map((item, itemIdx) => (
-                    <div key={itemIdx} className={styles.menuItemCard}>
-                      <div className={styles.itemHeader}>
-                        <h4 className={styles.itemName}>{item.name}</h4>
-                        <span className={styles.itemPrice}>{item.price}</span>
+          {loading ? (
+             <p style={{ textAlign: 'center', padding: '3rem', color: 'var(--taupe)' }}>Loading menu offerings...</p>
+          ) : (
+            <div className={styles.cmStage}>
+              {/* LEFT SIDE: GRID */}
+              <div>
+                <div className={styles.cmGrid}>
+                  {filteredItems.map((item, idx) => {
+                    const isFeat = idx === 0 && item.isSignature; // Make first item featured if it's a signature
+                    const isActive = activeItem?._id === item._id;
+                    
+                    return (
+                      <div 
+                        key={item._id || idx}
+                        className={`${styles.cmCard} ${isFeat ? styles.cmCardFeatured : ''} ${styles.fadeIn}`}
+                        onClick={() => setActiveItem(item)}
+                        style={{ outline: isActive ? '2px solid var(--rust)' : 'none', outlineOffset: '-2px' }}
+                      >
+                        <div className={styles.cmCardImg}>
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className={styles.cmCardImgInner} loading="lazy" />
+                          ) : (
+                            <div className={styles.cmCardImgInner} style={{ background: 'linear-gradient(135deg, var(--taupe), var(--cocoa-deep))' }} />
+                          )}
+                          {item.badge && <span className={styles.cmBadge}>{item.badge}</span>}
+                          {item.dietaryTags && item.dietaryTags.length > 0 && (
+                            <div className={styles.cmDietary}>
+                              {item.dietaryTags.slice(0, 2).map((tag, tIdx) => (
+                                <span key={tIdx} className={styles.cmDtag}>{tag}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className={styles.cmCardBody}>
+                          <div className={styles.cmCardCat}>{item.categoryName}</div>
+                          <div className={styles.cmCardName}>{item.name}</div>
+                          <div className={styles.cmCardDesc}>
+                            {item.description && item.description.length > (isFeat ? 120 : 70)
+                              ? item.description.slice(0, isFeat ? 120 : 70) + '…'
+                              : item.description}
+                          </div>
+                          <div className={styles.cmCardFoot}>
+                            <div className={styles.cmPrice}>{item.priceKobo ? `₦${(item.priceKobo / 100).toLocaleString()}` : item.price || ''} <span>naira</span></div>
+                            <div className={styles.cmArrow}>&rarr;</div>
+                          </div>
+                        </div>
                       </div>
-                      <p className={styles.itemDesc}>{item.description}</p>
-                      
-                      <div className={styles.itemBadges}>
-                        {item.badge && <span className={styles.badgePill}>{item.badge}</span>}
-                        {item.dietaryTags?.map((tag, tIdx) => (
-                          <span key={tIdx} className={styles.dietPill}>{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
+                </div>
+
+                {/* HOUSE WELCOME CHIN CHIN */}
+                <div className={styles.cmChinChin}>
+                  <div className={styles.cmCcLeft}>
+                    <div className={styles.cmCcTag}>House welcome</div>
+                    <div className={styles.cmCcName}>Complimentary Chin Chin</div>
+                    <div className={styles.cmCcDesc}>Served to every seated guest — our house greeting, made fresh daily.</div>
+                  </div>
+                  <Link to="/visit" className={styles.cmCcPill}>Also available to take home &rarr;</Link>
                 </div>
               </div>
-            ))
+
+              {/* RIGHT SIDE: PANEL */}
+              {activeItem && (
+                <div className={styles.cmPanel}>
+                  <div className={styles.cmPanelImg}>
+                    <div className={styles.cmPanelGlow}></div>
+                    {activeItem.image ? (
+                      <img src={activeItem.image} alt={activeItem.name} className={styles.cmPanelImgInner} />
+                    ) : (
+                      <div className={styles.cmPanelImgInner} style={{ background: 'linear-gradient(160deg, var(--cocoa), #1E0F06)' }} />
+                    )}
+                  </div>
+                  <div className={styles.cmPanelBody}>
+                    <div className={styles.cmPanelCat}>{activeItem.categoryName}</div>
+                    <div className={styles.cmPanelName}>{activeItem.name}</div>
+                    <div className={styles.cmPanelDesc}>{activeItem.description}</div>
+                    
+                    <div className={styles.cmPanelPriceRow}>
+                      <div className={styles.cmPanelPrice}>{activeItem.priceKobo ? `₦${(activeItem.priceKobo / 100).toLocaleString()}` : activeItem.price || ''}</div>
+                      <div className={styles.cmPanelAvail}>Available now</div>
+                    </div>
+
+                    {activeItem.dietaryTags && activeItem.dietaryTags.length > 0 && (
+                      <div className={styles.cmPanelDietary}>
+                        {activeItem.dietaryTags.map((tag, tIdx) => (
+                          <span key={tIdx} className={styles.cmPanelDtag}>{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                    <button style={{ width: '100%', background: 'var(--rust)', color: 'var(--paper)', fontFamily: 'var(--f-sans)', fontSize: '11px', letterSpacing: '.1em', textTransform: 'uppercase', padding: '14px', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
+                      View Full Details &rarr;
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* 5. Dietary Markers & Allergen Notice */}
-          <div className={styles.dietaryNotice}>
+          <div className={styles.dietaryNotice} style={{ marginTop: '60px' }}>
             <strong>Dietary Legend:</strong> [VG] Vegan &bull; [V] Vegetarian &bull; [GF] Gluten-Free &bull; [DF] Dairy-Free &bull; [N] Contains Nuts<br />
             <span style={{ fontSize: '12px', color: 'var(--taupe)', marginTop: '4px', display: 'inline-block' }}>
               Please inform your host of any severe food allergies prior to placing your order.
@@ -153,8 +245,8 @@ export default function Cafe() {
           {/* 6. Takeaway & Private Hire Banner */}
           <div className={styles.hireBanner}>
             <div className={styles.hireText}>
-              <h3>Private Breakfasts &amp; Celebrations</h3>
-              <p>Host private brunches, brand activations, or group coffee masterclasses at The Café &amp; The Loft.</p>
+              <h3 style={{ fontSize: '26px', marginBottom: '8px' }}>Private Breakfasts &amp; Celebrations</h3>
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--cocoa)', fontWeight: 300 }}>Host private brunches, brand activations, or group coffee masterclasses at The Café &amp; The Loft.</p>
             </div>
             <Button to="/venue-hire">Enquire About Venue Hire &rarr;</Button>
           </div>

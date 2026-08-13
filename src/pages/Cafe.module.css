@@ -125,172 +125,404 @@
   font-weight: 300;
 }
 
-/* Menu Section */
-.menuSection {
-  padding-bottom: 90px;
+/* --- New Menu Redesign (World Class) --- */
+
+.cm {
+  padding: 0 0 48px;
 }
 
-.menuHeader {
-  text-align: center;
-  max-width: 600px;
-  margin: 0 auto 40px;
+.cmHeader {
+  padding: 32px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.menuHeader h2 {
-  font-size: clamp(30px, 3.8vw, 44px);
-  margin-top: 8px;
+.cmEyebrow {
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--taupe);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cmEyebrow::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--gold);
 }
 
-/* Category Filter Tabs */
-.categoryTabs {
+.cmTitle {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: clamp(30px, 4vw, 36px);
+  color: var(--cocoa-deep);
+  letter-spacing: -.01em;
+  line-height: 1;
+}
+.cmTitle em {
+  font-style: italic;
+  color: var(--rust);
+  font-weight: 400;
+}
+
+.cmCats {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cmCat {
+  font-size: 11px;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  color: var(--taupe);
+  cursor: pointer;
+  transition: all .25s var(--ease);
+  background: transparent;
+  white-space: nowrap;
+}
+.cmCatOn {
+  background: var(--cocoa-deep);
+  color: var(--paper);
+  border-color: var(--cocoa-deep);
+}
+.cmCat:hover:not(.cmCatOn) {
+  background: var(--paper);
+  color: var(--cocoa);
+  border-color: var(--taupe);
+}
+
+.cmDivider {
+  height: 1px;
+  background: linear-gradient(to right, var(--gold), var(--line), transparent);
+  margin: 0 0 28px;
+}
+
+.cmStage {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 30px;
+  align-items: start;
+}
+
+.cmGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cmCard {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: transform .35s var(--ease), box-shadow .35s var(--ease);
+  position: relative;
+  outline: none;
+}
+.cmCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.cmCardFeatured {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+}
+.cmCardFeatured .cmCardImg {
+  height: 240px;
+}
+.cmCardFeatured .cmCardBody {
+  padding: 28px 24px;
+}
+
+.cmCardImg {
+  height: 180px;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 50px;
+  background: var(--line);
 }
-
-.tabBtn {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  color: var(--cocoa);
-  padding: 10px 20px;
-  border-radius: 24px;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 600;
-  transition: all 0.3s var(--ease);
-  cursor: pointer;
-}
-
-.tabBtn:hover {
-  border-color: var(--rust);
-  color: var(--rust);
-}
-
-.tabBtnActive {
-  background: var(--rust) !important;
-  color: #fff !important;
-  border-color: var(--rust) !important;
-  box-shadow: 0 4px 14px rgba(164, 69, 31, 0.35);
-}
-
-/* Category Display Block */
-.categoryBlock {
-  margin-bottom: 60px;
-}
-
-.categoryTitle {
-  font-size: 24px;
-  font-weight: 500;
-  color: var(--cocoa-deep);
-  border-bottom: 2px solid var(--gold);
-  padding-bottom: 10px;
-  margin-bottom: 30px;
+.cmCardImgInner {
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  transition: transform .5s var(--ease);
+  object-fit: cover;
+}
+.cmCard:hover .cmCardImgInner {
+  transform: scale(1.04);
 }
 
-.categoryIcon {
-  font-size: 22px;
+.cmBadge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(252,248,240,.88);
+  color: var(--rust);
+  border: 1px solid rgba(164,69,31,.2);
+  backdrop-filter: blur(4px);
+  z-index: 2;
 }
 
-.menuGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 32px 48px;
+.cmDietary {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
+}
+.cmDtag {
+  font-size: 8.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(252,248,240,.95);
+  color: #414F36;
+  border: 1px solid rgba(65,79,54,.2);
+  backdrop-filter: blur(4px);
 }
 
-.menuItemCard {
-  background: var(--paper);
+.cmCardBody {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+}
+.cmCardCat {
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+.cmCardName {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--cocoa-deep);
+  margin-bottom: 6px;
+  line-height: 1.1;
+}
+.cmCardFeatured .cmCardName {
+  font-size: 24px;
+}
+.cmCardDesc {
+  font-size: 13px;
+  color: var(--taupe);
+  line-height: 1.6;
+  font-weight: 300;
+  margin-bottom: 14px;
+  flex-grow: 1;
+}
+.cmCardFoot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cmPrice {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--cocoa-deep);
+}
+.cmPrice span {
+  font-size: 11px;
+  color: var(--taupe);
+}
+.cmArrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--taupe);
+  font-size: 13px;
+  transition: all .25s;
+}
+.cmCard:hover .cmArrow {
+  background: var(--cocoa-deep);
+  color: var(--paper);
+  border-color: var(--cocoa-deep);
+}
+
+.cmPanel {
+  border-radius: var(--radius-lg);
+  background: var(--cocoa-deep);
+  overflow: hidden;
+  position: sticky;
+  top: 100px; /* Offset for navbar */
+}
+.cmPanelImg {
+  height: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #3B2510, #1E0F06);
+  overflow: hidden;
+}
+.cmPanelImgInner {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+.cmPanelGlow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(164,69,31,.3) 0%, transparent 65%);
+  pointer-events: none;
+}
+.cmPanelBody {
   padding: 24px 28px;
-  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease);
 }
-
-.menuItemCard:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow);
-  border-color: var(--gold);
+.cmPanelCat {
+  font-size: 9.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(200,155,74,.7);
+  margin-bottom: 8px;
 }
-
-.itemHeader {
+.cmPanelName {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 24px;
+  color: var(--paper);
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+.cmPanelDesc {
+  font-size: 13px;
+  color: rgba(220,203,178,.8);
+  line-height: 1.65;
+  font-weight: 300;
+  margin-bottom: 16px;
+}
+.cmPanelTagline {
+  font-family: var(--f-serif);
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(200,155,74,.8);
+  margin-bottom: 20px;
+}
+.cmPanelPriceRow {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(247,239,225,.08);
+  border-bottom: 1px solid rgba(247,239,225,.08);
+  margin-bottom: 16px;
 }
-
-.itemName {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--cocoa-deep);
-}
-
-.itemPrice {
+.cmPanelPrice {
   font-family: var(--f-serif);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--rust);
+  font-weight: 500;
+  font-size: 26px;
+  color: var(--paper);
 }
-
-.itemDesc {
-  font-size: 14px;
-  color: var(--cocoa);
-  line-height: 1.5;
-  font-weight: 300;
-  margin-bottom: 12px;
+.cmPanelAvail {
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(200,155,74,.6);
 }
-
-.itemBadges {
+.cmPanelDietary {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 6px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
-
-.badgePill {
-  font-size: 10px;
-  letter-spacing: 0.08em;
+.cmPanelDtag {
+  font-size: 9px;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  font-weight: 600;
-  background: rgba(164, 69, 31, 0.1);
-  color: var(--rust);
-  padding: 3px 10px;
-  border-radius: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(200,155,74,.1);
+  color: var(--gold);
+  border: 1px solid rgba(200,155,74,.2);
 }
 
-.dietPill {
-  font-size: 10px;
-  letter-spacing: 0.06em;
+.cmChinChin {
+  margin: 32px 0 0;
+  border-radius: var(--radius-lg);
+  background: var(--cocoa-deep);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.cmCcTag {
+  font-size: 9px;
+  letter-spacing: .18em;
   text-transform: uppercase;
-  font-weight: 600;
-  background: rgba(65, 79, 54, 0.1);
-  color: #414F36;
-  padding: 3px 8px;
-  border-radius: 12px;
+  color: var(--gold);
+  margin-bottom: 5px;
+}
+.cmCcName {
+  font-family: var(--f-serif);
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--paper);
+  margin-bottom: 4px;
+}
+.cmCcDesc {
+  font-size: 12px;
+  color: rgba(220,203,178,.6);
+  font-weight: 300;
+}
+.cmCcPill {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(200,155,74,.4);
+  color: var(--gold);
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cmCcPill:hover {
+  background: rgba(200,155,74,.1);
 }
 
-/* Dietary Key Footer */
-.dietaryNotice {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  padding: 24px 32px;
-  margin-top: 40px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--cocoa);
+.fadeIn {
+  animation: fadeUp .4s var(--ease) both;
 }
 
-.dietaryNotice strong {
-  color: var(--cocoa-deep);
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
+
 
 /* Private Hire Prompt Banner */
 .hireBanner {
