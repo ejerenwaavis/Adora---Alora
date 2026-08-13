@@ -27,7 +27,8 @@ async function seedData() {
         startDate: new Date(Date.now() + 86400000 * 5), // +5 days
         endDate: new Date(Date.now() + 86400000 * 5 + 3600000 * 2), // +2 hours
         status: "published",
-        isFeatured: true
+        isFeatured: true,
+        coverImage: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=800"
       },
       {
         title: "Becoming: Leadership Circle",
@@ -38,7 +39,8 @@ async function seedData() {
         externalOrganizerCta: "Register with Partner",
         startDate: new Date(Date.now() + 86400000 * 20), // +20 days
         endDate: new Date(Date.now() + 86400000 * 20 + 3600000 * 3), 
-        status: "published"
+        status: "published",
+        coverImage: "https://images.unsplash.com/photo-1542385151-efd9000785a0?auto=format&fit=crop&q=80&w=800"
       },
       {
         title: "Introspective Journaling Night",
@@ -47,7 +49,8 @@ async function seedData() {
         bookingDestination: "internal",
         startDate: new Date(Date.now() + 86400000 * 12), // +12 days
         endDate: new Date(Date.now() + 86400000 * 12 + 3600000 * 1.5), 
-        status: "published"
+        status: "published",
+        coverImage: "https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&q=80&w=800"
       }
     ]);
     console.log('✅ Seeded Events');
@@ -108,7 +111,8 @@ async function seedData() {
         capacityText: "Up to 50 guests standing, 30 seated",
         features: ["Outdoor Space", "Natural Light", "Cafe Access"],
         isActive: true,
-        sortOrder: 1
+        sortOrder: 1,
+        images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=2000"]
       },
       {
         name: "The Movement Loft",
@@ -117,7 +121,8 @@ async function seedData() {
         capacityText: "12 Reformer beds, up to 20 for mat work",
         features: ["Mirrors", "Sonos Sound System", "Private Lockers"],
         isActive: true,
-        sortOrder: 2
+        sortOrder: 2,
+        images: ["https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=2000"]
       }
     ]);
     console.log('✅ Seeded VenueSpaces');

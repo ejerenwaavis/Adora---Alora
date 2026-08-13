@@ -1,6 +1,6 @@
 .venuePage {
   min-height: 100vh;
-  background: var(--paper, #F5F2E9);
+  background: transparent;
   padding-top: 120px;
   padding-bottom: 120px;
   color: #1a1a1a;

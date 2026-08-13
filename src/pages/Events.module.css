@@ -1,7 +1,7 @@
 /* EVENTS PAGE WRAPPER */
 .ev {
   font-family: var(--f-body, 'Jost', sans-serif);
-  background: var(--paper, #F5F2E9);
+  background: transparent;
   padding: 40px 28px 56px;
   min-height: 100vh;
 }
@@ -507,7 +507,7 @@
 }
 
 .detailPage {
-  background: var(--paper, #F5F2E9);
+  background: transparent;
   min-height: 100vh;
   padding: 120px 20px;
 }

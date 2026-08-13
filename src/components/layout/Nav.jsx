@@ -52,9 +52,6 @@ export default function Nav() {
 
   return (
     <>
-      {/* ─── Announcement Bar ─── */}
-      <AnnouncementBar />
-
       {/* ─── Main Header ─── */}
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
         <nav className={styles.nav}>
