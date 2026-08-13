@@ -56,11 +56,19 @@ app.use('/static', express.static(path.join(__dirname, 'public')));
 // 5. HEALTH CHECK — required for Namecheap Passenger startup detection
 // ─────────────────────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  let dbStatus = 'Disconnected';
+  if (dbState === 1) dbStatus = 'Live';
+  else if (dbState === 2) dbStatus = 'Connecting';
+  else if (dbState === 3) dbStatus = 'Disconnecting';
+
   res.status(200).json({
-    status:    'ok',
-    app:       'adora-alora',
-    env:       process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString(),
+    Status:      'running',
+    'DB-Status': dbStatus,
+    Uptime:      `${Math.floor(process.uptime())} seconds`,
+    app:         'adora-alora',
+    env:         process.env.NODE_ENV || 'development',
+    timestamp:   new Date().toISOString(),
   });
 });
 
