@@ -3,6 +3,7 @@ import axios from 'axios';
 import VisitPanel from '../components/home/VisitPanel.jsx';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import Eyebrow from '../components/ui/Eyebrow.jsx';
+import PageHeader from '../components/ui/PageHeader';
 import styles from './Visit.module.css';
 
 export default function Visit() {
@@ -23,13 +24,11 @@ export default function Visit() {
   return (
     <div className={styles.visitPage}>
       {/* Hero Header */}
-      <section className={styles.heroHeader}>
-        <Eyebrow text="Plan Your Experience" centered />
-        <h1>Step Inside the House.</h1>
-        <p>
-          Located in the heart of Victoria Island, Lagos — a peaceful sanctuary for daily movement, coastal dining, archive fashion, and cultural gathering.
-        </p>
-      </section>
+      <PageHeader 
+        eyebrow="Plan Your Experience"
+        title="Step Inside the House."
+        description="Located in the heart of Victoria Island, Lagos — a peaceful sanctuary for daily movement, coastal dining, archive fashion, and cultural gathering."
+      />
 
       {/* Main Location Card with Live Map */}
       <VisitPanel />

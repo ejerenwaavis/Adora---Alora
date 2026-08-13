@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Eyebrow from '../components/ui/Eyebrow.jsx';
 import Button from '../components/ui/Button.jsx';
+import PageHeader from '../components/ui/PageHeader';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import styles from './Cafe.module.css';
 
@@ -55,18 +56,16 @@ export default function Cafe() {
 
   return (
     <div className={styles.cafePage}>
-      {/* 1. Hero & Visual Introduction */}
-      <section className={styles.hero}>
-        <img src="/assets/cafe-2.jpg" alt="Adora & Alora Café" className={styles.heroBg} />
-        <div className={styles.heroOverlay} />
-        <div className={styles.heroContent}>
-          <Eyebrow text="Coastal Culinary &amp; Coffee" centered />
-          <h1>Nourish the body. Feed the soul.</h1>
-          <p>
-            A modern coastal dining sanctuary in Victoria Island. Serving single-origin specialty roast coffee, ceremonial Uji matcha, vibrant grain bowls, and signature Nigerian culinary touches.
-          </p>
-        </div>
-      </section>
+      {/* 1. Unified Hero */}
+      <PageHeader 
+        eyebrow="Coastal Culinary &amp; Coffee"
+        title="Nourish the body. Feed the soul."
+        description="A modern coastal dining sanctuary in Victoria Island. Serving single-origin specialty roast coffee, ceremonial Uji matcha, vibrant grain bowls, and signature Nigerian culinary touches."
+      />
+      
+      <div className={styles.cafeHeroImageWrapper}>
+        <img src="/assets/cafe-2.jpg" alt="Adora & Alora Café" className={styles.cafeHeroImg} />
+      </div>
 
       {/* 2. Opening Hours & Service Format Bar */}
       <section className={styles.serviceBar}>

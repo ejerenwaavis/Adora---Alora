@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from './VenueHire.module.css';
+import PageHeader from '../components/ui/PageHeader';
 
 const DEFAULT_VENUE = {
   id: 'default',
@@ -71,14 +72,11 @@ export default function VenueHire({ section }) {
   return (
     <div className={styles.venuePage}>
       {/* Hero Intro */}
-      <div className={styles.introSection}>
-        <h1 className={styles.pageTitle}>Host Your Event at Adora &amp; Alora</h1>
-        <p className={styles.pageDesc}>
-          Adora &amp; Alora offers beautifully designed, versatile spaces for learning, connection, celebration and community. 
-          Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or 
-          brand gathering, our spaces can be adapted to suit your occasion.
-        </p>
-      </div>
+      <PageHeader 
+        eyebrow="Venue Hire"
+        title={<>Host Your Event at Adora &amp; Alora</>}
+        description="Adora & Alora offers beautifully designed, versatile spaces for learning, connection, celebration and community. Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or brand gathering, our spaces can be adapted to suit your occasion."
+      />
 
       {/* Interactive Tour */}
       <div className={styles.tourSection}>

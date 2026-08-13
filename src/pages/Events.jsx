@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './Events.module.css';
+import PageHeader from '../components/ui/PageHeader';
 
 const GRADIENTS = [
   'linear-gradient(180deg, #EAE0CD 0%, transparent 100%)',
@@ -124,10 +125,11 @@ export default function Events({ detail }) {
 
   return (
     <div className={styles.ev}>
-      <div className={styles.evHead}>
-        <div className={styles.evEyebrow}>Upcoming Events</div>
-        <div className={styles.evH1}>Where the house <em>comes together.</em></div>
-      </div>
+      {/* HERO FEATURED */}
+      <PageHeader 
+        eyebrow="Upcoming Events" 
+        title={<>Where the house <em>comes together.</em></>} 
+      />
 
       <div className={styles.evFilter}>
         <div className={`${styles.evPill} ${activeFilter === 'all' ? styles.on : ''}`} onClick={() => setActiveFilter('all')}>All events</div>

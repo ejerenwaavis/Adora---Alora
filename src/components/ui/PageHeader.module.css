@@ -1,0 +1,63 @@
+.pageHeader {
+  text-align: center;
+  padding: 120px 20px 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-family: var(--f-body, 'Jost', sans-serif);
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--rust, #A4451F);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.eyebrow::before, .eyebrow::after {
+  content: '';
+  width: 32px;
+  height: 1px;
+  background: var(--gold, #C89B4A);
+}
+
+.title {
+  font-family: var(--f-display, 'Fraunces', serif);
+  font-weight: 400;
+  font-size: clamp(40px, 6vw, 64px);
+  color: var(--ink, #1a1a1a);
+  letter-spacing: -.015em;
+  line-height: 1.1;
+  margin-bottom: 24px;
+}
+
+.title em {
+  font-style: italic;
+  font-weight: 300;
+}
+
+.description {
+  font-family: var(--f-body, 'Jost', sans-serif);
+  font-size: 16px;
+  color: rgba(26, 26, 26, 0.7);
+  line-height: 1.6;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.children {
+  margin-top: 40px;
+}
+
+@media (max-width: 768px) {
+  .pageHeader {
+    padding: 100px 20px 40px;
+  }
+  .title {
+    font-size: clamp(32px, 8vw, 40px);
+  }
+}

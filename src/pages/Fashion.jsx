@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '../components/ui/PageHeader';
 import styles from './Fashion.module.css';
 
 // Utility to determine if a color is light or dark to set text contrast
@@ -104,6 +105,10 @@ export default function Fashion() {
 
   return (
     <div className={styles.fashionPage}>
+      <PageHeader 
+        eyebrow="The Boutique"
+        title="Elevated Everyday."
+      />
       <div className={styles.contentWrap}>
         {activeItem ? (
           <>

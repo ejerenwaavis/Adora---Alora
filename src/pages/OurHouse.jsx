@@ -1,5 +1,6 @@
 import SectionHead from '../components/ui/SectionHead';
 import ExploreDoors from '../components/home/ExploreDoors';
+import PageHeader from '../components/ui/PageHeader';
 import styles from './OurHouse.module.css';
 
 import HouseSnapshots from '../components/home/HouseSnapshots.jsx';
@@ -8,15 +9,12 @@ export default function OurHouse() {
   return (
     <div className={styles.container}>
       {/* ── Hero ── */}
-      <section className={styles.hero}>
-        <div className="wrap">
-          <div className="eyebrow centered">02 / Our House</div>
-          <h1 className={styles.heroTitle}>A sanctuary for intentional living in Lagos.</h1>
-          <p className={styles.heroSubtitle}>
-            Adora &amp; Alora is a multi-disciplinary house uniting Movement, Coastal Culinary, Curated Fashion, and Collaborative Spaces under one architectural roof.
-          </p>
-        </div>
-      </section>
+      {/* ── Hero ── */}
+      <PageHeader 
+        eyebrow="Our House"
+        title="A sanctuary for intentional living in Lagos."
+        description="Adora &amp; Alora is a multi-disciplinary house uniting Movement, Coastal Culinary, Curated Fashion, and Collaborative Spaces under one architectural roof."
+      />
 
       {/* ── Story Section ── */}
       <section className={styles.storySection}>

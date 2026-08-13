@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import BookingModal from '../components/BookingModal';
+import PageHeader from '../components/ui/PageHeader';
 import styles from './Movement.module.css';
 
 export default function Movement() {
@@ -24,11 +25,11 @@ export default function Movement() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
-        <div className="eyebrow centered">The Studio</div>
-        <h1 className={styles.title}>Movement</h1>
-        <p className={styles.subtitle}>Book your spot in our signature classes.</p>
-      </div>
+      <PageHeader 
+        eyebrow="The Studio"
+        title="Movement"
+        description="Book your spot in our signature classes."
+      />
 
       <div className={styles.timetable}>
         {loading ? (
