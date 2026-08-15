@@ -2,53 +2,88 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from './VenueHire.module.css';
 import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
 
-const DEFAULT_VENUE = {
-  id: 'default',
-  title: 'Loading Spaces...',
-  subtitle: 'Please wait',
-  description: '',
-  suitableFor: [],
-  features: '',
-  bookingPrompt: '',
-  images: []
+const FALLBACK_VENUES = {
+  'the-loft': {
+    id: 'the-loft',
+    title: 'The Loft',
+    subtitle: 'A flexible venue created for meaningful learning, conversation and connection.',
+    description: 'Positioned as a learning and events venue rather than a leadership lounge — “The Loft” is more distinctive and commercially flexible.',
+    suitableFor: [
+      'Seminars and workshops',
+      'Masterclasses and mastermind programmes',
+      'Training sessions and leadership events',
+      'Panel discussions and networking events',
+      'Book launches and community gatherings',
+      'Webinars, recordings and hybrid programmes',
+      'Small conferences'
+    ],
+    features: 'The space can be arranged in different formats depending on the nature of the event, including theatre-style seating, classroom arrangements, round-table discussions and open networking layouts.',
+    bookingPrompt: 'Host your programme at The Loft — planning a seminar, workshop, mastermind or leadership event? The Loft is available for private hire.',
+    images: [
+      'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=2000',
+      'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000',
+      'https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000'
+    ]
+  },
+  'the-cafe': {
+    id: 'the-cafe',
+    title: 'The Café',
+    subtitle: 'A warm and stylish setting for smaller gatherings and celebrations.',
+    description: 'An inviting and intimately designed setting tailored for personal connections and vibrant social events.',
+    suitableFor: [
+      'Private breakfasts, brunches and dinners',
+      'Birthday celebrations',
+      'Bridal and baby showers',
+      'Book clubs and intimate conversations',
+      'Brand activations and pop-up events',
+      'Networking gatherings and small parties'
+    ],
+    features: 'Options to present: exclusive hire of the full café; reserved use of the private seating area; food and beverage packages; and event styling or setup as an optional add-on.',
+    bookingPrompt: 'Celebrate at Adora & Alora Café — reserve our private area or enquire about exclusive café hire for your next intimate event.',
+    images: [
+      'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&q=80&w=2000',
+      'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=2000'
+    ]
+  }
 };
 
 export default function VenueHire({ section }) {
-  const [venuesMap, setVenuesMap] = useState({});
-  const [activeVenue, setActiveVenue] = useState(section || 'default');
+  const [venuesMap, setVenuesMap] = useState(FALLBACK_VENUES);
+  const [activeVenue, setActiveVenue] = useState(section || 'the-loft');
   const [imageIndex, setImageIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchVenues = async () => {
       try {
         const res = await axios.get('/api/venue/spaces');
-        const map = {};
-        res.data.forEach((v, idx) => {
-          map[v.slug] = {
-            id: v.slug,
-            title: v.name,
-            subtitle: v.shortDescription || `Capacity: ${v.capacity || 'Flexible'}`,
-            description: v.description || '',
-            suitableFor: v.seatingOptions?.length > 0 ? v.seatingOptions : ['Private Events', 'Gatherings', 'Photoshoots'],
-            features: v.amenities?.join(', ') || 'Various features available upon request.',
-            bookingPrompt: `Enquire about booking ${v.name} for your next event.`,
-            images: v.images?.length > 0 ? v.images : ['https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000']
-          };
-        });
-        setVenuesMap(map);
-        if (res.data.length > 0) {
-          setActiveVenue(res.data[0].slug);
+        if (res.data && res.data.length > 0) {
+          const map = {};
+          res.data.forEach((v) => {
+            map[v.slug] = {
+              id: v.slug,
+              title: v.name,
+              subtitle: v.shortDescription || `Capacity: ${v.capacity || 'Flexible'}`,
+              description: v.description || '',
+              suitableFor: v.seatingOptions?.length > 0 ? v.seatingOptions : ['Private Events', 'Gatherings', 'Photoshoots'],
+              features: v.amenities?.join(', ') || 'Various features available upon request.',
+              bookingPrompt: `Enquire about booking ${v.name} for your next event.`,
+              images: v.images?.length > 0 ? v.images : ['https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000']
+            };
+          });
+          setVenuesMap(map);
+          if (!section) {
+            setActiveVenue(res.data[0].slug);
+          }
         }
       } catch (err) {
         console.error('Failed to load venue spaces:', err);
-      } finally {
-        setLoading(false);
       }
     };
     fetchVenues();
-  }, []);
+  }, [section]);
 
   useEffect(() => {
     if (section && venuesMap[section]) {
@@ -57,7 +92,7 @@ export default function VenueHire({ section }) {
     }
   }, [section, venuesMap]);
 
-  const venue = venuesMap[activeVenue] || DEFAULT_VENUE;
+  const venue = venuesMap[activeVenue] || Object.values(venuesMap)[0] || FALLBACK_VENUES['the-loft'];
 
   const handleVenueChange = (venueId) => {
     setActiveVenue(venueId);
@@ -73,13 +108,11 @@ export default function VenueHire({ section }) {
     <div className={styles.venuePage}>
       {/* Hero Intro */}
       <PageHeader 
-        eyebrow="Venue Hire"
         title={<>Host Your Event at Adora &amp; Alora</>}
-        description="Adora & Alora offers beautifully designed, versatile spaces for learning, connection, celebration and community. Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or brand gathering, our spaces can be adapted to suit your occasion."
-      />
-
-      {/* Interactive Tour */}
-      <div className={styles.tourSection}>
+      >
+        <p className={styles.heroDesc}>
+          Adora & Alora offers beautifully designed, versatile spaces for learning, connection, celebration and community. Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or brand gathering, our spaces can be adapted to suit your occasion.
+        </p>
         <div className={styles.tourControls}>
           {loading ? (
             <button className={`${styles.tourBtn} ${styles.activeBtn}`}>Loading...</button>
@@ -95,6 +128,10 @@ export default function VenueHire({ section }) {
             ))
           )}
         </div>
+      </PageHeader>
+
+      {/* Interactive Tour */}
+      <div className={styles.tourSection}>
 
         <div className={styles.tourDisplay}>
           <div className={styles.tourImageWrapper}>
@@ -140,12 +177,12 @@ export default function VenueHire({ section }) {
             
             <div className={styles.bookingBox}>
               <p>{venue.bookingPrompt}</p>
-              <button 
-                className={styles.scrollBtn}
+              <Button 
+                variant="primary"
                 onClick={() => document.getElementById('enquiry-form').scrollIntoView({ behavior: 'smooth' })}
               >
                 Enquire About Venue Hire &rarr;
-              </button>
+              </Button>
             </div>
           </div>
         </div>

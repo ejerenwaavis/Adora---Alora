@@ -67,12 +67,23 @@ export default function BookingModal({ session, onClose }) {
     return (
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={e => e.stopPropagation()}>
-          <div className="eyebrow centered" style={{ marginBottom: '0.75rem' }}>Adora &amp; Alora</div>
-          <h2>Sign in to book</h2>
-          <p className={styles.subtext}>You must be signed in to your member account to book a class or join the waitlist.</p>
-          <div className={styles.actions}>
-            <Link to="/login" className="btn btn-primary" onClick={onClose}>Sign In</Link>
-            <button onClick={onClose} className="btn btn-outline">Cancel</button>
+          <div className="eyebrow centered" style={{ marginBottom: '0.5rem' }}>Class Details</div>
+          <h2 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>{session.classType?.name}</h2>
+          
+          <div className={styles.details} style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <p style={{ fontWeight: 500, color: 'var(--cocoa-deep)' }}>
+              {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })} at {new Date(session.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+            </p>
+            <p>Instructor: {session.instructor?.firstName} {session.instructor?.lastName}</p>
+          </div>
+
+          <div style={{ borderTop: '1px solid var(--line)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
+            <h3 style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Sign in to book</h3>
+            <p className={styles.subtext} style={{ textAlign: 'center' }}>You must be signed in to your member account to book a class or join the waitlist.</p>
+            <div className={styles.actions} style={{ justifyContent: 'center' }}>
+              <Link to="/login" className="btn btn-primary" onClick={onClose}>Sign In</Link>
+              <button onClick={onClose} className="btn btn-outline">Cancel</button>
+            </div>
           </div>
         </div>
       </div>

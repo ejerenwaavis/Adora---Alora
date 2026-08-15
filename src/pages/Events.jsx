@@ -128,7 +128,7 @@ export default function Events({ detail }) {
       {/* HERO FEATURED */}
       <PageHeader 
         eyebrow="Upcoming Events" 
-        title={<>Where the house <em>comes together.</em></>} 
+        title={<>Where the house <span style={{ fontStyle: 'italic', color: 'var(--rust)', fontWeight: 400 }}>comes together.</span></>} 
       />
 
       <div className={styles.evFilter}>
@@ -138,11 +138,6 @@ export default function Events({ detail }) {
         <div className={`${styles.evPill} ${activeFilter === 'month' ? styles.on : ''}`} onClick={() => setActiveFilter('month')}>This month</div>
       </div>
 
-      <div className={styles.evLegend}>
-        <div className={styles.evLeg}><div className={styles.evLegDot} style={{ background: 'var(--rust)' }}></div>House event</div>
-        <div className={styles.evLeg}><div className={styles.evLegDot} style={{ background: 'var(--olive)' }}></div>Partner event</div>
-      </div>
-
       {/* HERO FEATURED */}
       {heroEvent && (
         <Link to={`/events/${heroEvent.slug}`} className={`${styles.evHero} ${styles.fadeIn}`}>
@@ -150,7 +145,7 @@ export default function Events({ detail }) {
           <div className={styles.evHeroBody}>
             <div className={styles.evHeroTop}>
               <div className={styles.evHeroHostRow}>
-                <span className={`${styles.evHostBadge} ${heroEvent.eventType === 'house' ? styles.evHostHouse : styles.evHostPartner}`}>
+                <span className={styles.evCardHost}>
                   {heroEvent.organiser}
                 </span>
               </div>

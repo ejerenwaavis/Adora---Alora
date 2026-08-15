@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/ui/PageHeader';
+import Button from '../components/ui/Button';
 import styles from './Fashion.module.css';
 
 // Utility to determine if a color is light or dark to set text contrast
@@ -26,6 +27,8 @@ export default function Fashion() {
   const [displayImageIndex, setDisplayImageIndex] = useState(0);
   const [animState, setAnimState] = useState('idle');
   const [showCatalog, setShowCatalog] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/fashion')
@@ -49,10 +52,15 @@ export default function Fashion() {
   const handleTabClick = (layerObj) => {
     setActiveLayer(layerObj.layer);
     setShowCatalog(false); // Reset catalog view when switching tabs
+    setIsExpanded(false);
     if (layerObj.items && layerObj.items.length > 0) {
       setActiveItem(layerObj.items[0]);
+      setDisplayItem(layerObj.items[0]);
+      setDisplayImageIndex(0);
     } else {
       setActiveItem(null);
+      setDisplayItem(null);
+      setDisplayImageIndex(0);
     }
   };
 
@@ -80,6 +88,7 @@ export default function Fashion() {
     
     // Update the shell state immediately for background change
     setActiveItem(item);
+    setIsExpanded(false);
     
     // Animate the image out, then update image, then animate in
     setAnimState('out');
@@ -140,16 +149,36 @@ export default function Fashion() {
               </div>
 
               <div className={styles.vcBody}>
-                {/* Left Column: Info */}
-                <div className={styles.vcInfo}>
+                {/* Mobile Title Block */}
+                <div className={styles.vcMobileTitle}>
                   <div className={styles.vcSeller}>{currentRenderItem?.brand || currentRenderItem?.sellerName} — Adora Archive</div>
                   <h2 className={styles.vcName}>{currentRenderItem?.name}</h2>
-                  <div className={styles.vcLayerBadge}>
-                    <svg width="7" height="7" viewBox="0 0 7 7"><circle cx="3.5" cy="3.5" r="3.5" fill="currentColor"/></svg>
-                    {activeLayer?.name || 'Archive'} Layer
+                </div>
+
+                {/* Left Column: Info */}
+                <div className={styles.vcInfo}>
+                  <div className={styles.vcDesktopTitle}>
+                    <div className={styles.vcSeller}>{currentRenderItem?.brand || currentRenderItem?.sellerName} — Adora Archive</div>
+                    <h2 className={styles.vcName}>{currentRenderItem?.name}</h2>
                   </div>
-                  <p className={styles.vcDesc}>{currentRenderItem?.description}</p>
-                  <div className={styles.vcTagline}>"Confidence, wrapped in warmth."</div>
+                  <p className={styles.vcDesc}>
+                    {(() => {
+                      const desc = currentRenderItem?.description || '';
+                      const isLong = desc.length > 95;
+                      if (!isLong) return desc;
+                      return (
+                        <>
+                          {isExpanded ? desc : `${desc.slice(0, 90)}...`}
+                          <button 
+                            className={styles.readMoreBtn} 
+                            onClick={() => setIsExpanded(!isExpanded)}
+                          >
+                            {isExpanded ? ' Show Less' : ' Read More'}
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </p>
                   
                   <div className={styles.vcPriceRow}>
                     <div className={styles.vcPrice}>{currentRenderItem ? formatPrice(currentRenderItem.displayPriceKobo) : ''}</div>
@@ -157,13 +186,13 @@ export default function Fashion() {
                   </div>
                   
                   {currentRenderItem?.raireListingUrl ? (
-                    <a href={currentRenderItem.raireListingUrl} target="_blank" rel="noopener noreferrer" className={styles.vcBtn}>
+                    <Button href={currentRenderItem.raireListingUrl} target="_blank" rel="noopener noreferrer" variant="primary">
                       View on Raireapp &rarr;
-                    </a>
+                    </Button>
                   ) : (
-                    <button className={styles.vcBtn}>
+                    <Button variant="primary">
                       Reserve Item &rarr;
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -176,6 +205,8 @@ export default function Fashion() {
                         src={currentRenderItem.images[displayImageIndex]} 
                         alt={currentRenderItem.name} 
                         className={`${styles.mainImage} ${animState === 'out' ? styles.flyOut : ''} ${animState === 'in' ? styles.flyIn : ''}`} 
+                        onClick={() => setIsLightboxOpen(true)}
+                        style={{ cursor: 'zoom-in' }}
                       />
                     )}
                   </div>
@@ -192,9 +223,7 @@ export default function Fashion() {
                           alt="angle"
                         />
                       ))
-                    ) : (
-                      <span>"Confidence, wrapped in warmth."</span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -208,7 +237,6 @@ export default function Fashion() {
                           className={`${styles.vcThumb} ${activeItem._id === item._id ? styles.vcThumbOn : ''}`}
                           onClick={() => {
                             triggerItemChange(item);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                         >
                           <img src={item.images?.[0]} alt={item.name} className={styles.thumbImg} />
@@ -220,7 +248,7 @@ export default function Fashion() {
 
                   {currentRenderItem?.sizes && currentRenderItem.sizes.length > 0 && (
                     <div className={styles.vcSizesBlock}>
-                      <div className={styles.vcSizeLbl2}>Choose size</div>
+                      <div className={styles.vcSizeLbl2}>AVAILABLE SIZE</div>
                       <div className={styles.vcSzRow}>
                         {currentRenderItem.sizes.map((size, idx) => (
                           <div key={idx} className={styles.vcSz2}>{size}</div>
@@ -234,12 +262,12 @@ export default function Fashion() {
 
             {/* View Full Catalog Section */}
             <div className={styles.catalogSection}>
-              <button 
-                className={styles.catalogBtn}
+              <Button 
+                variant="outline"
                 onClick={() => setShowCatalog(!showCatalog)}
               >
                 {showCatalog ? 'Hide Collection ↑' : 'View Full Collection ↓'}
-              </button>
+              </Button>
 
               {showCatalog && (
                 <div className={styles.catalogGrid}>
@@ -249,7 +277,6 @@ export default function Fashion() {
                       className={styles.catalogItem}
                       onClick={() => {
                         triggerItemChange(item);
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                     >
                       <div className={styles.catalogImgWrapper}>
@@ -277,9 +304,9 @@ export default function Fashion() {
                       and strict curation criteria. Discover the leading voices in our marketplace.
                     </p>
                   </div>
-                  <a href="https://raireapp.com/sell" target="_blank" rel="noopener noreferrer" className={styles.raireCta}>
+                  <Button href="https://raireapp.com/sell" target="_blank" rel="noopener noreferrer" variant="outline">
                     Become a Featured Seller &rarr;
-                  </a>
+                  </Button>
                 </div>
 
                 <div className={styles.sellersGrid}>
@@ -308,6 +335,35 @@ export default function Fashion() {
           </div>
         )}
       </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && currentRenderItem?.images && (
+        <div className={styles.lightboxOverlay} onClick={() => setIsLightboxOpen(false)}>
+          <button className={styles.lightboxClose} onClick={() => setIsLightboxOpen(false)}>&times;</button>
+          
+          <div className={styles.lightboxContent} onClick={e => e.stopPropagation()}>
+            <img 
+              src={currentRenderItem.images[displayImageIndex]} 
+              alt={currentRenderItem.name} 
+              className={styles.lightboxImg} 
+            />
+            
+            {currentRenderItem.images.length > 1 && (
+              <div className={styles.lightboxThumbs}>
+                {currentRenderItem.images.map((img, idx) => (
+                  <img 
+                    key={idx}
+                    src={img} 
+                    className={`${styles.lightboxThumb} ${displayImageIndex === idx ? styles.lightboxThumbOn : ''}`}
+                    onClick={() => setDisplayImageIndex(idx)}
+                    alt="angle"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

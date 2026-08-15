@@ -105,24 +105,51 @@ async function seedData() {
     await VenueSpace.deleteMany({});
     await VenueSpace.insertMany([
       {
-        name: "The Coastal Courtyard",
-        slug: "coastal-courtyard",
-        description: "An open-air sanctuary wrapped in lush Mediterranean flora and natural limestone.",
-        capacityText: "Up to 50 guests standing, 30 seated",
-        features: ["Outdoor Space", "Natural Light", "Cafe Access"],
-        isActive: true,
+        name: "The Loft",
+        slug: "the-loft",
+        shortDescription: "A flexible venue created for meaningful learning, conversation and connection.",
+        description: "Positioned as a learning and events venue rather than a leadership lounge — “The Loft” is more distinctive and commercially flexible.",
+        capacity: 60,
+        seatingOptions: [
+          "Seminars and workshops",
+          "Masterclasses and mastermind programmes",
+          "Training sessions and leadership events",
+          "Panel discussions and networking events",
+          "Book launches and community gatherings",
+          "Webinars, recordings and hybrid programmes",
+          "Small conferences"
+        ],
+        amenities: ["Flexible seating formats", "AV Equipment", "Theatre & Classroom Layouts", "WiFi"],
+        isAvailable: true,
         sortOrder: 1,
-        images: ["https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=2000"]
+        images: [
+          "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000",
+          "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000",
+          "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2000"
+        ]
       },
       {
-        name: "The Movement Loft",
-        slug: "movement-loft",
-        description: "A bright, airy studio with sprung floors and premium Pilates reformer equipment.",
-        capacityText: "12 Reformer beds, up to 20 for mat work",
-        features: ["Mirrors", "Sonos Sound System", "Private Lockers"],
-        isActive: true,
+        name: "The Café",
+        slug: "the-cafe",
+        shortDescription: "A warm and stylish setting for smaller gatherings and celebrations.",
+        description: "An inviting and intimately designed setting tailored for personal connections and vibrant social events.",
+        capacity: 40,
+        seatingOptions: [
+          "Private breakfasts, brunches and dinners",
+          "Birthday celebrations",
+          "Bridal and baby showers",
+          "Book clubs and intimate conversations",
+          "Brand activations and pop-up events",
+          "Networking gatherings and small parties"
+        ],
+        amenities: ["Exclusive full café hire", "Private seating area", "Food & beverage packages", "Optional event styling"],
+        isAvailable: true,
         sortOrder: 2,
-        images: ["https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&q=80&w=2000"]
+        images: [
+          "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=2000",
+          "https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&q=80&w=2000",
+          "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=2000"
+        ]
       }
     ]);
     console.log('✅ Seeded VenueSpaces');

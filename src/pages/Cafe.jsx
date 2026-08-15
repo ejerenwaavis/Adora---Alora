@@ -11,6 +11,7 @@ export default function Cafe() {
   const [activeTab, setActiveTab] = useState('all');
   const [activeItem, setActiveItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMobileModal, setShowMobileModal] = useState(false);
 
   useEffect(() => {
     fetch('/api/menu')
@@ -139,7 +140,7 @@ export default function Cafe() {
           ) : (
             <div className={styles.cmStage}>
               {/* LEFT SIDE: GRID */}
-              <div>
+              <div className={styles.cmGridWrap}>
                 <div className={styles.cmGrid}>
                   {filteredItems.map((item, idx) => {
                     const isFeat = idx === 0 && item.isSignature; // Make first item featured if it's a signature
@@ -149,7 +150,10 @@ export default function Cafe() {
                       <div 
                         key={item._id || idx}
                         className={`${styles.cmCard} ${isFeat ? styles.cmCardFeatured : ''} ${styles.fadeIn}`}
-                        onClick={() => setActiveItem(item)}
+                        onClick={() => {
+                          setActiveItem(item);
+                          setShowMobileModal(true);
+                        }}
                         style={{ outline: isActive ? '2px solid var(--rust)' : 'none', outlineOffset: '-2px' }}
                       >
                         <div className={styles.cmCardImg}>
@@ -159,22 +163,10 @@ export default function Cafe() {
                             <div className={styles.cmCardImgInner} style={{ background: 'linear-gradient(135deg, var(--taupe), var(--cocoa-deep))' }} />
                           )}
                           {item.badge && <span className={styles.cmBadge}>{item.badge}</span>}
-                          {item.dietaryTags && item.dietaryTags.length > 0 && (
-                            <div className={styles.cmDietary}>
-                              {item.dietaryTags.slice(0, 2).map((tag, tIdx) => (
-                                <span key={tIdx} className={styles.cmDtag}>{tag}</span>
-                              ))}
-                            </div>
-                          )}
                         </div>
                         <div className={styles.cmCardBody}>
                           <div className={styles.cmCardCat}>{item.categoryName}</div>
                           <div className={styles.cmCardName}>{item.name}</div>
-                          <div className={styles.cmCardDesc}>
-                            {item.description && item.description.length > (isFeat ? 120 : 70)
-                              ? item.description.slice(0, isFeat ? 120 : 70) + '…'
-                              : item.description}
-                          </div>
                           <div className={styles.cmCardFoot}>
                             <div className={styles.cmPrice}>{item.priceKobo ? `₦${(item.priceKobo / 100).toLocaleString()}` : item.price || ''} <span>naira</span></div>
                             <div className={styles.cmArrow}>&rarr;</div>
@@ -198,7 +190,8 @@ export default function Cafe() {
 
               {/* RIGHT SIDE: PANEL */}
               {activeItem && (
-                <div className={styles.cmPanel}>
+                <div className={`${styles.cmPanel} ${showMobileModal ? styles.cmPanelMobileOpen : ''}`}>
+                  <button className={styles.cmPanelClose} onClick={() => setShowMobileModal(false)}>✕</button>
                   <div className={styles.cmPanelImg}>
                     <div className={styles.cmPanelGlow}></div>
                     {activeItem.image ? (
@@ -224,9 +217,6 @@ export default function Cafe() {
                         ))}
                       </div>
                     )}
-                    <button style={{ width: '100%', background: 'var(--rust)', color: 'var(--paper)', fontFamily: 'var(--f-sans)', fontSize: '11px', letterSpacing: '.1em', textTransform: 'uppercase', padding: '14px', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
-                      View Full Details &rarr;
-                    </button>
                   </div>
                 </div>
               )}

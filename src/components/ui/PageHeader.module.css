@@ -1,6 +1,6 @@
 .pageHeader {
   text-align: center;
-  padding: 120px 20px 60px;
+  padding: 80px 20px 80px;
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -55,7 +55,7 @@
 
 @media (max-width: 768px) {
   .pageHeader {
-    padding: 100px 20px 40px;
+    padding: 40px 20px 40px;
   }
   .title {
     font-size: clamp(32px, 8vw, 40px);

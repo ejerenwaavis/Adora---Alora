@@ -256,7 +256,7 @@
 .announceClose:hover { opacity: 1; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 995px) {
   .navLinks { display: none; }
   .hamburger { display: flex; }
 }

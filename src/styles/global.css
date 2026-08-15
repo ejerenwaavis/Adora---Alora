@@ -43,6 +43,8 @@ input, textarea, select { font-family: inherit; }
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 0 var(--gutter);
+  width: 100%;
+  box-sizing: border-box;
 }
 .section  { padding: var(--section-pad) 0; }
 .section-lg { padding: calc(var(--section-pad) * 1.33) 0; }

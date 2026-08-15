@@ -84,6 +84,29 @@ router.get('/site/faqs', async (req, res) => {
   }
 });
 
+const Setting = require('../models/Setting');
+
+router.get('/site/settings/contact', async (req, res) => {
+  try {
+    const settings = await Setting.find({
+      key: { $in: [
+        'contact_email', 'contact_phone', 'location_address',
+        'location_map_url', 'location_map_query', 'opening_hours_weekday',
+        'opening_hours_weekend', 'open_today_text'
+      ]}
+    });
+    
+    const settingsMap = settings.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {});
+    
+    res.json(settingsMap);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
 router.get('/menu', async (req, res) => {
   try {
     const categories = await MenuCategory.find({ isActive: true }).sort('sortOrder');

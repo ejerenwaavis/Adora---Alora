@@ -1,6 +1,5 @@
 .fashionPage {
-  min-height: 100vh;
-  padding-top: 120px;
+  padding-top: 60px;
   padding-bottom: 80px;
   background: #F6EEE0;
   display: flex;
@@ -27,7 +26,7 @@
   min-height: 420px;
   background: var(--bg-gradient, linear-gradient(160deg, var(--accent-color, #3B2210) 0%, rgba(20,20,20,0.9) 50%, rgba(10,10,10,0.95) 100%));
   box-shadow: 0 30px 60px rgba(0,0,0,0.2);
-  transition: background 0.8s ease-in-out;
+  transition: background 0.8s ease-in-out, min-height 0.4s ease;
 }
 
 .vcGlow {
@@ -61,47 +60,53 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 22px 28px 0;
+  padding: 44px 56px 0;
   position: relative;
   z-index: 2;
 }
 
 .vcTab {
-  font-size: 10px;
-  letter-spacing: .12em;
+  font-family: var(--f-body, 'Jost', sans-serif);
+  font-size: var(--text-sm, 13px);
+  font-weight: 500;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  padding: 7px 16px;
-  border-radius: 20px;
+  padding: 14px 26px;
+  border-radius: var(--radius-sm, 2px);
   border: 1px solid var(--border-muted, rgba(220,203,178,.2));
   color: var(--text-muted, rgba(220,203,178,.6));
   background: transparent;
   cursor: pointer;
   transition: all 0.3s ease;
+  line-height: 1.2;
 }
 
-.vcTab:hover {
-  background: var(--bg-muted, rgba(255, 255, 255, 0.05));
+.vcTab:hover:not(.vcTabActive) {
+  border-color: var(--text-color, #F7EFE1);
   color: var(--text-color, #F7EFE1);
 }
 
 .vcTabActive {
-  background: var(--text-color, #F7EFE1);
-  border-color: var(--text-color, #F7EFE1);
-  color: var(--inverse-text-color, #1A0E05);
+  background: #FFFFFF;
+  border-color: #FFFFFF;
+  color: var(--cocoa-deep, #2A1D14);
 }
 
 /* Body */
 .vcBody {
   display: grid;
-  grid-template-columns: 1fr 320px 1fr;
-  gap: 0;
-  padding: 24px 28px 32px;
+  grid-template-columns: 340px 1fr 220px;
+  gap: 40px;
+  padding: 32px 56px 56px;
   align-items: center;
   position: relative;
   z-index: 2;
 }
 
-/* Left Info */
+/* Left Info & Titles */
+.vcMobileTitle {
+  display: none;
+}
 .vcInfo {
   padding-right: 28px;
   display: flex;
@@ -151,6 +156,27 @@
   margin-bottom: 16px;
   max-width: 90%;
   white-space: pre-line;
+  min-height: 44px;
+  transition: all 0.3s ease;
+}
+
+.readMoreBtn {
+  background: none;
+  border: none;
+  color: var(--text-color, #F7EFE1);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-left: 6px;
+  text-decoration: underline;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+.readMoreBtn:hover {
+  opacity: 1;
 }
 
 .vcTagline {
@@ -181,27 +207,6 @@
   letter-spacing: .06em;
 }
 
-.vcBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--rust, #A4451F);
-  color: #FCF8F0;
-  font-family: var(--f-sans, sans-serif);
-  font-size: 11px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  padding: 14px 24px;
-  border: none;
-  cursor: pointer;
-  border-radius: 2px;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.vcBtn:hover {
-  background: var(--rust-dark, #822F10);
-}
 
 /* Center Image (Arch) */
 .vcCenter {
@@ -213,7 +218,7 @@
 
 .vcHeroFrame {
   width: 100%;
-  max-width: 300px;
+  max-width: 500px;
   aspect-ratio: 4/5;
   display: flex;
   align-items: center;
@@ -284,7 +289,7 @@
   padding-left: 28px;
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 16px;
 }
 
@@ -293,17 +298,18 @@
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--text-muted, rgba(220,203,178,.5));
-  align-self: flex-end;
+  align-self: center;
 }
 
 .vcThumbRow {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  align-items: flex-end;
+  align-items: center;
   max-height: 300px;
   overflow-y: auto;
   padding-right: 4px;
+  padding-left: 7px; /* Offsets the 3px scrollbar + 4px padding on the right to keep true center */
 }
 .vcThumbRow::-webkit-scrollbar { width: 3px; }
 .vcThumbRow::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
@@ -311,7 +317,7 @@
 .thumbWrapper {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .vcThumb {
@@ -340,14 +346,17 @@
 .vcThumbName {
   font-size: 9px;
   color: var(--text-muted, rgba(220,203,178,.6));
-  text-align: right;
-  margin-top: 4px;
+  text-align: center;
+  margin-top: 2px;
 }
 
 /* Sizes */
 .vcSizesBlock {
   margin-top: 16px;
-  align-self: flex-end;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .vcSizeLbl2 {
@@ -356,7 +365,7 @@
   text-transform: uppercase;
   color: var(--text-muted, rgba(220,203,178,.5));
   margin-bottom: 8px;
-  text-align: right;
+  text-align: center;
 }
 
 .vcSzRow {
@@ -395,24 +404,6 @@
   width: 100%;
 }
 
-.catalogBtn {
-  background: transparent;
-  border: 1px solid rgba(20,20,20,0.1);
-  color: #1a1a1a;
-  font-family: var(--f-sans, sans-serif);
-  font-size: 11px;
-  letter-spacing: .15em;
-  text-transform: uppercase;
-  padding: 16px 32px;
-  border-radius: 40px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.catalogBtn:hover {
-  background: #1a1a1a;
-  color: #F6EEE0;
-}
 
 .catalogGrid {
   display: grid;
@@ -537,23 +528,6 @@
   line-height: 1.6;
 }
 
-.raireCta {
-  display: inline-block;
-  padding: 12px 24px;
-  border: 1px solid rgba(20,20,20,0.2);
-  border-radius: 40px;
-  color: #1a1a1a;
-  font-size: 11px;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.raireCta:hover {
-  background: #1a1a1a;
-  color: #F6EEE0;
-}
 
 .sellersGrid {
   display: grid;
@@ -604,12 +578,20 @@
 }
 
 @media (max-width: 1024px) {
+  .vcTabs {
+    justify-content: center;
+    padding-bottom: 32px;
+  }
+  .vcThumbsTitle {
+    align-self: center;
+  }
   .vcBody {
     grid-template-columns: 1fr 1fr;
-    gap: 32px;
+    gap: 16px;
   }
   .vcRight {
-    align-items: flex-start;
+    grid-column: 1 / -1;
+    align-items: center;
     padding-left: 0;
   }
   .vcThumbRow {
@@ -618,6 +600,7 @@
     overflow-y: hidden;
     max-height: none;
     align-items: flex-start;
+    justify-content: center;
   }
   .thumbWrapper {
     align-items: center;
@@ -626,28 +609,181 @@
     text-align: center;
   }
   .vcSizesBlock {
-    align-self: flex-start;
+    align-self: center;
   }
   .vcSizeLbl2 {
-    text-align: left;
+    text-align: center;
   }
   .vcSzRow {
-    justify-content: flex-start;
+    justify-content: center;
+  }
+  .vcHeroFrame {
+    aspect-ratio: auto;
+  }
+  .mainImage {
+    height: auto;
   }
   .brandProfiles { grid-template-columns: 1fr; gap: 40px; }
   .sellersGrid { grid-template-columns: repeat(3, 1fr); }
   .raireHeader { flex-direction: column; align-items: flex-start; gap: 20px; }
 }
 @media (max-width: 768px) {
+  .vcTabs {
+    padding: 16px 20px 0;
+    justify-content: center;
+  }
   .vcBody {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 20px 24px;
+  }
+  .vcMobileTitle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    order: 1;
+    width: 100%;
+    margin-top: 24px;
+  }
+  .vcMobileTitle .vcLayerBadge {
+    margin-bottom: 0;
+  }
+  .vcMobileTitle .vcName {
+    font-size: 32px;
+  }
+  .vcDesktopTitle {
+    display: none;
   }
   .vcCenter {
-    order: -1;
+    order: 2;
+  }
+  .vcHeroFrame {
+    aspect-ratio: auto;
+  }
+  .mainImage {
+    height: auto;
+  }
+  .vcInfo {
+    order: 4;
+    width: 100%;
+    padding-right: 0;
+    align-items: center;
+    text-align: center;
+  }
+  .vcDesc {
+    text-align: center;
+    margin: 0 auto 16px auto;
+  }
+  .vcPriceRow {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .vcRight {
+    order: 3;
+    width: 100%;
+    align-items: center;
+    gap: 8px;
+  }
+  .vcThumbsTitle {
+    align-self: center;
+  }
+  .vcThumbRow {
+    width: 100%;
+    justify-content: center;
+  }
+  .vcSizesBlock {
+    align-self: center;
+    margin-top: 24px;
+  }
+  .vcSizeLbl2 {
+    text-align: center;
+  }
+  .vcSzRow {
+    justify-content: center;
   }
   .catalogGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
   .sellersGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Lightbox Modal */
+.lightboxOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.lightboxClose {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 48px;
+  font-weight: 300;
+  cursor: pointer;
+  z-index: 10000;
+  transition: opacity 0.3s ease;
+  line-height: 1;
+}
+
+.lightboxClose:hover {
+  opacity: 0.7;
+}
+
+.lightboxContent {
+  position: relative;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightboxImg {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.lightboxThumbs {
+  display: flex;
+  gap: 16px;
+  margin-top: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.lightboxThumb {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.lightboxThumb:hover {
+  opacity: 1;
+}
+
+.lightboxThumbOn {
+  opacity: 1;
+  border-color: #ffffff;
 }

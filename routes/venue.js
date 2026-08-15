@@ -7,7 +7,13 @@ const VenueSpace = require('../models/VenueSpace');
 // Public
 router.get('/spaces', async (req, res) => {
   try {
-    const spaces = await VenueSpace.find({ isActive: true }).sort('sortOrder');
+    const spaces = await VenueSpace.find({
+      $or: [
+        { isAvailable: true },
+        { isActive: true },
+        { isAvailable: { $exists: false }, isActive: { $exists: false } }
+      ]
+    }).sort('sortOrder');
     res.json(spaces);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch venue spaces' });
@@ -16,7 +22,7 @@ router.get('/spaces', async (req, res) => {
 
 router.get('/spaces/:slug', async (req, res) => {
   try {
-    const space = await VenueSpace.findOne({ slug: req.params.slug, isActive: true });
+    const space = await VenueSpace.findOne({ slug: req.params.slug });
     if (!space) return res.status(404).json({ error: 'Venue not found' });
     res.json(space);
   } catch (err) {

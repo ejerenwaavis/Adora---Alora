@@ -1,7 +1,25 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Eyebrow from '../ui/Eyebrow.jsx';
 import styles from './VisitPanel.module.css';
 
 export default function VisitPanel() {
-  const mapsUrl = "https://maps.google.com/?q=14+Adetokunbo+Ademola+Street,+Victoria+Island,+Lagos,+Nigeria";
+  const [settings, setSettings] = useState(null);
+  
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('/api/site/settings/contact');
+        setSettings(res.data);
+      } catch (err) {
+        console.error('Failed to load contact settings:', err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const mapsUrl = settings?.location_map_url || "https://maps.google.com/?q=14+Adetokunbo+Ademola+Street,+Victoria+Island,+Lagos,+Nigeria";
+  const mapQuery = settings?.location_map_query ? encodeURIComponent(settings.location_map_query) : '14%20Adetokunbo%20Ademola%20Street,%20Victoria%20Island,%20Lagos,%20Nigeria';
 
   return (
     <section className={styles.visit} id="visit">
@@ -10,8 +28,8 @@ export default function VisitPanel() {
           {/* Left: Expansive Live Map with Overlay Badge */}
           <div className={styles.visitMap}>
             <iframe
-              title="Adora & Alora Location — 14 Adetokunbo Ademola Street, Victoria Island, Lagos"
-              src="https://maps.google.com/maps?q=14%20Adetokunbo%20Ademola%20Street,%20Victoria%20Island,%20Lagos,%20Nigeria&t=&z=16&ie=UTF8&iwloc=&output=embed"
+              title="Adora & Alora Location"
+              src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
               className={styles.mapIframe}
               allowFullScreen=""
               loading="lazy"
@@ -22,7 +40,7 @@ export default function VisitPanel() {
             <div className={styles.mapOverlayBadge}>
               <div className={styles.badgePin}>
                 <span className={styles.pingDot}></span>
-                Victoria Island, Lagos
+                {settings?.location_address ? settings.location_address.split('\n')[1] || 'Victoria Island, Lagos' : 'Victoria Island, Lagos'}
               </div>
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.badgeLink}>
                 Get Directions &nearr;
@@ -33,8 +51,8 @@ export default function VisitPanel() {
           {/* Right: Passport Location Card */}
           <div className={styles.visitInfo}>
             <div>
-              <div className={styles.statusPill}>
-                <span className={styles.statusDot}></span> Open Today &bull; 6:30 AM &ndash; 9:00 PM
+              <div style={{ marginBottom: '16px' }}>
+                <Eyebrow text={settings?.open_today_text || 'Open Today • 6:30 AM – 9:00 PM'} />
               </div>
 
               <h2>Find the house.</h2>
@@ -48,9 +66,8 @@ export default function VisitPanel() {
                   </svg>
                   <div>
                     <div className={styles.label}>Location</div>
-                    <div className={styles.val}>
-                      14 Adetokunbo Ademola Street<br />
-                      Victoria Island, Lagos
+                    <div className={styles.val} style={{ whiteSpace: 'pre-line' }}>
+                      {settings?.location_address || "14 Adetokunbo Ademola Street\nVictoria Island, Lagos"}
                     </div>
                   </div>
                 </div>
@@ -63,8 +80,8 @@ export default function VisitPanel() {
                   <div>
                     <div className={styles.label}>Opening Hours</div>
                     <div className={styles.val}>
-                      Mon &mdash; Fri: 6:30am &ndash; 9:00pm<br />
-                      Sat &mdash; Sun: 8:00am &ndash; 10:00pm
+                      {settings?.opening_hours_weekday || "Mon — Fri: 6:30am – 9:00pm"}<br />
+                      {settings?.opening_hours_weekend || "Sat — Sun: 8:00am – 10:00pm"}
                     </div>
                   </div>
                 </div>
@@ -76,8 +93,8 @@ export default function VisitPanel() {
                   <div>
                     <div className={styles.label}>Contact Concierge</div>
                     <div className={styles.val}>
-                      hello@adora-alora.com<br />
-                      +234 800 000 0000
+                      {settings?.contact_email || "hello@adora-alora.com"}<br />
+                      {settings?.contact_phone || "+234 800 000 0000"}
                     </div>
                   </div>
                 </div>
@@ -89,7 +106,7 @@ export default function VisitPanel() {
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
                 Open in Maps &rarr;
               </a>
-              <a href="tel:+2348000000000" className={styles.secondaryBtn}>
+              <a href={`tel:${settings?.contact_phone ? settings.contact_phone.replace(/\s/g, '') : '+2348000000000'}`} className={styles.secondaryBtn}>
                 Call Desk
               </a>
             </div>
