@@ -13,6 +13,7 @@ import Fashion      from './pages/Fashion.jsx';
 import VenueHire    from './pages/VenueHire.jsx';
 import Events       from './pages/Events.jsx';
 import Visit        from './pages/Visit.jsx';
+import KioskCheckIn from './pages/KioskCheckIn.jsx';
 
 // Auth Pages
 import Login           from './pages/Login.jsx';
@@ -37,6 +38,14 @@ import FashionCMS      from './admin/FashionCMS.jsx';
 import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
+
+// Clerk Dashboard
+import ClerkLayout     from './clerk/ClerkLayout.jsx';
+import ClerkDashboard  from './clerk/DashboardHome.jsx';
+import ClassManagement from './clerk/ClassManagement.jsx';
+import CafeManagement  from './clerk/CafeManagement.jsx';
+import EventManagement from './clerk/EventManagement.jsx';
+import ActivityLogs    from './clerk/ActivityLogs.jsx';
 
 // ── Route Guards ──────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
@@ -70,6 +79,7 @@ export const router = createBrowserRouter([
       { path: 'events',                 element: <Events /> },
       { path: 'events/:slug',           element: <Events detail /> },
       { path: 'visit',                  element: <Visit /> },
+      { path: 'check-in',               element: <KioskCheckIn /> },
       
       // Public Auth routes inside PageShell so they get the main nav/footer
       { path: 'login',                  element: <Login /> },
@@ -109,10 +119,17 @@ export const router = createBrowserRouter([
     ]
   },
 
-  // ── Protected: clerk front desk (Stubs) ──
+  // ── Protected: clerk front desk ──
   {
     path:    '/clerk',
-    element: <RequireRole roles={['admin','clerk']}><div style={{padding:'2rem'}}>Clerk Dashboard coming soon</div></RequireRole>,
+    element: <RequireRole roles={['admin','clerk']}><ClerkLayout /></RequireRole>,
+    children: [
+      { index: true, element: <ClerkDashboard /> },
+      { path: 'classes', element: <ClassManagement /> },
+      { path: 'cafe', element: <CafeManagement /> },
+      { path: 'events', element: <EventManagement /> },
+      { path: 'logs', element: <ActivityLogs /> },
+    ]
   },
 
   // ── 404 fallback ──

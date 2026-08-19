@@ -189,4 +189,63 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
   }
 });
 
+// ── Kiosk Check-In (Public) ──
+
+// Find today's bookings for a user by email
+router.get('/today-by-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) return res.json([]);
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const bookings = await Booking.find({
+      user: user._id,
+      status: 'confirmed'
+    })
+    .populate({
+      path: 'classSession',
+      match: { startTime: { $gte: startOfDay, $lte: endOfDay } },
+      populate: [{ path: 'classType' }, { path: 'instructor' }]
+    })
+    .sort({ 'classSession.startTime': 1 });
+
+    // Filter out bookings where the populated classSession was null (because it didn't match the time range)
+    const todaysBookings = bookings.filter(b => b.classSession !== null);
+
+    res.json(todaysBookings);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Check-in via Kiosk
+router.post('/kiosk-check-in', async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    if (!bookingId) return res.status(400).json({ error: 'bookingId is required' });
+
+    const booking = await Booking.findById(bookingId).populate('classSession');
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    
+    if (booking.checkedInAt) {
+      return res.status(400).json({ error: 'Already checked in' });
+    }
+
+    booking.checkedInAt = new Date();
+    // We do not set checkedInBy since it's self-service kiosk
+    await booking.save();
+
+    res.json({ message: 'Checked in successfully', booking });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

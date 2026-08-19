@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 // Add timestamps to all console outputs (stdout and stderr)
 ['log', 'error', 'warn', 'info'].forEach((method) => {
   const original = console[method];
@@ -8,7 +7,6 @@ require('dotenv').config();
     original(`[${timestamp}]`, ...args);
   };
 });
-
 const express   = require('express');
 const mongoose  = require('mongoose');
 const helmet    = require('helmet');

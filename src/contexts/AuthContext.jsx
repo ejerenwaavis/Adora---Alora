@@ -25,7 +25,13 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ firstName, lastName, email, password }),
     });
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection failed. Please try again.`);
+    }
     if (!res.ok) throw new Error(data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed');
     return data;
   }, []);
@@ -36,7 +42,13 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, totpCode }),
     });
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection failed. Please try again.`);
+    }
     if (!res.ok) throw new Error(data.error || 'Login failed');
     if (data.requires2FA) return { requires2FA: true };
     localStorage.setItem('aa_access_token',  data.accessToken);
@@ -71,6 +83,10 @@ export function AuthProvider({ children }) {
       body: JSON.stringify({ refreshToken: refresh }),
     });
     if (!res.ok) { logout(); return null; }
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      logout(); return null;
+    }
     const { accessToken, refreshToken: newRefresh } = await res.json();
     localStorage.setItem('aa_access_token',  accessToken);
     localStorage.setItem('aa_refresh_token', newRefresh);
