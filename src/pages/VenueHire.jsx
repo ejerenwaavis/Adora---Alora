@@ -67,10 +67,12 @@ export default function VenueHire({ section }) {
               title: v.name,
               subtitle: v.shortDescription || `Capacity: ${v.capacity || 'Flexible'}`,
               description: v.description || '',
-              suitableFor: v.seatingOptions?.length > 0 ? v.seatingOptions : ['Private Events', 'Gatherings', 'Photoshoots'],
+              suitableFor: v.suitableFor?.length > 0 ? v.suitableFor : ['Private Events', 'Gatherings', 'Photoshoots'],
               features: v.amenities?.join(', ') || 'Various features available upon request.',
               bookingPrompt: `Enquire about booking ${v.name} for your next event.`,
-              images: v.images?.length > 0 ? v.images : ['https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000']
+              images: v.images?.length > 0 ? v.images : ['https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000'],
+              capacity: v.capacity,
+              priceKobo: v.priceKobo
             };
           });
           setVenuesMap(map);
@@ -162,6 +164,12 @@ export default function VenueHire({ section }) {
           <div className={styles.tourContent}>
             <h2 className={styles.venueTitle}>{venue.title}</h2>
             <h3 className={styles.venueSubtitle}>{venue.subtitle}</h3>
+
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', marginBottom: '1.5rem', color: 'var(--primary-dark)', fontSize: '0.9rem', fontWeight: 500, opacity: 0.8 }}>
+              {venue.capacity && <div><strong>Capacity:</strong> {venue.capacity} guests</div>}
+              {venue.priceKobo > 0 && <div><strong>Price:</strong> {(venue.priceKobo / 100).toLocaleString('en-NG', { style: 'currency', currency: 'NGN' })}</div>}
+            </div>
+            
             <p className={styles.venueDesc}>{venue.description}</p>
             
             <div className={styles.featuresBox}>

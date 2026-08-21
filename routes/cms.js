@@ -257,14 +257,24 @@ router.get('/fashion-items', async (req, res) => {
 router.post('/fashion-items', upload.array('images', 10), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files && req.files.length > 0) {
-      data.images = req.files.map(f => f.path);
-    }
-    if (data.sizes && typeof data.sizes === 'string') data.sizes = data.sizes.split(',').map(s => s.trim());
-    if (data.colors && typeof data.colors === 'string') data.colors = data.colors.split(',').map(c => c.trim());
-    if (data.existingImages) {
-      const existing = Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages];
-      data.images = [...(data.images || []), ...existing];
+    const finalImages = [];
+    let existingArray = data.existingImages ? (Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages]) : [];
+    let existingIdx = 0, newIdx = 0;
+    
+    if (data.mediaOrder) {
+      const order = JSON.parse(data.mediaOrder);
+      order.forEach(type => {
+        if (type === 'existing' && existingIdx < existingArray.length) finalImages.push(existingArray[existingIdx++]);
+        else if (type === 'new' && req.files && newIdx < req.files.length) finalImages.push(req.files[newIdx++].path);
+      });
+      data.images = finalImages;
+    } else {
+      if (req.files && req.files.length > 0) {
+        data.images = req.files.map(f => f.path);
+      }
+      if (data.existingImages) {
+        data.images = [...(data.images || []), ...existingArray];
+      }
     }
     const existingItem = await FashionItem.findOne({ slug: data.slug });
     if (existingItem) {
@@ -282,13 +292,22 @@ router.patch('/fashion-items/:id', upload.array('images', 10), async (req, res) 
     
     // Combine existing images (URLs) + newly uploaded images (files)
     let finalImages = [];
-    if (data.existingImages) {
-      finalImages = Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages];
+    let existingArray = data.existingImages ? (Array.isArray(data.existingImages) ? data.existingImages : [data.existingImages]) : [];
+    let existingIdx = 0, newIdx = 0;
+
+    if (data.mediaOrder) {
+      const order = JSON.parse(data.mediaOrder);
+      order.forEach(type => {
+        if (type === 'existing' && existingIdx < existingArray.length) finalImages.push(existingArray[existingIdx++]);
+        else if (type === 'new' && req.files && newIdx < req.files.length) finalImages.push(req.files[newIdx++].path);
+      });
+      data.images = finalImages;
+    } else {
+      if (req.files && req.files.length > 0) {
+        finalImages = finalImages.concat(req.files.map(f => f.path));
+      }
+      data.images = existingArray.concat(finalImages);
     }
-    if (req.files && req.files.length > 0) {
-      finalImages = finalImages.concat(req.files.map(f => f.path));
-    }
-    data.images = finalImages;
 
     if (data.sizes && typeof data.sizes === 'string') data.sizes = data.sizes.split(',').map(s => s.trim());
     if (data.colors && typeof data.colors === 'string') data.colors = data.colors.split(',').map(c => c.trim());
@@ -368,16 +387,46 @@ router.get('/venue-spaces', async (req, res) => {
 router.post('/venue-spaces', upload.array('gallery', 5), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files) data.gallery = req.files.map(f => f.path);
-    if (data.features) data.features = data.features.split(',').map(f => f.trim());
+    const finalImages = [];
+    let existingArray = data.existingGallery ? (Array.isArray(data.existingGallery) ? data.existingGallery : [data.existingGallery]) : [];
+    let existingIdx = 0, newIdx = 0;
+    
+    if (data.mediaOrder) {
+      const order = JSON.parse(data.mediaOrder);
+      order.forEach(type => {
+        if (type === 'existing' && existingIdx < existingArray.length) finalImages.push(existingArray[existingIdx++]);
+        else if (type === 'new' && req.files && newIdx < req.files.length) finalImages.push(req.files[newIdx++].path);
+      });
+      data.images = finalImages;
+    } else {
+      if (req.files) data.images = req.files.map(f => f.path);
+    }
+
+    if (data.features) data.amenities = data.features.split(',').map(f => f.trim());
+    if (data.suitableFor) data.suitableFor = data.suitableFor.split(',').map(s => s.trim());
     res.status(201).json(await new VenueSpace(data).save());
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/venue-spaces/:id', upload.array('gallery', 5), async (req, res) => {
   try {
     const data = { ...req.body };
-    if (req.files && req.files.length > 0) data.gallery = req.files.map(f => f.path);
-    if (data.features && typeof data.features === 'string') data.features = data.features.split(',').map(f => f.trim());
+    const finalImages = [];
+    let existingArray = data.existingGallery ? (Array.isArray(data.existingGallery) ? data.existingGallery : [data.existingGallery]) : [];
+    let existingIdx = 0, newIdx = 0;
+    
+    if (data.mediaOrder) {
+      const order = JSON.parse(data.mediaOrder);
+      order.forEach(type => {
+        if (type === 'existing' && existingIdx < existingArray.length) finalImages.push(existingArray[existingIdx++]);
+        else if (type === 'new' && req.files && newIdx < req.files.length) finalImages.push(req.files[newIdx++].path);
+      });
+      data.images = finalImages;
+    } else {
+      if (req.files && req.files.length > 0) data.images = req.files.map(f => f.path);
+    }
+
+    if (data.features && typeof data.features === 'string') data.amenities = data.features.split(',').map(f => f.trim());
+    if (data.suitableFor && typeof data.suitableFor === 'string') data.suitableFor = data.suitableFor.split(',').map(s => s.trim());
     res.json(await VenueSpace.findByIdAndUpdate(req.params.id, data, { new: true }));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });

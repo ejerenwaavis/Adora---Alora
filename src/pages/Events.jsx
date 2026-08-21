@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './Events.module.css';
 import PageHeader from '../components/ui/PageHeader';
+import EventCheckoutModal from '../components/EventCheckoutModal';
 
 const GRADIENTS = [
   'linear-gradient(180deg, #EAE0CD 0%, transparent 100%)',
@@ -23,6 +24,7 @@ export default function Events({ detail }) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -100,12 +102,27 @@ export default function Events({ detail }) {
                 </div>
               </div>
 
-              <button className={styles.bookBtn} onClick={() => alert('Checkout flow initiated!')}>
-                Book / RSVP
+              <button className={styles.bookBtn} onClick={() => {
+                if (event.bookingDestination === 'external_url' && event.externalUrl) {
+                  window.open(event.externalUrl, '_blank');
+                } else {
+                  setIsCheckoutOpen(true);
+                }
+              }}>
+                {event.bookingDestination === 'external_url' ? (event.externalOrganizerCta || 'Register with Partner') : 'Book / RSVP'}
               </button>
             </div>
           </div>
         </div>
+        {isCheckoutOpen && (
+          <EventCheckoutModal 
+            event={event} 
+            onClose={() => setIsCheckoutOpen(false)} 
+            onComplete={() => {
+               // Optionally refresh data or show success toast
+            }} 
+          />
+        )}
       </div>
     );
   }

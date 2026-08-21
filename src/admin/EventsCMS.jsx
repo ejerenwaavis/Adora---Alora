@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css';
@@ -11,7 +11,7 @@ export default function EventsCMS() {
   const [loading, setLoading] = useState(true);
 
   // Forms
-  const defaultVenueForm = { name: '', slug: '', description: '', capacity: 0, hourlyRateKobo: 0, features: '', sortOrder: 0, isActive: true, newGallery: [], existingGallery: [] };
+  const defaultVenueForm = { name: '', slug: '', description: '', shortDescription: '', suitableFor: '', capacity: 0, priceKobo: 0, features: '', sortOrder: 0, isActive: true, galleryItems: [] };
   const defaultEventForm = { 
     title: '', slug: '', description: '', shortDescription: '', 
     organiser: 'Aora House', bookingDestination: 'internal', externalUrl: '', externalOrganizerCta: '',
@@ -27,6 +27,9 @@ export default function EventsCMS() {
   const [editingVenueId, setEditingVenueId] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
   const [activeTab, setActiveTab] = useState('events');
+
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -53,14 +56,25 @@ export default function EventsCMS() {
       formData.append('name', venueForm.name);
       formData.append('slug', venueForm.slug);
       formData.append('description', venueForm.description);
+      formData.append('shortDescription', venueForm.shortDescription);
       formData.append('capacity', venueForm.capacity);
-      formData.append('hourlyRateKobo', venueForm.hourlyRateKobo);
+      formData.append('priceKobo', venueForm.priceKobo);
       formData.append('features', venueForm.features);
+      formData.append('suitableFor', venueForm.suitableFor);
       formData.append('sortOrder', venueForm.sortOrder);
       formData.append('isActive', venueForm.isActive);
 
-      venueForm.existingGallery.forEach(img => formData.append('existingGallery', img));
-      venueForm.newGallery.forEach(file => formData.append('gallery', file));
+      const mediaOrder = [];
+      venueForm.galleryItems.forEach((item) => {
+        if (item.type === 'existing') {
+          formData.append('existingGallery', item.url);
+          mediaOrder.push('existing');
+        } else {
+          formData.append('gallery', item.file);
+          mediaOrder.push('new');
+        }
+      });
+      formData.append('mediaOrder', JSON.stringify(mediaOrder));
 
       const res = await authFetch(url, {
         method,
@@ -88,32 +102,33 @@ export default function EventsCMS() {
     setEditingVenueId(venue._id);
     setVenueForm({ 
       name: venue.name, slug: venue.slug, description: venue.description || '', 
-      capacity: venue.capacity, hourlyRateKobo: venue.hourlyRateKobo, 
-      features: venue.features?.join(', ') || '', sortOrder: venue.sortOrder, isActive: venue.isActive,
-      existingGallery: venue.gallery || [], newGallery: []
+      shortDescription: venue.shortDescription || '', suitableFor: venue.suitableFor?.join(', ') || '',
+      capacity: venue.capacity || 0, priceKobo: venue.priceKobo || 0, 
+      features: venue.amenities?.join(', ') || '', sortOrder: venue.sortOrder || 0, isActive: venue.isActive ?? true,
+      galleryItems: venue.images ? venue.images.map(url => ({ type: 'existing', url })) : []
     });
     setActiveTab('venues');
   }
 
-  function moveVenueExistingImage(index, dir) {
-    const newEx = [...venueForm.existingGallery];
-    if (dir === -1 && index > 0) {
-      [newEx[index-1], newEx[index]] = [newEx[index], newEx[index-1]];
-    } else if (dir === 1 && index < newEx.length - 1) {
-      [newEx[index], newEx[index+1]] = [newEx[index+1], newEx[index]];
-    }
-    setVenueForm({...venueForm, existingGallery: newEx});
-  }
+  const handleDragStart = (e, position) => {
+    dragItem.current = position;
+  };
 
-  function moveVenueNewImage(index, dir) {
-    const newImg = [...venueForm.newGallery];
-    if (dir === -1 && index > 0) {
-      [newImg[index-1], newImg[index]] = [newImg[index], newImg[index-1]];
-    } else if (dir === 1 && index < newImg.length - 1) {
-      [newImg[index], newImg[index+1]] = [newImg[index+1], newImg[index]];
+  const handleDragEnter = (e, position) => {
+    dragOverItem.current = position;
+  };
+
+  const handleDragEnd = () => {
+    if (dragItem.current !== null && dragOverItem.current !== null) {
+      const newList = [...venueForm.galleryItems];
+      const draggedItemContent = newList[dragItem.current];
+      newList.splice(dragItem.current, 1);
+      newList.splice(dragOverItem.current, 0, draggedItemContent);
+      dragItem.current = null;
+      dragOverItem.current = null;
+      setVenueForm({ ...venueForm, galleryItems: newList });
     }
-    setVenueForm({...venueForm, newGallery: newImg});
-  }
+  };
 
   // Events
   async function handleEventSubmit(e) {
@@ -217,6 +232,11 @@ export default function EventsCMS() {
               </div>
               
               <div className={styles.field}>
+                <label>Subtitle (Short Description)</label>
+                <input type="text" value={venueForm.shortDescription} onChange={e => setVenueForm({...venueForm, shortDescription: e.target.value})} placeholder="e.g. A flexible venue created for meaningful learning..." />
+              </div>
+              
+              <div className={styles.field}>
                 <label>Description</label>
                 <textarea rows="3" value={venueForm.description} onChange={e => setVenueForm({...venueForm, description: e.target.value})} />
               </div>
@@ -227,13 +247,18 @@ export default function EventsCMS() {
                   <input type="number" value={venueForm.capacity} onChange={e => setVenueForm({...venueForm, capacity: Number(e.target.value)})} />
                 </div>
                 <div className={styles.field}>
-                  <label>Hourly Rate (Kobo/Cents)</label>
-                  <input type="number" value={venueForm.hourlyRateKobo} onChange={e => setVenueForm({...venueForm, hourlyRateKobo: Number(e.target.value)})} />
+                  <label>Price (Kobo/Cents)</label>
+                  <input type="number" value={venueForm.priceKobo} onChange={e => setVenueForm({...venueForm, priceKobo: Number(e.target.value)})} />
                 </div>
               </div>
 
               <div className={styles.field}>
-                <label>Features (comma separated)</label>
+                <label>Suitable For (comma separated)</label>
+                <input type="text" value={venueForm.suitableFor} onChange={e => setVenueForm({...venueForm, suitableFor: e.target.value})} placeholder="e.g. Seminars, Workshops, Masterclasses" />
+              </div>
+
+              <div className={styles.field}>
+                <label>Features / Amenities (comma separated)</label>
                 <input type="text" value={venueForm.features} onChange={e => setVenueForm({...venueForm, features: e.target.value})} placeholder="e.g. WiFi, Projector, Sound System" />
               </div>
               
@@ -255,42 +280,34 @@ export default function EventsCMS() {
                   The first image will be used as the main cover photo for the space.
                 </p>
                 <input type="file" multiple accept="image/*" onChange={e => {
-                  const files = Array.from(e.target.files).slice(0, 5 - venueForm.existingGallery.length - venueForm.newGallery.length);
-                  setVenueForm({...venueForm, newGallery: [...venueForm.newGallery, ...files]});
+                  const files = Array.from(e.target.files).slice(0, 5 - venueForm.galleryItems.length);
+                  const newItems = files.map(file => ({ type: 'new', file, url: URL.createObjectURL(file) }));
+                  setVenueForm({...venueForm, galleryItems: [...venueForm.galleryItems, ...newItems]});
                 }} />
                 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-                  {venueForm.existingGallery.map((url, i) => (
-                    <div key={`existing-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: i === 0 ? '2px solid var(--gold)' : '1px solid #ccc' }}>
-                      <img src={url} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                      {i === 0 && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>MAIN</span>}
+                  {venueForm.galleryItems.map((item, i) => (
+                    <div 
+                      key={i} 
+                      draggable 
+                      onDragStart={(e) => handleDragStart(e, i)}
+                      onDragEnter={(e) => handleDragEnter(e, i)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                      style={{ 
+                        position: 'relative', width: '100px', height: '100px', cursor: 'grab',
+                        border: i === 0 ? '2px solid var(--gold)' : '1px solid #ccc',
+                        opacity: item.type === 'new' ? 0.8 : 1 
+                      }}
+                    >
+                      <img src={item.url} alt="" style={{width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none'}} />
+                      {i === 0 && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center', pointerEvents: 'none'}}>MAIN</span>}
                       
-                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
-                        <button type="button" onClick={() => moveVenueExistingImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
-                        <button type="button" onClick={() => {
-                          const newEx = [...venueForm.existingGallery];
-                          newEx.splice(i, 1);
-                          setVenueForm({...venueForm, existingGallery: newEx});
-                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
-                        <button type="button" onClick={() => moveVenueExistingImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {venueForm.newGallery.map((file, i) => (
-                    <div key={`new-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: (i === 0 && venueForm.existingGallery.length === 0) ? '2px solid var(--gold)' : '1px solid #ccc', opacity: 0.8 }}>
-                      <img src={URL.createObjectURL(file)} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                      {(i === 0 && venueForm.existingGallery.length === 0) && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>MAIN</span>}
-                      
-                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
-                        <button type="button" onClick={() => moveVenueNewImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
-                        <button type="button" onClick={() => {
-                            const newImg = [...venueForm.newGallery];
-                            newImg.splice(i, 1);
-                            setVenueForm({...venueForm, newGallery: newImg});
-                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
-                        <button type="button" onClick={() => moveVenueNewImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
-                      </div>
+                      <button type="button" onClick={() => {
+                        const newItems = [...venueForm.galleryItems];
+                        newItems.splice(i, 1);
+                        setVenueForm({...venueForm, galleryItems: newItems});
+                      }} style={{position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '0.8rem'}}>X</button>
                     </div>
                   ))}
                 </div>
@@ -307,7 +324,7 @@ export default function EventsCMS() {
             {venues.map(v => (
               <div key={v._id} className={`${styles.listItem} ${!v.isActive ? styles.inactive : ''}`}>
                 <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {v.gallery && v.gallery.length > 0 && <img src={v.gallery[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                  {v.images && v.images.length > 0 && <img src={v.images[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
                   <div>
                     <strong>{v.name}</strong> <span className={styles.meta}>(Cap: {v.capacity})</span>
                   </div>

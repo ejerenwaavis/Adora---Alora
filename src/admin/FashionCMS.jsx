@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
 import styles from './CMS.module.css';
@@ -17,13 +17,16 @@ export default function FashionCMS() {
   const defaultItemForm = { 
     name: '', slug: '', description: '', layer: '', displayPriceKobo: 0, 
     sizes: '', colors: '', isFeatured: false, isActive: true, sortOrder: 0,
-    existingImages: [], newImages: []
+    galleryItems: []
   };
   const [itemForm, setItemForm] = useState(defaultItemForm);
   
   const [editingLayerId, setEditingLayerId] = useState(null);
   const [editingItemId, setEditingItemId] = useState(null);
   const [activeTab, setActiveTab] = useState('items');
+
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -99,8 +102,17 @@ export default function FashionCMS() {
       formData.append('sortOrder', itemForm.sortOrder);
 
       // Append images
-      itemForm.existingImages.forEach(img => formData.append('existingImages', img));
-      itemForm.newImages.forEach(file => formData.append('images', file));
+      const mediaOrder = [];
+      itemForm.galleryItems.forEach((item) => {
+        if (item.type === 'existing') {
+          formData.append('existingImages', item.url);
+          mediaOrder.push('existing');
+        } else {
+          formData.append('images', item.file);
+          mediaOrder.push('new');
+        }
+      });
+      formData.append('mediaOrder', JSON.stringify(mediaOrder));
       
       const res = await authFetch(url, {
         method,
@@ -135,30 +147,30 @@ export default function FashionCMS() {
       layer: item.layer?._id || '', displayPriceKobo: item.displayPriceKobo || 0, 
       sizes: item.sizes?.join(', ') || '', colors: item.colors?.join(', ') || '',
       isFeatured: item.isFeatured, isActive: item.isActive, sortOrder: item.sortOrder,
-      existingImages: item.images || [], newImages: []
+      galleryItems: item.images ? item.images.map(url => ({ type: 'existing', url })) : []
     });
     setActiveTab('items');
   }
 
-  function moveExistingImage(index, dir) {
-    const newEx = [...itemForm.existingImages];
-    if (dir === -1 && index > 0) {
-      [newEx[index-1], newEx[index]] = [newEx[index], newEx[index-1]];
-    } else if (dir === 1 && index < newEx.length - 1) {
-      [newEx[index], newEx[index+1]] = [newEx[index+1], newEx[index]];
-    }
-    setItemForm({...itemForm, existingImages: newEx});
-  }
+  const handleDragStart = (e, position) => {
+    dragItem.current = position;
+  };
 
-  function moveNewImage(index, dir) {
-    const newImg = [...itemForm.newImages];
-    if (dir === -1 && index > 0) {
-      [newImg[index-1], newImg[index]] = [newImg[index], newImg[index-1]];
-    } else if (dir === 1 && index < newImg.length - 1) {
-      [newImg[index], newImg[index+1]] = [newImg[index+1], newImg[index]];
+  const handleDragEnter = (e, position) => {
+    dragOverItem.current = position;
+  };
+
+  const handleDragEnd = () => {
+    if (dragItem.current !== null && dragOverItem.current !== null) {
+      const newList = [...itemForm.galleryItems];
+      const draggedItemContent = newList[dragItem.current];
+      newList.splice(dragItem.current, 1);
+      newList.splice(dragOverItem.current, 0, draggedItemContent);
+      dragItem.current = null;
+      dragOverItem.current = null;
+      setItemForm({ ...itemForm, galleryItems: newList });
     }
-    setItemForm({...itemForm, newImages: newImg});
-  }
+  };
 
   if (loading) return <div>Loading...</div>;
 
@@ -280,41 +292,33 @@ export default function FashionCMS() {
                 </p>
                 <input type="file" multiple accept="image/*" onChange={e => {
                   const files = Array.from(e.target.files);
-                  setItemForm({...itemForm, newImages: [...itemForm.newImages, ...files]});
+                  const newItems = files.map(file => ({ type: 'new', file, url: URL.createObjectURL(file) }));
+                  setItemForm({...itemForm, galleryItems: [...itemForm.galleryItems, ...newItems]});
                 }} />
                 
                 <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
-                  {itemForm.existingImages.map((url, i) => (
-                    <div key={`existing-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: i === 0 ? '2px solid var(--gold)' : '1px solid #ccc' }}>
-                      <img src={url} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                      {i === 0 && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>COVER</span>}
+                  {itemForm.galleryItems.map((item, i) => (
+                    <div 
+                      key={i} 
+                      draggable 
+                      onDragStart={(e) => handleDragStart(e, i)}
+                      onDragEnter={(e) => handleDragEnter(e, i)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                      style={{ 
+                        position: 'relative', width: '100px', height: '100px', cursor: 'grab',
+                        border: i === 0 ? '2px solid var(--gold)' : '1px solid #ccc',
+                        opacity: item.type === 'new' ? 0.8 : 1 
+                      }}
+                    >
+                      <img src={item.url} alt="" style={{width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none'}} />
+                      {i === 0 && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center', pointerEvents: 'none'}}>COVER</span>}
                       
-                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
-                        <button type="button" onClick={() => moveExistingImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
-                        <button type="button" onClick={() => {
-                          const newEx = [...itemForm.existingImages];
-                          newEx.splice(i, 1);
-                          setItemForm({...itemForm, existingImages: newEx});
-                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
-                        <button type="button" onClick={() => moveExistingImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
-                      </div>
-                    </div>
-                  ))}
-
-                  {itemForm.newImages.map((file, i) => (
-                    <div key={`new-${i}`} style={{ position: 'relative', width: '100px', height: '100px', border: (i === 0 && itemForm.existingImages.length === 0) ? '2px solid var(--gold)' : '1px solid #ccc', opacity: 0.8 }}>
-                      <img src={URL.createObjectURL(file)} alt="" style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-                      {(i === 0 && itemForm.existingImages.length === 0) && <span style={{position:'absolute', bottom:0, left:0, right:0, background:'rgba(0,0,0,0.6)', color:'white', fontSize:'0.7rem', textAlign:'center'}}>COVER</span>}
-                      
-                      <div style={{position: 'absolute', top: 0, left: 0, right: 0, display: 'flex', justifyContent: 'space-between'}}>
-                        <button type="button" onClick={() => moveNewImage(i, -1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&lt;</button>
-                        <button type="button" onClick={() => {
-                            const newImg = [...itemForm.newImages];
-                            newImg.splice(i, 1);
-                            setItemForm({...itemForm, newImages: newImg});
-                        }} style={{background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>X</button>
-                        <button type="button" onClick={() => moveNewImage(i, 1)} style={{background: '#333', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 5px'}}>&gt;</button>
-                      </div>
+                      <button type="button" onClick={() => {
+                        const newItems = [...itemForm.galleryItems];
+                        newItems.splice(i, 1);
+                        setItemForm({...itemForm, galleryItems: newItems});
+                      }} style={{position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '0.8rem'}}>X</button>
                     </div>
                   ))}
                 </div>
