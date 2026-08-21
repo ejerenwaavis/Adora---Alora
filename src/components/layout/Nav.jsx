@@ -57,7 +57,7 @@ export default function Nav() {
         <nav className={styles.nav}>
           {/* Brand */}
           <Link to="/" className={styles.brand} aria-label="Aora House — Home">
-            <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
+            <div className={styles.logo}>Aora House</div>
           </Link>
 
           {/* Desktop nav links */}

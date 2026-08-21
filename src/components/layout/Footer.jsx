@@ -65,7 +65,7 @@ export default function Footer() {
         {/* Footer grid */}
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
+            <div className={styles.logo}>Aora House</div>
             <p>A Lagos lifestyle house for movement, food, fashion and community. Curating style, creating community.</p>
           </div>
           <div className={styles.col}>

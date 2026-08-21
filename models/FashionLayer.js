@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// Three fashion layers: Adora Archive | Brand Partners | Raire Featured Sellers
+// Three fashion layers: Aora House Archive | Brand Partners | Raire Featured Sellers
 const fashionLayerSchema = new mongoose.Schema({
   name:        { type: String, required: true, trim: true },
   slug:        { type: String, required: true, unique: true, lowercase: true },

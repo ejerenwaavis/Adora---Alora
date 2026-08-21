@@ -8,7 +8,7 @@ const EVENTS = [
     month: 'SEP',
     day: '12',
     org: 'Hosted by Aora House',
-    title: 'Adora Evening: Styling Conversations',
+    title: 'Aora House Evening: Styling Conversations',
     desc: 'An evening of style, conversation and community in the Café.',
     to: '/events/1'
   },
