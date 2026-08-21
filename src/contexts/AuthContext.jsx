@@ -106,7 +106,7 @@ export function AuthProvider({ children }) {
       headers['Content-Type'] = 'application/json';
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { cache: 'no-store', ...options, headers });
     if (res.status === 401) {
       const newToken = await refreshToken();
       if (!newToken) throw new Error('Session expired');
@@ -119,7 +119,7 @@ export function AuthProvider({ children }) {
         retryHeaders['Content-Type'] = 'application/json';
       }
 
-      return fetch(url, { ...options, headers: retryHeaders });
+      return fetch(url, { cache: 'no-store', ...options, headers: retryHeaders });
     }
     return res;
   }, [refreshToken]);
