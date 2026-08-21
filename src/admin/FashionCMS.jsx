@@ -72,6 +72,7 @@ export default function FashionCMS() {
   }
 
   function editLayer(layer) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingLayerId(layer._id);
     setLayerForm({ name: layer.name, slug: layer.slug, description: layer.description || '', sortOrder: layer.sortOrder, isActive: layer.isActive });
     setActiveTab('layers');
@@ -127,6 +128,7 @@ export default function FashionCMS() {
   }
 
   function editItem(item) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingItemId(item._id);
     setItemForm({ 
       name: item.name, slug: item.slug, description: item.description || '', 

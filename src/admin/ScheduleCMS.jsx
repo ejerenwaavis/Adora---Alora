@@ -119,6 +119,7 @@ export default function ScheduleCMS() {
   }
 
   function handleEdit(session) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(session._id);
     const startDate = new Date(session.startTime);
     const endDate = new Date(session.endTime);

@@ -48,6 +48,7 @@ export default function CreditPacksCMS() {
   }
 
   function handleEdit(pack) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(pack._id);
     setFormData({ 
       name: pack.name, 

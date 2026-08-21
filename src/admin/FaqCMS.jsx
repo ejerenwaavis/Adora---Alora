@@ -49,6 +49,7 @@ export default function FaqCMS() {
   }
 
   function editItem(item) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(item._id);
     setFormData({ question: item.question, answer: item.answer, category: item.category || 'General', isActive: item.isActive, sortOrder: item.sortOrder || 0 });
   }

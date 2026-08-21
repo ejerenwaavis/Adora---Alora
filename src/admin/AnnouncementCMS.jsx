@@ -49,6 +49,7 @@ export default function AnnouncementCMS() {
   }
 
   function editItem(item) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(item._id);
     setFormData({ message: item.message, linkText: item.linkText || '', linkUrl: item.linkUrl || '', isActive: item.isActive });
   }

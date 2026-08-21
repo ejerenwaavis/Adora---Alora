@@ -74,6 +74,7 @@ export default function ClassesCMS() {
   }
 
   function editClass(cls) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingClassId(cls._id);
     setClassForm({ name: cls.name, slug: cls.slug, description: cls.description || '', durationMinutes: cls.durationMinutes, maxCapacity: cls.maxCapacity || 20, level: cls.level || 'all-levels', isActive: cls.isActive, coverImage: null, existingCoverImage: cls.coverImage || '' });
     setActiveTab('classes');
@@ -115,6 +116,7 @@ export default function ClassesCMS() {
   }
 
   function editInstructor(inst) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingInstId(inst._id);
     setInstructorForm({ firstName: inst.firstName, lastName: inst.lastName, bio: inst.bio || '', isActive: inst.isActive, photo: null, existingPhoto: inst.photo || '' });
     setActiveTab('instructors');

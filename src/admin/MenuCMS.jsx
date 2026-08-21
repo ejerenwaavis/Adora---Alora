@@ -67,6 +67,7 @@ export default function MenuCMS() {
   }
 
   function editCat(cat) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingCatId(cat._id);
     setCatForm({ name: cat.name, slug: cat.slug, description: cat.description || '', sortOrder: cat.sortOrder, isActive: cat.isActive });
     setActiveTab('categories');
@@ -113,6 +114,7 @@ export default function MenuCMS() {
   }
 
   function editItem(item) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingItemId(item._id);
     setItemForm({ 
       name: item.name, slug: item.slug, description: item.description || '', 

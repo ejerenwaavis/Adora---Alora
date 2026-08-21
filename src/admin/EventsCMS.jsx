@@ -84,6 +84,7 @@ export default function EventsCMS() {
   }
 
   function editVenue(venue) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingVenueId(venue._id);
     setVenueForm({ 
       name: venue.name, slug: venue.slug, description: venue.description || '', 
@@ -172,6 +173,7 @@ export default function EventsCMS() {
   }
 
   function editEvent(evt) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingEventId(evt._id);
     setEventForm({ 
       title: evt.title, slug: evt.slug, description: evt.description || '', shortDescription: evt.shortDescription || '',

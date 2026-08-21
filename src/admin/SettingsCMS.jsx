@@ -45,6 +45,7 @@ export default function SettingsCMS() {
   }
 
   function handleEdit(setting) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(setting._id);
     setFormData({ 
       key: setting.key, 
