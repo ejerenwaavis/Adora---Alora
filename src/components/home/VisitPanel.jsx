@@ -28,7 +28,7 @@ export default function VisitPanel() {
           {/* Left: Expansive Live Map with Overlay Badge */}
           <div className={styles.visitMap}>
             <iframe
-              title="Adora & Alora Location"
+              title="Aora House Location"
               src={`https://maps.google.com/maps?q=${mapQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
               className={styles.mapIframe}
               allowFullScreen=""
@@ -93,7 +93,7 @@ export default function VisitPanel() {
                   <div>
                     <div className={styles.label}>Contact Concierge</div>
                     <div className={styles.val}>
-                      {settings?.contact_email || "hello@adora-alora.com"}<br />
+                      {settings?.contact_email || "hello@aora-house.com"}<br />
                       {settings?.contact_phone || "+234 800 000 0000"}
                     </div>
                   </div>

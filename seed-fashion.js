@@ -6,7 +6,7 @@ const FashionItem = require('./models/FashionItem');
 const VENDORS = [
   { name: 'Numen', slug: 'numen', description: 'Curated earthy essentials.' },
   { name: 'Terra', slug: 'terra', description: 'Sustainable modern wear.' },
-  { name: 'Adora & Alora', slug: 'adora-alora', description: 'Our signature house collection.' },
+  { name: 'Aora House', slug: 'aora-house', description: 'Our signature house collection.' },
   { name: 'Raireapp', slug: 'raireapp', description: 'Featured sellers from the Raire network.' }
 ];
 
@@ -57,15 +57,15 @@ const ITEMS = [
     images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 9500,
   },
-  // Adora & Alora Items
+  // Aora House Items
   {
-    layerSlug: 'adora-alora',
+    layerSlug: 'aora-house',
     name: 'Signature Silk Scarf',
     slug: 'aa-signature-silk-scarf',
     description: 'Hand-rolled edges with our custom house print.',
     sizes: ['OS'],
     colors: ['#414F36'], // Forest Green
-    brand: 'Adora & Alora',
+    brand: 'Aora House',
     images: ['/assets/fashion-1.jpg'],
     displayPriceKobo: 4500,
   },

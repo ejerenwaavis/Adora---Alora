@@ -37,7 +37,7 @@ export default function ForgotPassword() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div className="eyebrow centered" style={{ margin: '0 auto 1.5rem' }}>Adora & Alora</div>
+        <div className="eyebrow centered" style={{ margin: '0 auto 1.5rem' }}>Aora House</div>
         <h1 className={styles.title}>Reset Password</h1>
         
         {error && <div className={styles.error}>{error}</div>}

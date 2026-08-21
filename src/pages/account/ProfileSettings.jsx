@@ -134,7 +134,7 @@ export default function ProfileSettings() {
             <>
               <div style={{ padding: '1rem', background: '#f9f9f9', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', height: '150px', overflowY: 'auto', marginBottom: '1rem', fontSize: '0.8rem', lineHeight: 1.6 }}>
                 <strong>Liability Waiver & Release</strong><br/><br/>
-                By signing this document, you acknowledge that participation in physical exercise and movement classes involves inherent risks... [Full waiver text would go here]. I hereby release Adora & Alora from any claims of injury...
+                By signing this document, you acknowledge that participation in physical exercise and movement classes involves inherent risks... [Full waiver text would go here]. I hereby release Aora House from any claims of injury...
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

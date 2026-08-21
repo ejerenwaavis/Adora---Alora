@@ -95,7 +95,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <span>© {new Date().getFullYear()} Adora &amp; Alora. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Aora House. All rights reserved.</span>
           <div className={styles.legal}>
             <Link to="/terms">Terms</Link>
             <Link to="/privacy">Privacy</Link>

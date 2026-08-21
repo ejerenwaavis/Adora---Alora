@@ -9,7 +9,7 @@ function buildGoogleCalendarLink({ title, description, location, startDate, endD
     text:     title,
     dates:    `${fmt(startDate)}/${fmt(endDate)}`,
     details:  description || '',
-    location: location || 'Adora & Alora, Lagos',
+    location: location || 'Aora House, Lagos',
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -26,15 +26,15 @@ function buildICSBuffer({ uid, title, description, location, startDate, endDate,
   ];
 
   const { error, value } = ics.createEvent({
-    uid:         uid || `aa-${Date.now()}@adoraandalora.com`,
+    uid:         uid || `aa-${Date.now()}@Aora House.com`,
     title,
     description: description || '',
-    location:    location || 'Adora & Alora, Lagos',
+    location:    location || 'Aora House, Lagos',
     start:       toArr(startDate),
     end:         toArr(endDate),
     startInputType: 'local',
     endInputType:   'local',
-    organizer:   { name: 'Adora & Alora', email: process.env.MAIL_USER },
+    organizer:   { name: 'Aora House', email: process.env.MAIL_USER },
     status:      'CONFIRMED',
     busyStatus:  'BUSY',
     url:         process.env.APP_URL,
@@ -49,14 +49,14 @@ function buildICSBuffer({ uid, title, description, location, startDate, endDate,
 function buildCalendarLinks({ booking, classSession, classType, instructor }) {
   const start = new Date(classSession.startTime);
   const end   = new Date(classSession.endTime);
-  const title = `${classType.name} with ${instructor.firstName} — Adora & Alora`;
+  const title = `${classType.name} with ${instructor.firstName} — Aora House`;
   const description = `Your Pilates class is confirmed. Booking ref: ${booking._id}`;
-  const location = classSession.location || 'The Studio, Adora & Alora';
+  const location = classSession.location || 'The Studio, Aora House';
 
   const google = buildGoogleCalendarLink({ title, description, location, startDate: start, endDate: end });
 
   const icsBuffer = buildICSBuffer({
-    uid:         `booking-${booking._id}@adoraandalora.com`,
+    uid:         `booking-${booking._id}@Aora House.com`,
     title,
     description,
     location,

@@ -43,7 +43,7 @@ export default function ClerkLayout() {
     <div className="shell">
       <div className="sidebar">
         <div className="sb-brand">
-          <div className="sb-wordmark">Adora &amp; Alora</div>
+          <div className="sb-wordmark">Aora House</div>
           <div className="sb-sub">Clerk station</div>
         </div>
         

@@ -117,7 +117,7 @@ export default function Hero({ imageSrc }) {
           </div>
         </h1>
 
-        <p>Made in Lagos by a mother and daughter, Adora & Alora brings together the rituals that make everyday life feel fuller.</p>
+        <p>Made in Lagos by a mother and daughter, Aora House brings together the rituals that make everyday life feel fuller.</p>
         <div className={styles.heroActions}>
           <Link to="/movement" className={`${styles.btn} ${styles.btnSolid}`}>Book a Class</Link>
           <a href="#house" className={`${styles.btn} ${styles.btnOutline}`}>Explore the House</a>

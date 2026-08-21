@@ -65,7 +65,7 @@ export default function Cafe() {
       />
       
       <div className={styles.cafeHeroImageWrapper}>
-        <img src="/assets/cafe-2.jpg" alt="Adora & Alora Café" className={styles.cafeHeroImg} />
+        <img src="/assets/cafe-2.jpg" alt="Aora House Café" className={styles.cafeHeroImg} />
       </div>
 
       {/* 2. Opening Hours & Service Format Bar */}
@@ -100,7 +100,7 @@ export default function Cafe() {
           <div className={styles.chinChinText}>
             <h3>House Welcome &bull; Signature Chin Chin</h3>
             <p>
-              Every seated guest at Adora &amp; Alora is greeted with our complimentary house-made Chin Chin — crisp, lightly spiced, and prepared daily. Artisanal packaged Chin Chin jars are also available at reception for takeaway.
+              Every seated guest at Aora House is greeted with our complimentary house-made Chin Chin — crisp, lightly spiced, and prepared daily. Artisanal packaged Chin Chin jars are also available at reception for takeaway.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function Cafe() {
           
           <div className={styles.cmHeader}>
             <div className={styles.cmTitleBlock}>
-              <div className={styles.cmEyebrow}>The Café at Adora &amp; Alora</div>
+              <div className={styles.cmEyebrow}>The Café at Aora House</div>
               <div className={styles.cmTitle}>What's <em>on</em> today.</div>
             </div>
             

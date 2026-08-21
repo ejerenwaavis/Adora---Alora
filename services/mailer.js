@@ -21,7 +21,7 @@ function getTransport() {
 async function send({ to, subject, html, text }) {
   const t = getTransport();
   return t.sendMail({
-    from:    process.env.MAIL_FROM || '"Adora & Alora" <noreply@adoraandalora.com>',
+    from:    process.env.MAIL_FROM || '"Aora House" <noreply@Aora House.com>',
     to,
     subject,
     html,
@@ -52,10 +52,10 @@ function shell(content) {
 </head>
 <body>
 <div class="wrap">
-  <div class="header"><h1>ADORA &amp; ALORA</h1></div>
+  <div class="header"><h1>Aora House</h1></div>
   <div class="body">${content}</div>
   <div class="footer">
-    <p>Adora &amp; Alora &bull; Lagos, Nigeria</p>
+    <p>Aora House &bull; Lagos, Nigeria</p>
     <p style="margin:4px 0 0;">You are receiving this because you have an account with us.</p>
   </div>
 </div>
@@ -70,7 +70,7 @@ async function sendBookingConfirmation({ user, classSession, booking, calendarLi
   // TODO Phase 6: implement with full class details + calendar buttons
   return send({
     to:      user.email,
-    subject: 'Your Pilates class is confirmed — Adora & Alora',
+    subject: 'Your Pilates class is confirmed — Aora House',
     html:    shell(`
       <p>Hi ${user.firstName},</p>
       <p>Your booking is confirmed.</p>
@@ -93,7 +93,7 @@ async function sendWaitlistPromotion({ user, classSession, expiresAt }) {
 async function sendVenueEnquiryAck({ enquiry }) {
   return send({
     to:      enquiry.email,
-    subject: 'We received your venue enquiry — Adora & Alora',
+    subject: 'We received your venue enquiry — Aora House',
     html:    shell(`
       <p>Hi ${enquiry.firstName},</p>
       <p>Thank you for your enquiry about hiring our venue. We'll be in touch within 2 business days.</p>
@@ -106,7 +106,7 @@ async function sendEmailVerification({ user, token }) {
   const url = `${process.env.APP_URL}/verify-email?token=${token}`;
   return send({
     to:      user.email,
-    subject: 'Verify your email — Adora & Alora',
+    subject: 'Verify your email — Aora House',
     html:    shell(`
       <p>Hi ${user.firstName},</p>
       <p>Please verify your email address to complete your account setup.</p>
@@ -120,7 +120,7 @@ async function sendPasswordReset({ user, token }) {
   const url = `${process.env.APP_URL}/reset-password?token=${token}`;
   return send({
     to:      user.email,
-    subject: 'Reset your password — Adora & Alora',
+    subject: 'Reset your password — Aora House',
     html:    shell(`
       <p>Hi ${user.firstName},</p>
       <p>We received a request to reset your password. This link expires in 1 hour.</p>

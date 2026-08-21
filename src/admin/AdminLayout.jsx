@@ -15,7 +15,7 @@ export default function AdminLayout() {
     <div className={styles.adminContainer}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <span className="wordmark">Adora &amp; Alora</span>
+          <span className="wordmark">Aora House</span>
           <span className={styles.badge}>Admin</span>
         </div>
         

@@ -7,7 +7,7 @@ const EVENTS = [
     id: '1',
     month: 'SEP',
     day: '12',
-    org: 'Hosted by Adora & Alora',
+    org: 'Hosted by Aora House',
     title: 'Adora Evening: Styling Conversations',
     desc: 'An evening of style, conversation and community in the Café.',
     to: '/events/1'

@@ -13,7 +13,7 @@ export default function OurHouse() {
       <PageHeader 
         eyebrow="Our House"
         title="A sanctuary for intentional living in Lagos."
-        description="Adora &amp; Alora is a multi-disciplinary house uniting Movement, Coastal Culinary, Curated Fashion, and Collaborative Spaces under one architectural roof."
+        description="Aora House is a multi-disciplinary house uniting Movement, Coastal Culinary, Curated Fashion, and Collaborative Spaces under one architectural roof."
       />
 
       {/* ── Story Section ── */}
@@ -26,7 +26,7 @@ export default function OurHouse() {
                 Founded on the belief that physical vitality, aesthetic beauty, and genuine human connection belong together.
               </h2>
               <div className={styles.quoteBlock}>
-                <p>&ldquo;We designed Adora &amp; Alora as a breath of fresh air—a space where you can start your morning in mindful motion and stay through the afternoon surrounded by warmth.&rdquo;</p>
+                <p>&ldquo;We designed Aora House as a breath of fresh air—a space where you can start your morning in mindful motion and stay through the afternoon surrounded by warmth.&rdquo;</p>
                 <span>Founders&apos; Note</span>
               </div>
             </div>
@@ -36,7 +36,7 @@ export default function OurHouse() {
                 In a fast-moving world, our house offers a tactile pause. Designed with natural textures, limestone tones, and warm timber, every corner reflects our commitment to slow, intentional luxury.
               </p>
               <p>
-                Whether you arrive for a high-precision Reformer class, a bowl of coastal fare at the café, or to browse an archive fashion piece, Adora &amp; Alora is curated to feel like an extension of home.
+                Whether you arrive for a high-precision Reformer class, a bowl of coastal fare at the café, or to browse an archive fashion piece, Aora House is curated to feel like an extension of home.
               </p>
             </div>
           </div>

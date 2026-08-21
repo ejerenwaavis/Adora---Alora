@@ -1,7 +1,7 @@
 {
-  "name": "adora-alora",
+  "name": "aora-house",
   "version": "1.0.0",
-  "description": "Adora & Alora — curated lifestyle house. Full-stack enterprise website.",
+  "description": "Aora House — curated lifestyle house. Full-stack enterprise website.",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",

@@ -16,7 +16,7 @@ async function send() {
     const info = await transporter.sendMail({
       from: process.env.FROM_EMAIL,
       to: 'aceddivisionllc@gmail.com',
-      subject: 'Test QR Check-in Code - Adora & Alora',
+      subject: 'Test QR Check-in Code - Aora House',
       text: 'Here is your test QR code for checking in. Use the clerk station to scan it!',
       html: '<p>Here is your test QR code for checking in. Use the clerk station to scan it!</p><img src="cid:qrcode" />',
       attachments: [

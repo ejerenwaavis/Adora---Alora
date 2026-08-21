@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/adora-alora';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/aora-house';
 
 async function seedClerk() {
   try {
     await mongoose.connect(MONGO_URI);
     console.log('Connected to MongoDB');
 
-    const email = 'clerk@adoraalora.com';
+    const email = 'clerk@Aora House.com';
     const password = 'password123';
 
     // Check if clerk exists

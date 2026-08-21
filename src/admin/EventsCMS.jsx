@@ -14,7 +14,7 @@ export default function EventsCMS() {
   const defaultVenueForm = { name: '', slug: '', description: '', capacity: 0, hourlyRateKobo: 0, features: '', sortOrder: 0, isActive: true, newGallery: [], existingGallery: [] };
   const defaultEventForm = { 
     title: '', slug: '', description: '', shortDescription: '', 
-    organiser: 'Adora & Alora', bookingDestination: 'internal', externalUrl: '', externalOrganizerCta: '',
+    organiser: 'Aora House', bookingDestination: 'internal', externalUrl: '', externalOrganizerCta: '',
     startDate: '', endDate: '', location: '', venueSpace: '',
     capacity: 0, ticketsSold: 0, priceKobo: 0, isFree: false,
     status: 'draft', isFeatured: false,
@@ -339,7 +339,7 @@ export default function EventsCMS() {
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>Organiser *</label>
-                  <input type="text" value={eventForm.organiser} onChange={e => setEventForm({...eventForm, organiser: e.target.value})} required placeholder="e.g. Adora & Alora" />
+                  <input type="text" value={eventForm.organiser} onChange={e => setEventForm({...eventForm, organiser: e.target.value})} required placeholder="e.g. Aora House" />
                 </div>
                 <div className={styles.field}>
                   <label>Booking Destination *</label>

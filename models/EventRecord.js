@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 // CRITICAL RULE (non-negotiable, enforced at schema level):
 //
 //   Every event record MUST have:
-//     - organiser:           who is running the event (e.g. "Adora & Alora",
+//     - organiser:           who is running the event (e.g. "Aora House",
 //                            "The Becoming Network", or any partner name)
-//     - bookingDestination:  'internal'     → Adora & Alora handles checkout
+//     - bookingDestination:  'internal'     → Aora House handles checkout
 //                            'external_url' → user is sent to partner's own site
 //
-//   TBN events MUST use external_url. They never touch Adora & Alora checkout
+//   TBN events MUST use external_url. They never touch Aora House checkout
 //   or branding. This is enforced in the pre-save hook below.
 // ──────────────────────────────────────────────────────────────────────────────
 const eventRecordSchema = new mongoose.Schema({

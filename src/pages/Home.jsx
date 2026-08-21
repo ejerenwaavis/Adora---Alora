@@ -51,7 +51,7 @@ export default function Home() {
         id="venue"
         eyebrow="Spaces for gathering"
         title="From intimate celebrations to seminars in The Loft."
-        desc="Adora & Alora offers versatile spaces for learning, connection and celebration — adaptable to your occasion."
+        desc="Aora House offers versatile spaces for learning, connection and celebration — adaptable to your occasion."
         ctaTo="/venue-hire"
         ctaText="Enquire About Venue Hire"
         reverse={true}

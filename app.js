@@ -74,7 +74,7 @@ app.get('/health', (req, res) => {
     Status:      'running',
     'DB-Status': dbStatus,
     Uptime:      `${Math.floor(process.uptime())} seconds`,
-    app:         'adora-alora',
+    app:         'aora-house',
     env:         process.env.NODE_ENV || 'development',
     timestamp:   new Date().toISOString(),
   });
@@ -107,7 +107,7 @@ app.get('*', (req, res) => {
   } else {
     // Development fallback — Vite handles the frontend on port 5175
     res.status(200).json({
-      message: 'Adora & Alora API is running.',
+      message: 'Aora House API is running.',
       hint:    'Frontend served by Vite on port 5175. Run `npm run build` for production.',
     });
   }
@@ -136,7 +136,7 @@ mongoose
   .then(() => {
     console.log('✓ MongoDB connected');
     app.listen(PORT, () => {
-      console.log(`✓ Adora & Alora server running on port ${PORT}`);
+      console.log(`✓ Aora House server running on port ${PORT}`);
       console.log(`  → API:      http://localhost:${PORT}/api`);
       console.log(`  → Health:   http://localhost:${PORT}/health`);
       console.log(`  → Frontend: http://localhost:5175 (Vite dev server)`);

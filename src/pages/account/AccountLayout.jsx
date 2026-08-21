@@ -14,7 +14,7 @@ export default function AccountLayout() {
     <div className={styles.accountContainer}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <Link to="/" className="wordmark" style={{ textDecoration: 'none', color: 'inherit' }}>Adora &amp; Alora</Link>
+          <Link to="/" className="wordmark" style={{ textDecoration: 'none', color: 'inherit' }}>Aora House</Link>
           <span className={styles.badge}>Account</span>
         </div>
         

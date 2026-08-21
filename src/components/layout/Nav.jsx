@@ -56,7 +56,7 @@ export default function Nav() {
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
         <nav className={styles.nav}>
           {/* Brand */}
-          <Link to="/" className={styles.brand} aria-label="Adora & Alora — Home">
+          <Link to="/" className={styles.brand} aria-label="Aora House — Home">
             <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
           </Link>
 
@@ -164,7 +164,7 @@ export default function Nav() {
 function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(false);
   // TODO Phase 3: fetch active announcements from /api/site/announcements
-  const message = 'Adora & Alora — Opening soon in Lagos. Join the waitlist.';
+  const message = 'Aora House — Opening soon in Lagos. Join the waitlist.';
 
   if (dismissed) return null;
   return (

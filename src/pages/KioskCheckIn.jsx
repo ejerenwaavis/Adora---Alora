@@ -12,7 +12,7 @@ export default function KioskCheckIn() {
 
   const t = {
     en: {
-      title: "Welcome to Adora & Alora",
+      title: "Welcome to Aora House",
       subtitle: "Enter your email to check in for your class.",
       emailPlaceholder: "Email address",
       findBookings: "Find My Bookings",
@@ -26,7 +26,7 @@ export default function KioskCheckIn() {
       loading: "Loading..."
     },
     es: {
-      title: "Bienvenidos a Adora & Alora",
+      title: "Bienvenidos a Aora House",
       subtitle: "Ingresa tu correo electrónico para registrarte en tu clase.",
       emailPlaceholder: "Correo electrónico",
       findBookings: "Buscar Mis Reservas",

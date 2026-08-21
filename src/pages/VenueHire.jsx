@@ -41,7 +41,7 @@ const FALLBACK_VENUES = {
       'Networking gatherings and small parties'
     ],
     features: 'Options to present: exclusive hire of the full café; reserved use of the private seating area; food and beverage packages; and event styling or setup as an optional add-on.',
-    bookingPrompt: 'Celebrate at Adora & Alora Café — reserve our private area or enquire about exclusive café hire for your next intimate event.',
+    bookingPrompt: 'Celebrate at Aora House Café — reserve our private area or enquire about exclusive café hire for your next intimate event.',
     images: [
       'https://images.unsplash.com/photo-1559925393-8be0ec4767c8?auto=format&fit=crop&q=80&w=2000',
       'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=2000'
@@ -108,10 +108,10 @@ export default function VenueHire({ section }) {
     <div className={styles.venuePage}>
       {/* Hero Intro */}
       <PageHeader 
-        title={<>Host Your Event at Adora &amp; Alora</>}
+        title={<>Host Your Event at Aora House</>}
       >
         <p className={styles.heroDesc}>
-          Adora & Alora offers beautifully designed, versatile spaces for learning, connection, celebration and community. Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or brand gathering, our spaces can be adapted to suit your occasion.
+          Aora House offers beautifully designed, versatile spaces for learning, connection, celebration and community. Whether you are planning a seminar, masterclass, mastermind session, intimate celebration, private brunch or brand gathering, our spaces can be adapted to suit your occasion.
         </p>
         <div className={styles.tourControls}>
           {loading ? (

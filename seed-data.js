@@ -22,7 +22,7 @@ async function seedData() {
       {
         title: "Styling Conversation: The Archive",
         slug: "styling-conversation-archive",
-        organiser: "Adora & Alora",
+        organiser: "Aora House",
         bookingDestination: "internal",
         startDate: new Date(Date.now() + 86400000 * 5), // +5 days
         endDate: new Date(Date.now() + 86400000 * 5 + 3600000 * 2), // +2 hours
@@ -45,7 +45,7 @@ async function seedData() {
       {
         title: "Introspective Journaling Night",
         slug: "introspective-journaling-night",
-        organiser: "Adora & Alora",
+        organiser: "Aora House",
         bookingDestination: "internal",
         startDate: new Date(Date.now() + 86400000 * 12), // +12 days
         endDate: new Date(Date.now() + 86400000 * 12 + 3600000 * 1.5), 
@@ -59,7 +59,7 @@ async function seedData() {
     await FAQ.deleteMany({});
     await FAQ.insertMany([
       {
-        question: "Do I need a membership to visit Adora & Alora?",
+        question: "Do I need a membership to visit Aora House?",
         answer: "No, the house is open to everyone! All our rituals — Café dining, Reformer classes, Fashion pop-ups, and cultural events — are open for non-members.",
         category: "General",
         isActive: true,

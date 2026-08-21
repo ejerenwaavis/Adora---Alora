@@ -125,7 +125,7 @@ router.get('/me', requireAuth, async (req, res) => {
 // ── POST /api/auth/2fa/setup ──────────────────────────────────────────────────
 router.post('/2fa/setup', requireAuth, async (req, res, next) => {
   try {
-    const secret = speakeasy.generateSecret({ name: `Adora & Alora (${req.user.email})` });
+    const secret = speakeasy.generateSecret({ name: `Aora House (${req.user.email})` });
     req.user.twoFactorSecret = secret.base32;
     await req.user.save();
     const qrDataUrl = await qrcode.toDataURL(secret.otpauth_url);
@@ -171,7 +171,7 @@ router.post('/forgot-password', [
     
     await sendEmail({
       to: user.email,
-      subject: 'Adora & Alora - Password Reset',
+      subject: 'Aora House - Password Reset',
       text: `You requested a password reset. Please go to this link to reset your password: \n\n${resetUrl}\n\nIf you didn't request this, please ignore this email.`,
       html: `<p>You requested a password reset.</p><p>Please <a href="${resetUrl}">click here</a> to reset your password.</p><p>If you didn't request this, please ignore this email.</p>`
     });

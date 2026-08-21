@@ -16,7 +16,7 @@ const MAX_SIZE_BYTES = (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 10) * 1024
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'adora-alora',
+    folder: 'aora-house',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'pdf'],
     public_id: (req, file) => {
       const ext  = path.extname(file.originalname).toLowerCase();

@@ -62,7 +62,7 @@ export default function ResetPassword() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <div className="eyebrow centered" style={{ margin: '0 auto 1.5rem' }}>Adora & Alora</div>
+        <div className="eyebrow centered" style={{ margin: '0 auto 1.5rem' }}>Aora House</div>
         <h1 className={styles.title}>Set New Password</h1>
         
         {error && <div className={styles.error}>{error}</div>}
