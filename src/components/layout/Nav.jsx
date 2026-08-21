@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, NavLink, useNavigate }       from 'react-router-dom';
 import { useAuth }                           from '../../contexts/AuthContext.jsx';
 import styles                                from './Nav.module.css';
+import SearchOverlay                         from '../ui/SearchOverlay';
 
 /* ─── Monogram Seal (from mockup) ─────────────────────────────────────────── */
 
@@ -23,6 +24,7 @@ export default function Nav() {
   const [open, setOpen]             = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const [userMenu, setUserMenu]     = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Scroll shadow
   useEffect(() => {
@@ -78,6 +80,20 @@ export default function Nav() {
 
           {/* Right side */}
           <div className={styles.navRight}>
+            
+            {/* Search Icon */}
+            <button 
+              className={styles.searchToggleBtn} 
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cocoa-deep)', display: 'flex', alignItems: 'center' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+
             <Link to="/movement" className="btn btn-primary hide-mobile">
               Book a Class <span className="btn-arrow">→</span>
             </Link>
@@ -156,6 +172,8 @@ export default function Nav() {
           </Link>
         </div>
       </div>
+
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

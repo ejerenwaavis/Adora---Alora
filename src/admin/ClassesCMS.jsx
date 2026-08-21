@@ -20,6 +20,10 @@ export default function ClassesCMS() {
   const [editingClassId, setEditingClassId] = useState(null);
   const [editingInstId, setEditingInstId] = useState(null);
   const [activeTab, setActiveTab] = useState('classes');
+  const [view, setView] = useState('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, active, inactive
+  const [levelFilter, setLevelFilter] = useState('all'); // all, beginner, intermediate, advanced, all-levels
 
   useEffect(() => { loadData(); }, []);
 
@@ -59,6 +63,7 @@ export default function ClassesCMS() {
       if (res.ok) {
         setClassForm(defaultClassForm);
         setEditingClassId(null);
+        setView('list');
         loadData();
       }
     } catch (err) { console.error(err); }
@@ -78,6 +83,7 @@ export default function ClassesCMS() {
     setEditingClassId(cls._id);
     setClassForm({ name: cls.name, slug: cls.slug, description: cls.description || '', durationMinutes: cls.durationMinutes, maxCapacity: cls.maxCapacity || 20, level: cls.level || 'all-levels', isActive: cls.isActive, coverImage: null, existingCoverImage: cls.coverImage || '' });
     setActiveTab('classes');
+    setView('form');
   }
 
   // Instructors
@@ -101,6 +107,7 @@ export default function ClassesCMS() {
       if (res.ok) {
         setInstructorForm(defaultInstForm);
         setEditingInstId(null);
+        setView('list');
         loadData();
       }
     } catch (err) { console.error(err); }
@@ -120,7 +127,23 @@ export default function ClassesCMS() {
     setEditingInstId(inst._id);
     setInstructorForm({ firstName: inst.firstName, lastName: inst.lastName, bio: inst.bio || '', isActive: inst.isActive, photo: null, existingPhoto: inst.photo || '' });
     setActiveTab('instructors');
+    setView('form');
   }
+
+  const filteredClasses = classTypes.filter(cls => {
+    if (searchQuery && !cls.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter === 'active' && !cls.isActive) return false;
+    if (statusFilter === 'inactive' && cls.isActive) return false;
+    if (levelFilter !== 'all' && cls.level !== levelFilter) return false;
+    return true;
+  });
+
+  const filteredInstructors = instructors.filter(inst => {
+    if (searchQuery && !`${inst.firstName} ${inst.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter === 'active' && !inst.isActive) return false;
+    if (statusFilter === 'inactive' && inst.isActive) return false;
+    return true;
+  });
 
   if (loading) return <div>Loading...</div>;
 
@@ -129,16 +152,71 @@ export default function ClassesCMS() {
       <div className="eyebrow">CMS</div>
       <h1 className={styles.title}>Movement</h1>
       
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <button className={activeTab === 'classes' ? styles.btn : styles.btnOutline} onClick={() => setActiveTab('classes')}>Class Types</button>
-        <button className={activeTab === 'instructors' ? styles.btn : styles.btnOutline} onClick={() => setActiveTab('instructors')}>Instructors</button>
-      </div>
+      {view === 'list' && (
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+          <button className={activeTab === 'classes' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('classes'); setSearchQuery(''); setStatusFilter('all'); }}>Class Types</button>
+          <button className={activeTab === 'instructors' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('instructors'); setSearchQuery(''); setStatusFilter('all'); }}>Instructors</button>
+        </div>
+      )}
 
       {activeTab === 'classes' && (
         <>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>{editingClassId ? 'Edit Class Type' : 'New Class Type'}</h2>
-            <form onSubmit={handleClassSubmit} className={styles.form}>
+          {view === 'list' && (
+            <>
+              <div className={styles.actionBar}>
+                <div className={styles.filterGroup}>
+                  <input type="text" placeholder="Search class types..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                  <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <select className={styles.filterSelect} value={levelFilter} onChange={e => setLevelFilter(e.target.value)}>
+                    <option value="all">All Levels</option>
+                    <option value="all-levels">All Levels (Tag)</option>
+                    <option value="beginner">Beginner</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+                <button className={styles.btn} onClick={() => { setEditingClassId(null); setClassForm(defaultClassForm); setView('form'); }}>
+                  + Create New Class Type
+                </button>
+              </div>
+
+              <div className={styles.list}>
+                {filteredClasses.length === 0 ? (
+                  <div className={styles.empty}>No class types found.</div>
+                ) : (
+                  filteredClasses.map(item => (
+                    <div key={item._id} className={`${styles.listItem} ${!item.isActive ? styles.inactive : ''}`}>
+                      <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {item.coverImage && <img src={item.coverImage} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                        <div>
+                          <strong>{item.name}</strong> 
+                          <span className={styles.meta} style={{marginLeft: '0.5rem'}}>({item.durationMinutes} mins • {item.level} • max {item.maxCapacity})</span>
+                        </div>
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button onClick={() => editClass(item)} className={styles.btnOutline}>Edit</button>
+                        <button onClick={() => handleClassDelete(item._id)} className={styles.btnDanger}>Delete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {view === 'form' && (
+            <div className={styles.card}>
+              <div className={styles.formHeader}>
+                <button className={styles.backBtn} onClick={() => { setView('list'); setClassForm(defaultClassForm); setEditingClassId(null); }}>
+                  &larr; Back to List
+                </button>
+                <h2 className={styles.cardTitle} style={{marginBottom: 0}}>{editingClassId ? 'Edit Class Type' : 'New Class Type'}</h2>
+              </div>
+              <form onSubmit={handleClassSubmit} className={styles.form}>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>Name *</label>
@@ -199,36 +277,61 @@ export default function ClassesCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingClassId ? 'Update' : 'Create'}</button>
-                {editingClassId && <button type="button" onClick={() => { setEditingClassId(null); setClassForm(defaultClassForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
-
-          <div className={styles.list}>
-            {classTypes.map(item => (
-              <div key={item._id} className={`${styles.listItem} ${!item.isActive ? styles.inactive : ''}`}>
-                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {item.coverImage && <img src={item.coverImage} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
-                  <div>
-                    <strong>{item.name}</strong> 
-                    <span className={styles.meta} style={{marginLeft: '0.5rem'}}>({item.durationMinutes} mins • {item.level} • max {item.maxCapacity})</span>
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  <button onClick={() => editClass(item)} className={styles.btnOutline}>Edit</button>
-                  <button onClick={() => handleClassDelete(item._id)} className={styles.btnDanger}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </>
       )}
 
       {activeTab === 'instructors' && (
         <>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>{editingInstId ? 'Edit Instructor' : 'New Instructor'}</h2>
-            <form onSubmit={handleInstSubmit} className={styles.form}>
+          {view === 'list' && (
+            <>
+              <div className={styles.actionBar}>
+                <div className={styles.filterGroup}>
+                  <input type="text" placeholder="Search instructors..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                  <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <button className={styles.btn} onClick={() => { setEditingInstId(null); setInstructorForm(defaultInstForm); setView('form'); }}>
+                  + Add Instructor
+                </button>
+              </div>
+
+              <div className={styles.list}>
+                {filteredInstructors.length === 0 ? (
+                  <div className={styles.empty}>No instructors found.</div>
+                ) : (
+                  filteredInstructors.map(inst => (
+                    <div key={inst._id} className={`${styles.listItem} ${!inst.isActive ? styles.inactive : ''}`}>
+                      <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {inst.photo && <img src={inst.photo} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%'}} />}
+                        <strong>{inst.firstName} {inst.lastName}</strong>
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button onClick={() => editInstructor(inst)} className={styles.btnOutline}>Edit</button>
+                        <button onClick={() => handleInstDelete(inst._id)} className={styles.btnDanger}>Delete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {view === 'form' && (
+            <div className={styles.card}>
+              <div className={styles.formHeader}>
+                <button className={styles.backBtn} onClick={() => { setView('list'); setInstructorForm(defaultInstForm); setEditingInstId(null); }}>
+                  &larr; Back to List
+                </button>
+                <h2 className={styles.cardTitle} style={{marginBottom: 0}}>{editingInstId ? 'Edit Instructor' : 'New Instructor'}</h2>
+              </div>
+              <form onSubmit={handleInstSubmit} className={styles.form}>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>First Name *</label>
@@ -269,25 +372,10 @@ export default function ClassesCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingInstId ? 'Update' : 'Create'}</button>
-                {editingInstId && <button type="button" onClick={() => { setEditingInstId(null); setInstructorForm(defaultInstForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
-          
-          <div className={styles.list}>
-            {instructors.map(inst => (
-              <div key={inst._id} className={`${styles.listItem} ${!inst.isActive ? styles.inactive : ''}`}>
-                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {inst.photo && <img src={inst.photo} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '50%'}} />}
-                  <strong>{inst.firstName} {inst.lastName}</strong>
-                </div>
-                <div className={styles.itemActions}>
-                  <button onClick={() => editInstructor(inst)} className={styles.btnOutline}>Edit</button>
-                  <button onClick={() => handleInstDelete(inst._id)} className={styles.btnDanger}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </>
       )}
     </div>

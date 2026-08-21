@@ -27,6 +27,9 @@ export default function EventsCMS() {
   const [editingVenueId, setEditingVenueId] = useState(null);
   const [editingEventId, setEditingEventId] = useState(null);
   const [activeTab, setActiveTab] = useState('events');
+  const [view, setView] = useState('list'); // 'list' | 'form'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, published, draft, past
 
   const dragItem = useRef(null);
   const dragOverItem = useRef(null);
@@ -83,6 +86,7 @@ export default function EventsCMS() {
       if (res.ok) {
         setVenueForm(defaultVenueForm);
         setEditingVenueId(null);
+        setView('list');
         loadData();
       }
     } catch (err) { console.error(err); }
@@ -108,6 +112,7 @@ export default function EventsCMS() {
       galleryItems: venue.images ? venue.images.map(url => ({ type: 'existing', url })) : []
     });
     setActiveTab('venues');
+    setView('form');
   }
 
   const handleDragStart = (e, position) => {
@@ -173,6 +178,7 @@ export default function EventsCMS() {
       if (res.ok) {
         setEventForm(defaultEventForm);
         setEditingEventId(null);
+        setView('list');
         loadData();
       }
     } catch (err) { console.error(err); }
@@ -201,7 +207,32 @@ export default function EventsCMS() {
       existingCoverImage: evt.coverImage || '', coverImage: null
     });
     setActiveTab('events');
+    setView('form');
   }
+
+  const isPast = (dateStr) => {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
+  };
+
+  const filteredVenues = venues.filter(v => {
+    if (searchQuery && !v.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter === 'active' && !v.isActive) return false;
+    if (statusFilter === 'inactive' && v.isActive) return false;
+    return true;
+  });
+
+  const filteredEvents = events.filter(e => {
+    if (searchQuery && !e.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    const past = isPast(e.endDate || e.startDate);
+    
+    if (statusFilter === 'past' && !past) return false;
+    if (statusFilter === 'upcoming' && past) return false;
+    if (statusFilter === 'published' && e.status !== 'published') return false;
+    if (statusFilter === 'draft' && e.status !== 'draft') return false;
+    
+    return true;
+  }).sort((a, b) => new Date(b.startDate) - new Date(a.startDate)); // Newest first
 
   if (loading) return <div>Loading...</div>;
 
@@ -210,16 +241,63 @@ export default function EventsCMS() {
       <div className="eyebrow">CMS</div>
       <h1 className={styles.title}>Venues & Events</h1>
       
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <button className={activeTab === 'events' ? styles.btn : styles.btnOutline} onClick={() => setActiveTab('events')}>Events</button>
-        <button className={activeTab === 'venues' ? styles.btn : styles.btnOutline} onClick={() => setActiveTab('venues')}>Venue Spaces</button>
-      </div>
+      {view === 'list' && (
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+          <button className={activeTab === 'events' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('events'); setSearchQuery(''); setStatusFilter('all'); }}>Events</button>
+          <button className={activeTab === 'venues' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('venues'); setSearchQuery(''); setStatusFilter('all'); }}>Venue Spaces</button>
+        </div>
+      )}
 
       {activeTab === 'venues' && (
         <>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>{editingVenueId ? 'Edit Venue Space' : 'New Venue Space'}</h2>
-            <form onSubmit={handleVenueSubmit} className={styles.form}>
+          {view === 'list' && (
+            <>
+              <div className={styles.actionBar}>
+                <div className={styles.filterGroup}>
+                  <input type="text" placeholder="Search venues..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                  <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+                <button className={styles.btn} onClick={() => { setEditingVenueId(null); setVenueForm(defaultVenueForm); setView('form'); }}>
+                  + Create New Venue
+                </button>
+              </div>
+
+              <div className={styles.list}>
+                {filteredVenues.length === 0 ? (
+                  <div className={styles.empty}>No venue spaces found.</div>
+                ) : (
+                  filteredVenues.map(v => (
+                    <div key={v._id} className={`${styles.listItem} ${!v.isActive ? styles.inactive : ''}`}>
+                      <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {v.images && v.images.length > 0 && <img src={v.images[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
+                        <div>
+                          <strong>{v.name}</strong> <span className={styles.meta}>(Cap: {v.capacity})</span>
+                        </div>
+                      </div>
+                      <div className={styles.itemActions}>
+                        <button onClick={() => editVenue(v)} className={styles.btnOutline}>Edit</button>
+                        <button onClick={() => handleVenueDelete(v._id)} className={styles.btnDanger}>Delete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+
+          {view === 'form' && (
+            <div className={styles.card}>
+              <div className={styles.formHeader}>
+                <button className={styles.backBtn} onClick={() => { setView('list'); setVenueForm(defaultVenueForm); setEditingVenueId(null); }}>
+                  &larr; Back to List
+                </button>
+                <h2 className={styles.cardTitle} style={{marginBottom: 0}}>{editingVenueId ? 'Edit Venue Space' : 'New Venue Space'}</h2>
+              </div>
+              <form onSubmit={handleVenueSubmit} className={styles.form}>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>Name *</label>
@@ -315,35 +393,72 @@ export default function EventsCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingVenueId ? 'Update Venue' : 'Create Venue'}</button>
-                {editingVenueId && <button type="button" onClick={() => { setEditingVenueId(null); setVenueForm(defaultVenueForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
-
-          <div className={styles.list}>
-            {venues.map(v => (
-              <div key={v._id} className={`${styles.listItem} ${!v.isActive ? styles.inactive : ''}`}>
-                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {v.images && v.images.length > 0 && <img src={v.images[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
-                  <div>
-                    <strong>{v.name}</strong> <span className={styles.meta}>(Cap: {v.capacity})</span>
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  <button onClick={() => editVenue(v)} className={styles.btnOutline}>Edit</button>
-                  <button onClick={() => handleVenueDelete(v._id)} className={styles.btnDanger}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </>
       )}
 
       {activeTab === 'events' && (
         <>
-          <div className={styles.card}>
-            <h2 className={styles.cardTitle}>{editingEventId ? 'Edit Event' : 'New Event'}</h2>
-            <form onSubmit={handleEventSubmit} className={styles.form}>
+          {view === 'list' && (
+            <>
+              <div className={styles.actionBar}>
+                <div className={styles.filterGroup}>
+                  <input type="text" placeholder="Search events..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                  <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                    <option value="all">All Events</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+                <button className={styles.btn} onClick={() => { setEditingEventId(null); setEventForm(defaultEventForm); setView('form'); }}>
+                  + Create New Event
+                </button>
+              </div>
+
+              <div className={styles.list}>
+                {filteredEvents.length === 0 ? (
+                  <div className={styles.empty}>No events found.</div>
+                ) : (
+                  filteredEvents.map(evt => {
+                    const past = isPast(evt.endDate || evt.startDate);
+                    return (
+                      <div key={evt._id} className={`${styles.listItem} ${evt.status === 'draft' ? styles.inactive : ''} ${past ? styles.pastEvent : ''}`}>
+                        <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          {evt.coverImage && <img src={evt.coverImage} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', opacity: past ? 0.7 : 1}} />}
+                          <div>
+                            <strong>{evt.title}</strong> 
+                            <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
+                              {new Date(evt.startDate).toLocaleDateString()} • {evt.organiser}
+                            </span>
+                            <span className={styles.badge} style={{marginLeft: '0.5rem'}}>{past ? 'PAST' : evt.status}</span>
+                          </div>
+                        </div>
+                        <div className={styles.itemActions}>
+                          <button onClick={() => editEvent(evt)} className={styles.btnOutline}>Edit</button>
+                          <button onClick={() => handleEventDelete(evt._id)} className={styles.btnDanger}>Delete</button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </>
+          )}
+
+          {view === 'form' && (
+            <div className={styles.card}>
+              <div className={styles.formHeader}>
+                <button className={styles.backBtn} onClick={() => { setView('list'); setEventForm(defaultEventForm); setEditingEventId(null); }}>
+                  &larr; Back to List
+                </button>
+                <h2 className={styles.cardTitle} style={{marginBottom: 0}}>{editingEventId ? 'Edit Event' : 'New Event'}</h2>
+              </div>
+              <form onSubmit={handleEventSubmit} className={styles.form}>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>Title *</label>
@@ -444,31 +559,10 @@ export default function EventsCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingEventId ? 'Update Event' : 'Create Event'}</button>
-                {editingEventId && <button type="button" onClick={() => { setEditingEventId(null); setEventForm(defaultEventForm); }} className={styles.btnGhost}>Cancel</button>}
               </div>
             </form>
           </div>
-
-          <div className={styles.list}>
-            {events.map(evt => (
-              <div key={evt._id} className={`${styles.listItem} ${evt.status === 'draft' ? styles.inactive : ''}`}>
-                <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {evt.coverImage && <img src={evt.coverImage} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
-                  <div>
-                    <strong>{evt.title}</strong> 
-                    <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
-                      {new Date(evt.startDate).toLocaleDateString()} • {evt.organiser}
-                    </span>
-                    <span className={styles.badge} style={{marginLeft: '0.5rem'}}>{evt.status}</span>
-                  </div>
-                </div>
-                <div className={styles.itemActions}>
-                  <button onClick={() => editEvent(evt)} className={styles.btnOutline}>Edit</button>
-                  <button onClick={() => handleEventDelete(evt._id)} className={styles.btnDanger}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )}
         </>
       )}
     </div>

@@ -64,6 +64,8 @@ const AnnouncementBar = require('../models/AnnouncementBar');
 const FAQ             = require('../models/FAQ');
 const EventRecord     = require('../models/EventRecord');
 const VenueSpace      = require('../models/VenueSpace');
+const ClassType       = require('../models/ClassType');
+const Instructor      = require('../models/Instructor');
 
 // Public read-only data for the React frontend
 router.get('/site/announcements', async (req, res) => {
@@ -171,5 +173,26 @@ router.get('/events/:slug', async (req, res) => {
 });
 
 router.get('/classes/timetable',  (req, res) => res.json({ status: 'Phase 5 — pending implementation' }));
+
+router.get('/search', async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    if (!q || q.length < 2) return res.json({ events: [], venues: [], classes: [], instructors: [], fashion: [] });
+
+    const regex = new RegExp(q, 'i');
+
+    const [events, venues, classes, instructors, fashion] = await Promise.all([
+      EventRecord.find({ status: 'published', $or: [{ title: regex }, { description: regex }] }).limit(5),
+      VenueSpace.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      ClassType.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      Instructor.find({ isActive: true, $or: [{ firstName: regex }, { lastName: regex }, { bio: regex }] }).limit(5),
+      FashionItem.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5)
+    ]);
+
+    res.json({ events, venues, classes, instructors, fashion });
+  } catch (err) {
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
 
 module.exports = router;
