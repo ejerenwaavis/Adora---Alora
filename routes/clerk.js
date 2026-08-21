@@ -20,6 +20,61 @@ async function logActivity(userId, action, entityModel, entityId, description) {
   await ActivityLog.create({ user: userId, action, entityModel, entityId, description });
 }
 
+// ── QR Check-in ──
+router.post('/qr-checkin', async (req, res) => {
+  try {
+    const { qrToken } = req.body;
+    if (!qrToken || !qrToken.includes(':')) {
+      return res.status(400).json({ error: 'Invalid QR code format' });
+    }
+    const [type, id] = qrToken.split(':');
+    
+    if (type === 'CLASS') {
+      const booking = await Booking.findById(id).populate('user').populate('classSession');
+      if (!booking) return res.status(404).json({ error: 'Class booking not found' });
+      if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
+      
+      booking.checkedInAt = new Date();
+      booking.checkedInBy = req.user.id;
+      await booking.save();
+      
+      // Update session booked/checkedIn count if not already doing so
+      // In this system, bookedCount is already updated on booking.
+      
+      await logActivity(
+        req.user.id, 
+        'qr_checkin_class', 
+        'Booking', 
+        booking._id, 
+        `QR Checked in ${booking.user.firstName} ${booking.user.lastName} for class ${booking.classSession._id}`
+      );
+      
+      return res.json({ message: `Successfully checked in ${booking.user.firstName} ${booking.user.lastName}` });
+    } else if (type === 'EVENT') {
+      const booking = await EventBooking.findById(id).populate('user');
+      if (!booking) return res.status(404).json({ error: 'Event booking not found' });
+      if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
+      
+      booking.checkedInAt = new Date();
+      await booking.save();
+      
+      await logActivity(
+        req.user.id, 
+        'qr_checkin_event', 
+        'EventBooking', 
+        booking._id, 
+        `QR Checked in ${booking.customerName} for event ${booking.event}`
+      );
+      
+      return res.json({ message: `Successfully checked in ${booking.customerName}` });
+    } else {
+      return res.status(400).json({ error: 'Unknown QR token type' });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Global Search ──
 router.get('/search', async (req, res) => {
   try {

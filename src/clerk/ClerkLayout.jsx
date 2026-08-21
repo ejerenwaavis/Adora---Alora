@@ -3,10 +3,12 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './clerk.css';
 import WalkinModal from './WalkinModal';
+import QRScannerModal from './QRScannerModal';
 
 export default function ClerkLayout() {
   const { user } = useAuth();
   const [walkinOpen, setWalkinOpen] = useState(false);
+  const [qrScannerOpen, setQrScannerOpen] = useState(false);
   
   // Real-time clock for footer
   const [time, setTime] = useState('');
@@ -75,7 +77,7 @@ export default function ClerkLayout() {
           <div className="sb-item" onClick={() => setWalkinOpen(true)} style={{ cursor: 'pointer' }}>
             <i className="ti ti-user-plus" aria-hidden="true"></i> Walk-in
           </div>
-          <div className="sb-item" onClick={() => alert('QR Check-in flow opening...')}>
+          <div className="sb-item" onClick={() => setQrScannerOpen(true)} style={{ cursor: 'pointer' }}>
             <i className="ti ti-qrcode" aria-hidden="true"></i> QR check-in
           </div>
           <NavLink to="/clerk/logs" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`}>
@@ -94,6 +96,7 @@ export default function ClerkLayout() {
       </div>
 
       <WalkinModal isOpen={walkinOpen} onClose={() => setWalkinOpen(false)} />
+      {qrScannerOpen && <QRScannerModal onClose={() => setQrScannerOpen(false)} />}
     </div>
   );
 }
