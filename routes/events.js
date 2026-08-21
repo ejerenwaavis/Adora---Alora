@@ -7,7 +7,7 @@ const EventRecord = require('../models/EventRecord');
 // Public event listing
 router.get('/', async (req, res) => {
   try {
-    const events = await EventRecord.find({ status: 'published' }).sort('startDate');
+    const events = await EventRecord.find({ status: 'published', startDate: { $gte: new Date() } }).sort('startDate');
     res.json(events);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch events' });

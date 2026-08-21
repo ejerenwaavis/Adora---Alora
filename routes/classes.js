@@ -10,9 +10,10 @@ router.get('/timetable', async (req, res) => {
   try {
     const { start, end } = req.query;
     const query = { isPublic: true, isCancelled: false };
-    if (start && end) {
-      query.startTime = { $gte: new Date(start), $lte: new Date(end) };
-    }
+    
+    query.startTime = { $gte: new Date() };
+    if (start) query.startTime.$gte = new Date(start);
+    if (end) query.startTime.$lte = new Date(end);
     const sessions = await ClassSession.find(query)
       .populate('classType')
       .populate('instructor')
