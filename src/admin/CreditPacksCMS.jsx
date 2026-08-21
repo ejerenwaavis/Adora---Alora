@@ -10,6 +10,9 @@ export default function CreditPacksCMS() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' });
   const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState('list'); // 'list' | 'form'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
 
   useEffect(() => { loadPacks(); }, []);
 
@@ -33,6 +36,7 @@ export default function CreditPacksCMS() {
       if (res.ok) {
         setFormData({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' });
         setEditingId(null);
+        setView('list');
         loadPacks();
       }
     } catch (err) { console.error(err); }
@@ -58,7 +62,16 @@ export default function CreditPacksCMS() {
       isActive: pack.isActive,
       description: pack.description || ''
     });
+    setView('form');
   }
+
+  const filteredPacks = packs.filter(pack => {
+    const matchesSearch = pack.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && pack.isActive) || 
+                         (statusFilter === 'inactive' && !pack.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) return <div>Loading...</div>;
 
@@ -67,61 +80,87 @@ export default function CreditPacksCMS() {
       <div className="eyebrow">CMS</div>
       <h1 className={styles.title}>Credit Packs</h1>
 
-      <div className={styles.card}>
-        <h2 className={styles.cardTitle}>{editingId ? 'Edit Credit Pack' : 'New Credit Pack'}</h2>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Name *</label>
-              <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+      {view === 'list' && (
+        <>
+          <div className={styles.actionBar}>
+            <div className={styles.filterGroup}>
+              <input type="text" placeholder="Search credit packs..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
             </div>
-            <div className={styles.field}>
-              <label>Credits *</label>
-              <input type="number" min="1" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} required />
-            </div>
-          </div>
-          
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Price (Naira) *</label>
-              <input type="number" value={formData.priceKobo / 100} onChange={e => setFormData({...formData, priceKobo: Number(e.target.value) * 100})} required />
-            </div>
-            <div className={styles.field}>
-              <label>Expires In (Days) *</label>
-              <input type="number" min="1" value={formData.expiresInDays} onChange={e => setFormData({...formData, expiresInDays: Number(e.target.value)})} required />
-            </div>
+            <button className={styles.btn} onClick={() => { setEditingId(null); setFormData({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' }); setView('form'); }}>
+              + Create New
+            </button>
           </div>
 
-          <div className={styles.field}>
-            <label>Description</label>
-            <textarea rows="2" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+          <div className={styles.list}>
+            {filteredPacks.map(pack => (
+              <div key={pack._id} className={`${styles.listItem} ${!pack.isActive ? styles.inactive : ''}`}>
+                <div className={styles.itemContent}>
+                  <strong>{pack.name}</strong> <span className={styles.meta}>({pack.credits} credits, ₦{pack.priceKobo / 100}) - Expires in {pack.expiresInDays} days</span>
+                </div>
+                <div className={styles.itemActions}>
+                  <button onClick={() => handleEdit(pack)} className={styles.btnOutline}>Edit</button>
+                  <button onClick={() => handleDelete(pack._id)} className={styles.btnDanger}>Delete</button>
+                </div>
+              </div>
+            ))}
+            {filteredPacks.length === 0 && <p className={styles.empty}>No credit packs found matching your filters.</p>}
           </div>
+        </>
+      )}
 
-          <div className={styles.checkboxField} style={{marginTop: '1rem'}}>
-            <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
-            <label htmlFor="isActive">Active</label>
+      {view === 'form' && (
+        <>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button className={styles.btnGhost} onClick={() => setView('list')}>&larr; Back to List</button>
           </div>
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{editingId ? 'Edit Credit Pack' : 'New Credit Pack'}</h2>
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Name *</label>
+                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                </div>
+                <div className={styles.field}>
+                  <label>Credits *</label>
+                  <input type="number" min="1" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} required />
+                </div>
+              </div>
+              
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Price (Naira) *</label>
+                  <input type="number" value={formData.priceKobo / 100} onChange={e => setFormData({...formData, priceKobo: Number(e.target.value) * 100})} required />
+                </div>
+                <div className={styles.field}>
+                  <label>Expires In (Days) *</label>
+                  <input type="number" min="1" value={formData.expiresInDays} onChange={e => setFormData({...formData, expiresInDays: Number(e.target.value)})} required />
+                </div>
+              </div>
 
-          <div className={styles.actions}>
-            <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
-            {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: ''}); }} className={styles.btnGhost}>Cancel</button>}
-          </div>
-        </form>
-      </div>
+              <div className={styles.field}>
+                <label>Description</label>
+                <textarea rows="2" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+              </div>
 
-      <div className={styles.list}>
-        {packs.map(pack => (
-          <div key={pack._id} className={`${styles.listItem} ${!pack.isActive ? styles.inactive : ''}`}>
-            <div className={styles.itemContent}>
-              <strong>{pack.name}</strong> <span className={styles.meta}>({pack.credits} credits, ₦{pack.priceKobo / 100}) - Expires in {pack.expiresInDays} days</span>
-            </div>
-            <div className={styles.itemActions}>
-              <button onClick={() => handleEdit(pack)} className={styles.btnOutline}>Edit</button>
-              <button onClick={() => handleDelete(pack._id)} className={styles.btnDanger}>Delete</button>
-            </div>
+              <div className={styles.checkboxField} style={{marginTop: '1rem'}}>
+                <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
+                <label htmlFor="isActive">Active</label>
+              </div>
+
+              <div className={styles.actions}>
+                <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={() => { setEditingId(null); setFormData({name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: ''}); setView('list'); }} className={styles.btnGhost}>Cancel</button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

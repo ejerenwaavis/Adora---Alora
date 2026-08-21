@@ -25,6 +25,9 @@ export default function ScheduleCMS() {
   });
   
   const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState('list'); // 'list' | 'form'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'cancelled'
 
   useEffect(() => { loadData(); }, []);
 
@@ -67,6 +70,7 @@ export default function ScheduleCMS() {
       if (res.ok) {
         setFormData({ ...formData }); // keep defaults mostly
         setEditingId(null);
+        setView('list');
         loadData();
       } else {
         const data = await res.json();
@@ -132,7 +136,20 @@ export default function ScheduleCMS() {
       maxCapacity: session.maxCapacity,
       isPublic: session.isPublic
     });
+    setView('form');
   }
+
+  const filteredSessions = sessions.filter(session => {
+    const className = session.classType?.name || '';
+    const instructorName = `${session.instructor?.firstName || ''} ${session.instructor?.lastName || ''}`;
+    const searchString = `${className} ${instructorName}`.toLowerCase();
+    
+    const matchesSearch = searchString.includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && !session.isCancelled) || 
+                         (statusFilter === 'cancelled' && session.isCancelled);
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) return <div>Loading...</div>;
 
@@ -141,78 +158,104 @@ export default function ScheduleCMS() {
       <div className="eyebrow">CMS</div>
       <h1 className={styles.title}>Timetable Schedule</h1>
 
-      <div className={styles.card}>
-        <h2 className={styles.cardTitle}>{editingId ? 'Edit Session' : 'Schedule New Class'}</h2>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Class Type *</label>
-              <select value={formData.classType} onChange={e => setFormData({...formData, classType: e.target.value})} required>
-                <option value="">Select...</option>
-                {classTypes.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+      {view === 'list' && (
+        <>
+          <div className={styles.actionBar}>
+            <div className={styles.filterGroup}>
+              <input type="text" placeholder="Search sessions..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
-            <div className={styles.field}>
-              <label>Instructor *</label>
-              <select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} required>
-                <option value="">Select...</option>
-                {instructors.map(i => <option key={i._id} value={i._id}>{i.firstName} {i.lastName}</option>)}
-              </select>
-            </div>
-          </div>
-          
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Date *</label>
-              <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required />
-            </div>
-            <div className={styles.field}>
-              <label>Start Time *</label>
-              <input type="time" value={formData.startTimeStr} onChange={e => setFormData({...formData, startTimeStr: e.target.value})} required />
-            </div>
-            <div className={styles.field}>
-              <label>End Time *</label>
-              <input type="time" value={formData.endTimeStr} onChange={e => setFormData({...formData, endTimeStr: e.target.value})} required />
-            </div>
+            <button className={styles.btn} onClick={() => { setEditingId(null); setView('form'); }}>
+              + Schedule Class
+            </button>
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Capacity *</label>
-              <input type="number" min="1" value={formData.maxCapacity} onChange={e => setFormData({...formData, maxCapacity: Number(e.target.value)})} required />
-            </div>
-            <div className={styles.checkboxField} style={{marginTop: '2.5rem'}}>
-              <input type="checkbox" id="isPublic" checked={formData.isPublic} onChange={e => setFormData({...formData, isPublic: e.target.checked})} />
-              <label htmlFor="isPublic">Visible on Timetable</label>
-            </div>
-          </div>
-
-          <div className={styles.actions}>
-            <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Schedule'}</button>
-            {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({...formData, classType: '', instructor: ''}); }} className={styles.btnGhost}>Cancel</button>}
-          </div>
-        </form>
-      </div>
-
-      <div className={styles.list}>
-        {sessions.map(session => (
-          <div key={session._id} className={`${styles.listItem} ${session.isCancelled ? styles.inactive : ''}`}>
-            <div className={styles.itemContent}>
-              <strong>{session.classType?.name} with {session.instructor?.firstName} {session.instructor?.lastName}</strong> 
-              <div className={styles.meta}>
-                {new Date(session.startTime).toLocaleDateString()} @ {new Date(session.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                &nbsp;•&nbsp; {session.bookedCount}/{session.maxCapacity} Booked
-                {session.isCancelled && <span style={{color: 'red', marginLeft: '10px'}}>CANCELLED</span>}
+          <div className={styles.list}>
+            {filteredSessions.map(session => (
+              <div key={session._id} className={`${styles.listItem} ${session.isCancelled ? styles.inactive : ''}`}>
+                <div className={styles.itemContent}>
+                  <strong>{session.classType?.name} with {session.instructor?.firstName} {session.instructor?.lastName}</strong> 
+                  <div className={styles.meta}>
+                    {new Date(session.startTime).toLocaleDateString()} @ {new Date(session.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    &nbsp;•&nbsp; {session.bookedCount}/{session.maxCapacity} Booked
+                    {session.isCancelled && <span style={{color: 'red', marginLeft: '10px'}}>CANCELLED</span>}
+                  </div>
+                </div>
+                <div className={styles.itemActions}>
+                  <button onClick={() => handleEdit(session)} className={styles.btnOutline}>Edit</button>
+                  {!session.isCancelled && <button onClick={() => confirmCancel(session._id)} className={styles.btnGhost}>Cancel Class</button>}
+                  <button onClick={() => confirmDelete(session._id)} className={styles.btnDanger}>Delete</button>
+                </div>
               </div>
-            </div>
-            <div className={styles.itemActions}>
-              <button onClick={() => handleEdit(session)} className={styles.btnOutline}>Edit</button>
-              {!session.isCancelled && <button onClick={() => confirmCancel(session._id)} className={styles.btnGhost}>Cancel Class</button>}
-              <button onClick={() => confirmDelete(session._id)} className={styles.btnDanger}>Delete</button>
-            </div>
+            ))}
+            {filteredSessions.length === 0 && <p className={styles.empty}>No class sessions found matching your filters.</p>}
           </div>
-        ))}
-      </div>
+        </>
+      )}
+
+      {view === 'form' && (
+        <>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button className={styles.btnGhost} onClick={() => setView('list')}>&larr; Back to List</button>
+          </div>
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{editingId ? 'Edit Session' : 'Schedule New Class'}</h2>
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Class Type *</label>
+                  <select value={formData.classType} onChange={e => setFormData({...formData, classType: e.target.value})} required>
+                    <option value="">Select...</option>
+                    {classTypes.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className={styles.field}>
+                  <label>Instructor *</label>
+                  <select value={formData.instructor} onChange={e => setFormData({...formData, instructor: e.target.value})} required>
+                    <option value="">Select...</option>
+                    {instructors.map(i => <option key={i._id} value={i._id}>{i.firstName} {i.lastName}</option>)}
+                  </select>
+                </div>
+              </div>
+              
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Date *</label>
+                  <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} required />
+                </div>
+                <div className={styles.field}>
+                  <label>Start Time *</label>
+                  <input type="time" value={formData.startTimeStr} onChange={e => setFormData({...formData, startTimeStr: e.target.value})} required />
+                </div>
+                <div className={styles.field}>
+                  <label>End Time *</label>
+                  <input type="time" value={formData.endTimeStr} onChange={e => setFormData({...formData, endTimeStr: e.target.value})} required />
+                </div>
+              </div>
+
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Capacity *</label>
+                  <input type="number" min="1" value={formData.maxCapacity} onChange={e => setFormData({...formData, maxCapacity: Number(e.target.value)})} required />
+                </div>
+                <div className={styles.checkboxField} style={{marginTop: '2.5rem'}}>
+                  <input type="checkbox" id="isPublic" checked={formData.isPublic} onChange={e => setFormData({...formData, isPublic: e.target.checked})} />
+                  <label htmlFor="isPublic">Visible on Timetable</label>
+                </div>
+              </div>
+
+              <div className={styles.actions}>
+                <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Schedule'}</button>
+                <button type="button" onClick={() => { setEditingId(null); setFormData({...formData, classType: '', instructor: ''}); setView('list'); }} className={styles.btnGhost}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
 
       <Modal 
         isOpen={modalConfig.isOpen} 

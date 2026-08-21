@@ -393,6 +393,7 @@ export default function EventsCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingVenueId ? 'Update Venue' : 'Create Venue'}</button>
+                <button type="button" onClick={() => { setView('list'); setVenueForm(defaultVenueForm); setEditingVenueId(null); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
           </div>
@@ -559,6 +560,7 @@ export default function EventsCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingEventId ? 'Update Event' : 'Create Event'}</button>
+                <button type="button" onClick={() => { setView('list'); setEventForm(defaultEventForm); setEditingEventId(null); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
           </div>

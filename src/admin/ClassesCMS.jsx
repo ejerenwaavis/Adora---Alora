@@ -277,6 +277,7 @@ export default function ClassesCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingClassId ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={() => { setView('list'); setClassForm(defaultClassForm); setEditingClassId(null); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
           </div>
@@ -372,6 +373,7 @@ export default function ClassesCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingInstId ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={() => { setView('list'); setInstructorForm(defaultInstForm); setEditingInstId(null); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
           </div>

@@ -10,6 +10,9 @@ export default function AnnouncementCMS() {
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ message: '', linkText: '', linkUrl: '', isActive: true });
   const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState('list'); // 'list' | 'form'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'draft'
 
   useEffect(() => { loadItems(); }, []);
 
@@ -34,6 +37,7 @@ export default function AnnouncementCMS() {
       if (res.ok) {
         setFormData({ message: '', linkText: '', linkUrl: '', isActive: true });
         setEditingId(null);
+        setView('list');
         loadItems();
       }
     } catch (err) { console.error(err); }
@@ -52,7 +56,16 @@ export default function AnnouncementCMS() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingId(item._id);
     setFormData({ message: item.message, linkText: item.linkText || '', linkUrl: item.linkUrl || '', isActive: item.isActive });
+    setView('form');
   }
+
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.message.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || 
+                         (statusFilter === 'active' && item.isActive) || 
+                         (statusFilter === 'draft' && !item.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   if (loading) return <div>Loading...</div>;
 
@@ -61,50 +74,75 @@ export default function AnnouncementCMS() {
       <div className="eyebrow">CMS</div>
       <h1 className={styles.title}>Announcement Bar</h1>
       
-      <div className={styles.card}>
-        <h2 className={styles.cardTitle}>{editingId ? 'Edit Announcement' : 'New Announcement'}</h2>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.field}>
-            <label>Message *</label>
-            <input type="text" value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} required />
-          </div>
-          <div className={styles.row}>
-            <div className={styles.field}>
-              <label>Link Text</label>
-              <input type="text" value={formData.linkText} onChange={e => setFormData({...formData, linkText: e.target.value})} placeholder="e.g. Read more" />
+      {view === 'list' && (
+        <>
+          <div className={styles.actionBar}>
+            <div className={styles.filterGroup}>
+              <input type="text" placeholder="Search announcements..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                <option value="all">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="draft">Drafts</option>
+              </select>
             </div>
-            <div className={styles.field}>
-              <label>Link URL</label>
-              <input type="text" value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} placeholder="e.g. /events" />
-            </div>
+            <button className={styles.btn} onClick={() => { setEditingId(null); setFormData({ message: '', linkText: '', linkUrl: '', isActive: true }); setView('form'); }}>
+              + Create New
+            </button>
           </div>
-          <div className={styles.checkboxField}>
-            <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
-            <label htmlFor="isActive">Active (Visible on site)</label>
-          </div>
-          <div className={styles.actions}>
-            <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
-            {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({message:'', linkText:'', linkUrl:'', isActive:true}); }} className={styles.btnGhost}>Cancel</button>}
-          </div>
-        </form>
-      </div>
 
-      <div className={styles.list}>
-        {items.map(item => (
-          <div key={item._id} className={`${styles.listItem} ${!item.isActive ? styles.inactive : ''}`}>
-            <div className={styles.itemContent}>
-              <strong>{item.message}</strong>
-              {item.linkText && <span className={styles.meta}>Link: {item.linkText} → {item.linkUrl}</span>}
-            </div>
-            <div className={styles.itemActions}>
-              <span className={styles.badge}>{item.isActive ? 'Active' : 'Draft'}</span>
-              <button onClick={() => editItem(item)} className={styles.btnOutline}>Edit</button>
-              <button onClick={() => handleDelete(item._id)} className={styles.btnDanger}>Delete</button>
-            </div>
+          <div className={styles.list}>
+            {filteredItems.map(item => (
+              <div key={item._id} className={`${styles.listItem} ${!item.isActive ? styles.inactive : ''}`}>
+                <div className={styles.itemContent}>
+                  <strong>{item.message}</strong>
+                  {item.linkText && <span className={styles.meta}>Link: {item.linkText} → {item.linkUrl}</span>}
+                </div>
+                <div className={styles.itemActions}>
+                  <span className={styles.badge}>{item.isActive ? 'Active' : 'Draft'}</span>
+                  <button onClick={() => editItem(item)} className={styles.btnOutline}>Edit</button>
+                  <button onClick={() => handleDelete(item._id)} className={styles.btnDanger}>Delete</button>
+                </div>
+              </div>
+            ))}
+            {filteredItems.length === 0 && <p className={styles.empty}>No announcements found matching your filters.</p>}
           </div>
-        ))}
-        {items.length === 0 && <p className={styles.empty}>No announcements created yet.</p>}
-      </div>
+        </>
+      )}
+
+      {view === 'form' && (
+        <>
+          <div style={{ marginBottom: '1.5rem' }}>
+            <button className={styles.btnGhost} onClick={() => setView('list')}>&larr; Back to List</button>
+          </div>
+          <div className={styles.card}>
+            <h2 className={styles.cardTitle}>{editingId ? 'Edit Announcement' : 'New Announcement'}</h2>
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.field}>
+                <label>Message *</label>
+                <input type="text" value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})} required />
+              </div>
+              <div className={styles.row}>
+                <div className={styles.field}>
+                  <label>Link Text</label>
+                  <input type="text" value={formData.linkText} onChange={e => setFormData({...formData, linkText: e.target.value})} placeholder="e.g. Read more" />
+                </div>
+                <div className={styles.field}>
+                  <label>Link URL</label>
+                  <input type="text" value={formData.linkUrl} onChange={e => setFormData({...formData, linkUrl: e.target.value})} placeholder="e.g. /events" />
+                </div>
+              </div>
+              <div className={styles.checkboxField}>
+                <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
+                <label htmlFor="isActive">Active (Visible on site)</label>
+              </div>
+              <div className={styles.actions}>
+                <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={() => { setEditingId(null); setFormData({message:'', linkText:'', linkUrl:'', isActive:true}); setView('list'); }} className={styles.btnGhost}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </>
+      )}
     </div>
   );
 }
