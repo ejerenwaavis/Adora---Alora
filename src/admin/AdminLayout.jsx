@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Outlet, NavLink, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/ui/Icon';
@@ -5,6 +6,7 @@ import styles from './AdminLayout.module.css';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Basic guard (middleware also protects the API, but we protect the UI here too)
   if (!user || (user.role !== 'admin' && user.role !== 'content_editor')) {
@@ -13,7 +15,28 @@ export default function AdminLayout() {
 
   return (
     <div className={styles.adminContainer}>
-      <aside className={styles.sidebar}>
+      {/* Mobile Header */}
+      <header className={styles.mobileHeader}>
+        <div className={styles.mhBrand}>
+          <span className={styles.mhWordmark}>Aora House</span>
+          <span className={styles.badge}>Admin</span>
+        </div>
+        <button className={styles.mhToggle} onClick={() => setIsMobileMenuOpen(true)}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="18" x2="20" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+
+      {/* Sidebar Overlay */}
+      <div 
+        className={`${styles.sidebarOverlay} ${isMobileMenuOpen ? styles.show : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      ></div>
+
+      <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
         <div className={styles.brand}>
           <span className="wordmark">Aora House</span>
           <span className={styles.badge}>Admin</span>
@@ -25,10 +48,10 @@ export default function AdminLayout() {
               <Icon name="site-content" size={14} className={styles.groupIcon} />
               Site Content
             </span>
-            <NavLink to="/admin/announcements" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/announcements" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="announcements" size={16} className={styles.navIcon} /> Announcements
             </NavLink>
-            <NavLink to="/admin/faqs" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/faqs" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="faqs" size={16} className={styles.navIcon} /> FAQs
             </NavLink>
           </div>
@@ -38,7 +61,7 @@ export default function AdminLayout() {
               <Icon name="cafe" size={14} className={styles.groupIcon} />
               Café Menu
             </span>
-            <NavLink to="/admin/menu" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/menu" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="cafe-items" size={16} className={styles.navIcon} /> Categories & Items
             </NavLink>
           </div>
@@ -48,10 +71,10 @@ export default function AdminLayout() {
               <Icon name="movement" size={14} className={styles.groupIcon} />
               Movement
             </span>
-            <NavLink to="/admin/classes" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/classes" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="classes" size={16} className={styles.navIcon} /> Classes & Instructors
             </NavLink>
-            <NavLink to="/admin/timetable" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/timetable" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="timetable" size={16} className={styles.navIcon} /> Timetable
             </NavLink>
           </div>
@@ -61,7 +84,7 @@ export default function AdminLayout() {
               <Icon name="fashion" size={14} className={styles.groupIcon} />
               Fashion
             </span>
-            <NavLink to="/admin/fashion" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/fashion" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="layers" size={16} className={styles.navIcon} /> Layers & Items
             </NavLink>
           </div>
@@ -71,7 +94,7 @@ export default function AdminLayout() {
               <Icon name="venues-events" size={14} className={styles.groupIcon} />
               Venues & Events
             </span>
-            <NavLink to="/admin/events" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/events" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="spaces-events" size={16} className={styles.navIcon} /> Spaces & Events
             </NavLink>
           </div>
@@ -81,10 +104,10 @@ export default function AdminLayout() {
               <Icon name="commerce-config" size={14} className={styles.groupIcon} />
               Commerce & Config
             </span>
-            <NavLink to="/admin/credit-packs" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/credit-packs" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="credit-packs" size={16} className={styles.navIcon} /> Credit Packs
             </NavLink>
-            <NavLink to="/admin/settings" className={({isActive}) => isActive ? styles.active : ''}>
+            <NavLink to="/admin/settings" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="settings" size={16} className={styles.navIcon} /> Settings
             </NavLink>
           </div>

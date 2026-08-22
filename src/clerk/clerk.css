@@ -149,3 +149,50 @@
 .tab.on { color:var(--rust); border-bottom-color:var(--rust); }
 
 .hidden { display:none; }
+
+/* ── MOBILE HEADER (hidden on desktop) ── */
+.mobile-header { display:none; background:var(--cocoa-deep); padding:16px 20px; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(247,239,225,.08); z-index: 90; position: sticky; top: 0;}
+.mh-brand { display:flex; align-items:center; gap:8px; }
+.mh-wordmark { font-family:'Fraunces',serif; font-size:18px; color:#F7EFE1; line-height:1; }
+.mh-sub { font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:rgba(200,155,74,.65); margin-top:2px; }
+.mh-toggle { background:transparent; border:none; color:var(--gold); font-size:24px; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center; }
+
+/* ── SIDEBAR OVERLAY ── */
+.sidebar-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(42,29,20,0.5); z-index:95; backdrop-filter:blur(2px); opacity:0; transition:opacity 0.3s ease; pointer-events:none; }
+.sidebar-overlay.show { opacity:1; pointer-events:auto; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .shell { grid-template-columns:1fr; }
+  
+  .mobile-header { display:flex; }
+  
+  .sidebar { 
+    position:fixed; 
+    top:0; 
+    left:0; 
+    bottom:0; 
+    width:260px; 
+    z-index:100; 
+    transform:translateX(-100%); 
+    transition:transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+    box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+  }
+  
+  .sidebar.open { transform:translateX(0); }
+  
+  .sidebar-overlay { display:block; }
+  
+  /* Main area content adjustments */
+  .stat-row { grid-template-columns:1fr 1fr; }
+  .stat-cell { border-bottom:1px solid var(--line); }
+  .stat-cell:nth-child(2), .stat-cell:nth-child(4) { border-right:none; }
+  
+  .guest-thead { display:none; /* hide table headers on small screens if we want to shift to card view, but for now just let it scroll */ }
+  .guest-table { overflow-x: auto; }
+  .guest-row { min-width: 500px; }
+  
+  .walkin-form { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+}
+
