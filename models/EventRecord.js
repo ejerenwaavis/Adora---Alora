@@ -46,6 +46,14 @@ const eventRecordSchema = new mongoose.Schema({
   isFeatured:  { type: Boolean, default: false },
   tags:        [{ type: String }],
   publishedAt: { type: Date },
+  isRecurring: { type: Boolean, default: false },
+  seriesId:    { type: String }, // Grouping ID for recurring event instances
+  recurrence: {
+    frequency:   { type: String, enum: ['daily', 'weekly', 'biweekly', 'monthly'] },
+    daysOfWeek:  [{ type: Number }],
+    repeatCount: { type: Number },
+    repeatUntil: { type: Date }
+  }
 }, { timestamps: true });
 
 // Enforce: externalUrl required when bookingDestination = 'external_url'
@@ -60,5 +68,6 @@ eventRecordSchema.pre('save', function (next) {
 });
 
 eventRecordSchema.index({ startDate: 1, status: 1 });
+eventRecordSchema.index({ seriesId: 1 });
 
 module.exports = mongoose.model('EventRecord', eventRecordSchema);

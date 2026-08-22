@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
-import styles from './CMS.module.css'; // We will create this shared css module next
+import { useToast } from '../contexts/ToastContext';
+import styles from './CMS.module.css';
 
 export default function AnnouncementCMS() {
   const { authFetch } = useAuth();
   const { confirmAction } = useModal();
+  const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ message: '', linkText: '', linkUrl: '', isActive: true });
@@ -35,20 +37,36 @@ export default function AnnouncementCMS() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
+        toast.success(editingId ? 'Announcement updated successfully.' : 'Announcement created successfully.');
         setFormData({ message: '', linkText: '', linkUrl: '', isActive: true });
         setEditingId(null);
         setView('list');
         loadItems();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save announcement.');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Error saving announcement.');
+    }
   }
 
   function handleDelete(id) {
     confirmAction('Delete Announcement', 'Are you sure you want to delete this announcement?', async () => {
       try {
         const res = await authFetch(`/api/cms/announcements/${id}`, { method: 'DELETE' });
-        if (res.ok) loadItems();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Announcement deleted.');
+          loadItems();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.error || 'Failed to delete announcement.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete announcement.');
+      }
     });
   }
 

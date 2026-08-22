@@ -3,28 +3,29 @@
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   align-items: center;
-  gap: 20px;
-  padding: 80px var(--gutter) 90px;
-  max-width: var(--max-width);
+  gap: 32px;
+  padding: 80px var(--gutter, 48px) 90px;
+  max-width: var(--max-width, 1380px);
   margin: 0 auto;
 }
 
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
-    padding-bottom: 60px;
+    padding: 50px 24px 60px;
+    gap: 36px;
   }
 }
 
 .heroHeadline {
   font-family: var(--f-display);
-  font-size: clamp(38px, 5vw, 60px);
+  font-size: clamp(38px, 5vw, 62px);
   line-height: 1.08;
   letter-spacing: -0.01em;
   max-width: 560px;
   font-weight: 500;
-  color: var(--cocoa);
-  margin-bottom: 0;
+  color: var(--cocoa-deep, #2A1D14);
+  margin: 0 0 16px 0;
 }
 
 .staticLine {
@@ -39,7 +40,7 @@
 }
 
 .reelWindow {
-  height: 1.1em;
+  height: 1.12em;
   overflow: hidden;
   display: inline-block;
   vertical-align: top;
@@ -56,56 +57,25 @@
   color: #A4451F;
   white-space: nowrap;
   display: block;
-  line-height: 1.1;
+  line-height: 1.12;
 }
 
-/* Progress Pips */
-.wordProgress {
-  position: absolute;
-  left: 20px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 10;
-}
-
-.progressPip {
-  width: 2px;
-  height: 18px;
-  background: rgba(248, 242, 231, 0.2);
-  border-radius: 1px;
-  overflow: hidden;
-  position: relative;
-}
-
-.progressPipActive {
-  background: rgba(248, 242, 231, 0.4);
-}
-
-.progressFill {
-  width: 100%;
-  background: var(--cream, #f8f2e7);
-  border-radius: 1px;
-  transition: height 0.1s linear;
-}
-
-.heroCopy p {
-  color: var(--cocoa-deep);
-  max-width: 420px;
-  margin: 22px 0 32px;
-  font-size: var(--text-base);
+.heroDesc {
+  color: #4A3527;
+  max-width: 440px;
+  margin: 22px 0 34px;
+  font-size: var(--text-base, 1rem);
+  line-height: 1.6;
 }
 
 .eyebrow {
   font-family: var(--f-display);
   font-style: italic;
   font-weight: 400;
-  letter-spacing: .03em;
-  color: var(--forest);
-  font-size: var(--text-sm);
-  margin-bottom: 10px;
+  letter-spacing: 0.04em;
+  color: var(--forest, #414F36);
+  font-size: var(--text-sm, 0.92rem);
+  margin-bottom: 12px;
   display: block;
 }
 
@@ -118,11 +88,12 @@
 .heroVisual {
   position: relative;
   height: 520px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-md, 8px);
   background:
     radial-gradient(circle at 30% 20%, rgba(65,79,54,0.35), transparent 55%),
     linear-gradient(155deg, #C9B792 0%, #A98F65 45%, #6E5A3E 100%);
   overflow: hidden;
+  box-shadow: 0 16px 36px rgba(42, 29, 20, 0.08);
 }
 
 .heroVisual::after {
@@ -131,55 +102,78 @@
   bottom: 16px;
   left: 16px;
   font-size: 11px;
-  color: rgba(248, 242, 231, 0.75);
-  letter-spacing: 0.03em;
+  color: rgba(248, 242, 231, 0.85);
+  letter-spacing: 0.04em;
   font-family: var(--f-body);
+  background: rgba(20, 10, 4, 0.45);
+  backdrop-filter: blur(4px);
+  padding: 4px 10px;
+  border-radius: 3px;
 }
 
 .heroImg {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 85% center;
+  transition: transform 0.6s ease;
+}
+
+.heroVisual:hover .heroImg {
+  transform: scale(1.02);
 }
 
 @media (max-width: 900px) {
   .heroVisual {
-    height: 320px;
+    height: 380px;
   }
 }
 
-/* Local buttons, to match the simple template perfectly */
+@media (max-width: 600px) {
+  .heroVisual {
+    height: 300px;
+  }
+}
+
+/* Local action buttons */
 .btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 12px 24px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  letter-spacing: .04em;
+  border-radius: var(--radius-sm, 3px);
+  font-size: var(--text-sm, 0.82rem);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  border: 1px solid var(--cocoa);
-  transition: all .25s ease;
+  font-weight: 600;
+  border: 1px solid var(--cocoa-deep, #2A1D14);
+  transition: all 0.25s ease;
   cursor: pointer;
   text-decoration: none;
   font-family: var(--f-body);
 }
 
 .btnSolid {
-  background: var(--cocoa);
-  color: var(--cream);
+  background: var(--cocoa-deep, #2A1D14);
+  color: var(--cream, #FAF6EF);
 }
 
 .btnSolid:hover {
-  background: var(--forest);
-  border-color: var(--forest);
-  color: var(--cream);
+  background: #A4451F;
+  border-color: #A4451F;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(42, 29, 20, 0.15);
 }
 
 .btnOutline {
   background: transparent;
-  color: var(--cocoa);
+  color: var(--cocoa-deep, #2A1D14);
 }
 
 .btnOutline:hover {
-  background: var(--cocoa);
-  color: var(--cream);
+  background: var(--cocoa-deep, #2A1D14);
+  color: var(--cream, #FAF6EF);
+  transform: translateY(-1px);
 }
+

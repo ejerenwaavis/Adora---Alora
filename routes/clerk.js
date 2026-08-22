@@ -30,7 +30,7 @@ router.post('/qr-checkin', async (req, res) => {
     const [type, id] = qrToken.split(':');
     
     if (type === 'CLASS') {
-      const booking = await Booking.findById(id).populate('user').populate('classSession');
+      const booking = await Booking.findById(id).populate('user').populate({ path: 'classSession', populate: { path: 'classType' } });
       if (!booking) return res.status(404).json({ error: 'Class booking not found' });
       if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
       
@@ -38,32 +38,38 @@ router.post('/qr-checkin', async (req, res) => {
       booking.checkedInBy = req.user.id;
       await booking.save();
       
-      // Update session booked/checkedIn count if not already doing so
-      // In this system, bookedCount is already updated on booking.
-      
+      const className = booking.classSession?.classType?.name || 'Movement Class';
+      const classDate = booking.classSession?.startTime ? new Date(booking.classSession.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      const classTime = booking.classSession?.startTime ? new Date(booking.classSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const timeStr = classDate && classTime ? ` (${classDate} · ${classTime})` : '';
+
       await logActivity(
         req.user.id, 
         'qr_checkin_class', 
         'Booking', 
         booking._id, 
-        `QR Checked in ${booking.user.firstName} ${booking.user.lastName} for class ${booking.classSession._id}`
+        `QR Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`
       );
       
       return res.json({ message: `Successfully checked in ${booking.user.firstName} ${booking.user.lastName}` });
     } else if (type === 'EVENT') {
-      const booking = await EventBooking.findById(id).populate('user');
+      const booking = await EventBooking.findById(id).populate('user').populate('event');
       if (!booking) return res.status(404).json({ error: 'Event booking not found' });
       if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
       
       booking.checkedInAt = new Date();
       await booking.save();
       
+      const eventTitle = booking.event?.title || 'House Event';
+      const eventDate = booking.event?.startDate ? new Date(booking.event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+      const timeStr = eventDate ? ` (${eventDate})` : '';
+
       await logActivity(
         req.user.id, 
         'qr_checkin_event', 
         'EventBooking', 
         booking._id, 
-        `QR Checked in ${booking.customerName} for event ${booking.event}`
+        `QR Checked in ${booking.customerName} for ${eventTitle}${timeStr}`
       );
       
       return res.json({ message: `Successfully checked in ${booking.customerName}` });
@@ -157,7 +163,7 @@ router.get('/classes/:sessionId/roster', async (req, res) => {
 router.post('/classes/checkin', async (req, res) => {
   try {
     const { bookingId } = req.body;
-    const booking = await Booking.findById(bookingId).populate('user').populate('classSession');
+    const booking = await Booking.findById(bookingId).populate('user').populate({ path: 'classSession', populate: { path: 'classType' } });
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     if (booking.checkedInAt) return res.status(400).json({ error: 'Already checked in' });
 
@@ -165,12 +171,17 @@ router.post('/classes/checkin', async (req, res) => {
     booking.checkedInBy = req.user.id;
     await booking.save();
 
+    const className = booking.classSession?.classType?.name || 'Movement Class';
+    const classDate = booking.classSession?.startTime ? new Date(booking.classSession.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const classTime = booking.classSession?.startTime ? new Date(booking.classSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const timeStr = classDate && classTime ? ` (${classDate} · ${classTime})` : '';
+
     await logActivity(
       req.user.id, 
       'class_checkin', 
       'Booking', 
       booking._id, 
-      `Checked in ${booking.user.firstName} ${booking.user.lastName} for class ${booking.classSession._id}`
+      `Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`
     );
 
     res.json({ message: 'Checked in successfully', booking });
@@ -192,7 +203,7 @@ router.post('/classes/walkin', async (req, res) => {
       });
     }
 
-    const session = await ClassSession.findById(classSessionId);
+    const session = await ClassSession.findById(classSessionId).populate('classType');
     if (!session) return res.status(404).json({ error: 'Session not found' });
     
     // Create booking
@@ -210,12 +221,17 @@ router.post('/classes/walkin', async (req, res) => {
     session.bookedCount += 1;
     await session.save();
 
+    const className = session.classType?.name || 'Movement Class';
+    const classDate = session.startTime ? new Date(session.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const classTime = session.startTime ? new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const timeStr = classDate && classTime ? ` (${classDate} · ${classTime})` : '';
+
     await logActivity(
       req.user.id, 
       'class_walkin', 
       'Booking', 
       booking._id, 
-      `Walk-in booked and checked in ${user.firstName} ${user.lastName} for class ${session._id}`
+      `Walk-in booked and checked in ${user.firstName} ${user.lastName} for ${className}${timeStr}`
     );
 
     res.json({ message: 'Walk-in successful', booking });
@@ -303,19 +319,23 @@ router.get('/events/:eventId/roster', async (req, res) => {
 router.post('/events/checkin', async (req, res) => {
   try {
     const { bookingId } = req.body;
-    const booking = await EventBooking.findById(bookingId);
+    const booking = await EventBooking.findById(bookingId).populate('event');
     if (!booking) return res.status(404).json({ error: 'Event booking not found' });
     if (booking.checkedInAt) return res.status(400).json({ error: 'Already checked in' });
 
     booking.checkedInAt = new Date();
     await booking.save();
 
+    const eventTitle = booking.event?.title || 'House Event';
+    const eventDate = booking.event?.startDate ? new Date(booking.event.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const timeStr = eventDate ? ` (${eventDate})` : '';
+
     await logActivity(
       req.user.id, 
       'event_checkin', 
       'EventBooking', 
       booking._id, 
-      `Checked in ${booking.customerName} for event ${booking.event}`
+      `Checked in ${booking.customerName} for ${eventTitle}${timeStr}`
     );
 
     res.json({ message: 'Event check-in successful', booking });

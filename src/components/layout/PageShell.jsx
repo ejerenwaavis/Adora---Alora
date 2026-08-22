@@ -4,7 +4,7 @@ import Nav    from './Nav.jsx';
 import Footer from './Footer.jsx';
 import AnnouncementBar from './AnnouncementBar.jsx';
 
-// Scroll to top and trigger scroll reveal on route change
+// Scroll to top and trigger subtle scroll reveals on route change and scroll
 function ScrollHandler() {
   const { pathname } = useLocation();
 
@@ -21,12 +21,43 @@ function ScrollHandler() {
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
     );
 
-    const timer = setTimeout(() => {
-      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
-    }, 50);
+    const attachReveals = () => {
+      // 1. Observe all manually marked reveal items
+      document.querySelectorAll('.reveal, [data-reveal]').forEach((el) => {
+        observer.observe(el);
+      });
+
+      // 2. Automatically apply subtle reveals to all content write-ups, paragraphs, subheaders, and cards
+      const autoSelectors = [
+        '.section-head',
+        '.spotCopy',
+        '.spotVisual',
+        '.storyGrid > div',
+        '.quoteBlock',
+        '.storyBody p',
+        '.pillarCard',
+        '.doorCard',
+        '.venueCard',
+        '.eventCard',
+        '.snapshotCard',
+        '.visitPanel',
+        '.featureCard'
+      ];
+
+      autoSelectors.forEach((sel) => {
+        document.querySelectorAll(sel).forEach((el) => {
+          if (!el.classList.contains('reveal') && !el.hasAttribute('data-reveal')) {
+            el.classList.add('reveal');
+          }
+          observer.observe(el);
+        });
+      });
+    };
+
+    const timer = setTimeout(attachReveals, 80);
 
     return () => {
       clearTimeout(timer);

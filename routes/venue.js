@@ -8,10 +8,11 @@ const VenueSpace = require('../models/VenueSpace');
 router.get('/spaces', async (req, res) => {
   try {
     const spaces = await VenueSpace.find({
+      isActive: true,
       $or: [
-        { isAvailable: true },
-        { isActive: true },
-        { isAvailable: { $exists: false }, isActive: { $exists: false } }
+        { isHireableVenue: true },
+        { spaceType: 'venue_hire' },
+        { spaceType: { $exists: false } }
       ]
     }).sort('sortOrder');
     res.json(spaces);

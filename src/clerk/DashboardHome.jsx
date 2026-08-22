@@ -157,7 +157,12 @@ export default function DashboardHome() {
           {nextEvent ? (
              <>
                <div className="stat-value-event">{nextEvent.title}</div>
-               <div className="stat-sub danger">⚠ {eventRoster.length - verifiedEventCount} unverified guests</div>
+               <div className="stat-sub danger" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                   <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+                 </svg>
+                 <span>{eventRoster.length - verifiedEventCount} unverified guests</span>
+               </div>
              </>
           ) : (
              <div className="stat-sub">No upcoming events</div>
@@ -277,8 +282,10 @@ export default function DashboardHome() {
               </div>
             </div>
           ) : (
-            <div className="loft-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)', fontSize: '13px' }}>
-              No upcoming events
+            <div className="loft-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: '10px' }}>
+              <i className="ti ti-calendar-off" style={{ fontSize: '28px', color: 'var(--taupe-lt, #C4B9A8)', opacity: 0.5 }}></i>
+              <div style={{ fontFamily: "'Fraunces', serif", fontSize: '15px', color: 'var(--taupe)', fontWeight: 400 }}>No upcoming events</div>
+              <div style={{ fontSize: '11px', color: 'var(--taupe)', opacity: 0.55, letterSpacing: '.03em' }}>Loft events will appear here when scheduled</div>
             </div>
           )}
         </div>

@@ -16,6 +16,25 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(247, 239, 225, 0.2) transparent;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(247, 239, 225, 0.2);
+  border-radius: 4px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(247, 239, 225, 0.4);
 }
 
 .brand {
@@ -24,16 +43,18 @@
 }
 
 .brand .wordmark {
-  font-family: var(--f-script);
-  font-size: 24px;
-  color: var(--gold);
+  font-family: var(--f-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: #F7EFE1;
+  letter-spacing: -0.01em;
   display: block;
 }
 
 .badge {
   display: inline-block;
   background: rgba(247, 239, 225, 0.1);
-  color: var(--cream);
+  color: var(--gold);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -49,18 +70,28 @@
 
 .navGroup {
   margin-bottom: 24px;
+  position: relative;
 }
 
 .groupTitle {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 10px;
-  letter-spacing: 0.15em;
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--taupe);
+  color: rgba(200, 155, 74, 0.8);
   padding: 0 24px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.groupTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(247, 239, 225, 0.08);
+  margin-left: 8px;
 }
 
 .groupIcon {
@@ -166,9 +197,11 @@
 }
 
 .mhWordmark {
-  font-family: var(--f-script);
+  font-family: var(--f-display);
   font-size: 18px;
-  color: var(--gold);
+  font-weight: 500;
+  color: #F7EFE1;
+  letter-spacing: -0.01em;
 }
 
 /* Hamburger animation */

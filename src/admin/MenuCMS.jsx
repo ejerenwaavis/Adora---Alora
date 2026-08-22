@@ -1,19 +1,36 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import { useToast } from '../contexts/ToastContext';
 import styles from './CMS.module.css';
+
+const COMMON_DIETARY_TAGS = [
+  'Vegan',
+  'Vegetarian',
+  'Gluten-Free',
+  'Dairy-Free',
+  'Nut-Free',
+  'Sugar-Free',
+  'Keto',
+  'Organic',
+  'Plant-Based'
+];
 
 export default function MenuCMS() {
   const { authFetch } = useAuth();
   const { confirmAction } = useModal();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Forms
   const defaultCatForm = { name: '', slug: '', description: '', sortOrder: 0, isActive: true };
   const defaultItemForm = { 
-    name: '', slug: '', description: '', category: '', priceKobo: 0, 
+    name: '', slug: '', description: '', category: '', price: '', 
     dietaryTags: '', isFeatured: false, isAvailable: true, sortOrder: 0,
     image: null, existingImage: ''
   };
@@ -23,7 +40,14 @@ export default function MenuCMS() {
   
   const [editingCatId, setEditingCatId] = useState(null);
   const [editingItemId, setEditingItemId] = useState(null);
-  const [activeTab, setActiveTab] = useState('items'); // 'categories' or 'items'
+  
+  const activeTab = searchParams.get('tab') === 'categories' ? 'categories' : 'items';
+  const setActiveTab = (tab) => {
+    setSearchParams(tab === 'categories' ? { tab: 'categories' } : {});
+    setView('list');
+    setEditingCatId(null);
+    setEditingItemId(null);
+  };
   const [view, setView] = useState('list'); // 'list' | 'form'
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
@@ -38,13 +62,33 @@ export default function MenuCMS() {
       ]);
       if (catsRes.ok) setCategories(await catsRes.json());
       if (itemsRes.ok) setItems(await itemsRes.json());
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Failed to load menu data.');
+    }
     setLoading(false);
   }
+
+  const toggleDietaryTag = (tag) => {
+    const currentTags = itemForm.dietaryTags
+      ? itemForm.dietaryTags.split(',').map(t => t.trim()).filter(Boolean)
+      : [];
+    const tagLower = tag.toLowerCase();
+    const exists = currentTags.some(t => t.toLowerCase() === tagLower);
+    
+    let nextTags;
+    if (exists) {
+      nextTags = currentTags.filter(t => t.toLowerCase() !== tagLower);
+    } else {
+      nextTags = [...currentTags, tag];
+    }
+    setItemForm({ ...itemForm, dietaryTags: nextTags.join(', ') });
+  };
 
   // Categories
   async function handleCatSubmit(e) {
     e.preventDefault();
+    setSaving(true);
     try {
       const url = editingCatId ? `/api/cms/menu-categories/${editingCatId}` : '/api/cms/menu-categories';
       const method = editingCatId ? 'PATCH' : 'POST';
@@ -52,21 +96,40 @@ export default function MenuCMS() {
         method,
         body: JSON.stringify(catForm)
       });
-      if (res.ok) {
-        setCatForm(defaultCatForm);
-        setEditingCatId(null);
-        setView('list');
-        loadData();
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save menu category.');
+        setSaving(false);
+        return;
       }
-    } catch (err) { console.error(err); }
+      toast.success(editingCatId ? 'Menu category updated successfully.' : 'Menu category created successfully.');
+      setCatForm(defaultCatForm);
+      setEditingCatId(null);
+      setView('list');
+      loadData();
+    } catch (err) { 
+      console.error(err); 
+      toast.error(err.message || 'Failed to save category.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleCatDelete(id) {
     confirmAction('Delete Category', 'Are you sure you want to delete this category AND all its items?', async () => {
       try {
         const res = await authFetch(`/api/cms/menu-categories/${id}`, { method: 'DELETE' });
-        if (res.ok) loadData();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Category and items deleted successfully.');
+          loadData();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.error || 'Failed to delete category.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete category.');
+      }
     });
   }
 
@@ -74,7 +137,6 @@ export default function MenuCMS() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingCatId(cat._id);
     setCatForm({ name: cat.name, slug: cat.slug, description: cat.description || '', sortOrder: cat.sortOrder, isActive: cat.isActive });
-    setActiveTab('categories');
     setView('form');
   }
 
@@ -89,41 +151,62 @@ export default function MenuCMS() {
   // Items
   async function handleItemSubmit(e) {
     e.preventDefault();
+    setSaving(true);
     try {
       const url = editingItemId ? `/api/cms/menu-items/${editingItemId}` : '/api/cms/menu-items';
       const method = editingItemId ? 'PATCH' : 'POST';
       
       const formData = new FormData();
       formData.append('name', itemForm.name);
-      formData.append('slug', itemForm.slug);
-      formData.append('description', itemForm.description);
+      formData.append('slug', itemForm.slug || itemForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
+      formData.append('description', itemForm.description || '');
       formData.append('category', itemForm.category);
-      formData.append('priceKobo', itemForm.priceKobo);
+      formData.append('priceKobo', Math.round(parseFloat(itemForm.price || 0) * 100));
       formData.append('dietaryTags', itemForm.dietaryTags);
       formData.append('isFeatured', itemForm.isFeatured);
       formData.append('isAvailable', itemForm.isAvailable);
-      formData.append('sortOrder', itemForm.sortOrder);
+      formData.append('sortOrder', itemForm.sortOrder || 0);
       if (itemForm.image) formData.append('image', itemForm.image);
 
       const res = await authFetch(url, {
         method,
         body: formData
       });
-      if (res.ok) {
-        setItemForm(defaultItemForm);
-        setEditingItemId(null);
-        setView('list');
-        loadData();
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save menu item. Please check the fields.');
+        setSaving(false);
+        return;
       }
-    } catch (err) { console.error(err); }
+
+      toast.success(editingItemId ? 'Menu item updated successfully.' : 'Menu item created successfully.');
+      setItemForm(defaultItemForm);
+      setEditingItemId(null);
+      setView('list');
+      loadData();
+    } catch (err) { 
+      console.error(err);
+      toast.error(err.message || 'An error occurred while saving the menu item.');
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleItemDelete(id) {
     confirmAction('Delete Menu Item', 'Are you sure you want to delete this menu item?', async () => {
       try {
         const res = await authFetch(`/api/cms/menu-items/${id}`, { method: 'DELETE' });
-        if (res.ok) loadData();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Menu item deleted successfully.');
+          loadData();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.error || 'Failed to delete menu item.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete menu item.');
+      }
     });
   }
 
@@ -132,12 +215,12 @@ export default function MenuCMS() {
     setEditingItemId(item._id);
     setItemForm({ 
       name: item.name, slug: item.slug, description: item.description || '', 
-      category: item.category?._id || '', priceKobo: item.priceKobo, 
+      category: item.category?._id || '', 
+      price: item.priceKobo !== undefined ? (item.priceKobo / 100) : '', 
       dietaryTags: item.dietaryTags?.join(', ') || '', 
       isFeatured: item.isFeatured, isAvailable: item.isAvailable, sortOrder: item.sortOrder,
       image: null, existingImage: item.image || ''
     });
-    setActiveTab('items');
     setView('form');
   }
 
@@ -155,12 +238,7 @@ export default function MenuCMS() {
   return (
     <div>
       <div className="eyebrow">CMS</div>
-      <h1 className={styles.title}>Café Menu</h1>
-      
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <button className={activeTab === 'items' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('items'); setView('list'); setSearchQuery(''); }}>Menu Items</button>
-        <button className={activeTab === 'categories' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('categories'); setView('list'); setSearchQuery(''); }}>Categories</button>
-      </div>
+      <h1 className={styles.title}>{activeTab === 'categories' ? 'Menu Categories' : 'Café Menu Items'}</h1>
 
       {activeTab === 'categories' && (
         <>
@@ -231,7 +309,9 @@ export default function MenuCMS() {
                     </div>
                   </div>
                   <div className={styles.actions}>
-                    <button type="submit" className={styles.btn}>{editingCatId ? 'Update Category' : 'Create Category'}</button>
+                    <button type="submit" className={styles.btn} disabled={saving}>
+                      {saving ? 'Saving...' : (editingCatId ? 'Update Category' : 'Create Category')}
+                    </button>
                     <button type="button" onClick={() => { setEditingCatId(null); setCatForm(defaultCatForm); setView('list'); }} className={styles.btnGhost}>Cancel</button>
                   </div>
                 </form>
@@ -262,14 +342,36 @@ export default function MenuCMS() {
               <div className={styles.list}>
                 {filteredItems.map(item => (
                   <div key={item._id} className={`${styles.listItem} ${!item.isAvailable ? styles.inactive : ''}`}>
-                    <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      {item.image && <img src={item.image} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />}
-                      <div>
-                        <strong>{item.name}</strong> 
-                        <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
-                          {item.category?.name} • ₦{(item.priceKobo / 100).toFixed(2)}
-                        </span>
-                        {item.isFeatured && <span className={styles.badge} style={{marginLeft: '0.5rem'}}>Featured</span>}
+                    <div className={styles.cardMain}>
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className={styles.cardThumb} />
+                      ) : (
+                        <div className={styles.cardThumbPlaceholder}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="4" /><line x1="10" x2="10" y1="2" y2="4" /><line x1="14" x2="14" y1="2" y2="4" />
+                          </svg>
+                        </div>
+                      )}
+                      <div className={styles.itemContent}>
+                        <div className={styles.itemTitle}>
+                          <span>{item.name}</span>
+                          {item.isFeatured && <span className={styles.badge}>Featured</span>}
+                          {!item.isAvailable && <span className={styles.badge} style={{ color: 'var(--rust)', background: 'rgba(164, 69, 31, 0.1)' }}>Unavailable</span>}
+                        </div>
+                        <div className={styles.meta}>
+                          {item.category?.name && <span>{item.category.name}</span>}
+                          <span>•</span>
+                          <span className={styles.itemPrice}>₦{(item.priceKobo / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          {item.dietaryTags && item.dietaryTags.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--forest)', background: 'rgba(65, 79, 54, 0.08)', padding: '1px 6px', borderRadius: '3px' }}>
+                                {item.dietaryTags.join(', ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {item.description && <p className={styles.itemDesc}>{item.description}</p>}
                       </div>
                     </div>
                     <div className={styles.itemActions}>
@@ -311,8 +413,16 @@ export default function MenuCMS() {
                       </select>
                     </div>
                     <div className={styles.field}>
-                      <label>Price (in Kobo / Cents) *</label>
-                      <input type="number" value={itemForm.priceKobo} onChange={e => setItemForm({...itemForm, priceKobo: Number(e.target.value)})} required />
+                      <label>Price (₦) *</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="e.g. 2500 or 50.00" 
+                        value={itemForm.price} 
+                        onChange={e => setItemForm({...itemForm, price: e.target.value})} 
+                        required 
+                      />
                     </div>
                   </div>
 
@@ -322,11 +432,44 @@ export default function MenuCMS() {
                   </div>
 
                   <div className={styles.row}>
-                    <div className={styles.field}>
-                      <label>Dietary Tags (comma separated)</label>
-                      <input type="text" value={itemForm.dietaryTags} onChange={e => setItemForm({...itemForm, dietaryTags: e.target.value})} placeholder="e.g. GF, Vegan, Nut-free" />
+                    <div className={styles.field} style={{ flex: 2 }}>
+                      <label>Dietary Tags (comma separated or click pills)</label>
+                      <input 
+                        type="text" 
+                        value={itemForm.dietaryTags} 
+                        onChange={e => setItemForm({...itemForm, dietaryTags: e.target.value})} 
+                        placeholder="e.g. Dairy-Free, Gluten-Free, Vegan" 
+                      />
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px' }}>
+                        {COMMON_DIETARY_TAGS.map(tag => {
+                          const currentTags = itemForm.dietaryTags
+                            ? itemForm.dietaryTags.split(',').map(t => t.trim().toLowerCase())
+                            : [];
+                          const isSelected = currentTags.includes(tag.toLowerCase());
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => toggleDietaryTag(tag)}
+                              style={{
+                                fontSize: '0.72rem',
+                                padding: '3px 9px',
+                                borderRadius: '12px',
+                                border: isSelected ? '1px solid var(--forest)' : '1px solid var(--line)',
+                                background: isSelected ? 'var(--forest)' : '#FDFBF7',
+                                color: isSelected ? '#FFFFFF' : 'var(--cocoa)',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                fontWeight: isSelected ? 600 : 400
+                              }}
+                            >
+                              {isSelected ? '✓ ' : '+ '} {tag}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className={styles.field}>
+                    <div className={styles.field} style={{ flex: 1 }}>
                       <label>Sort Order</label>
                       <input type="number" value={itemForm.sortOrder} onChange={e => setItemForm({...itemForm, sortOrder: Number(e.target.value)})} />
                     </div>
@@ -361,7 +504,9 @@ export default function MenuCMS() {
                   </div>
 
                   <div className={styles.actions}>
-                    <button type="submit" className={styles.btn}>{editingItemId ? 'Update Item' : 'Create Item'}</button>
+                    <button type="submit" className={styles.btn} disabled={saving}>
+                      {saving ? 'Saving...' : (editingItemId ? 'Update Item' : 'Create Item')}
+                    </button>
                     <button type="button" onClick={() => { setEditingItemId(null); setItemForm(defaultItemForm); setView('list'); }} className={styles.btnGhost}>Cancel</button>
                   </div>
                 </form>

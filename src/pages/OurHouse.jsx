@@ -21,21 +21,21 @@ export default function OurHouse() {
         <div className="wrap">
           <div className={styles.storyGrid}>
             <div>
-              <div className="eyebrow" style={{ marginBottom: '1rem' }}>Our Philosophy</div>
-              <h2 className={styles.storyLead}>
+              <div className="eyebrow reveal" style={{ marginBottom: '1rem' }}>Our Philosophy</div>
+              <h2 className={`${styles.storyLead} reveal reveal-delay-1`}>
                 Founded on the belief that physical vitality, aesthetic beauty, and genuine human connection belong together.
               </h2>
-              <div className={styles.quoteBlock}>
+              <div className={`${styles.quoteBlock} reveal reveal-delay-2`}>
                 <p>&ldquo;We designed Aora House as a breath of fresh air—a space where you can start your morning in mindful motion and stay through the afternoon surrounded by warmth.&rdquo;</p>
                 <span>Founders&apos; Note</span>
               </div>
             </div>
 
             <div className={styles.storyBody}>
-              <p>
+              <p className="reveal reveal-delay-1">
                 In a fast-moving world, our house offers a tactile pause. Designed with natural textures, limestone tones, and warm timber, every corner reflects our commitment to slow, intentional luxury.
               </p>
-              <p>
+              <p className="reveal reveal-delay-2">
                 Whether you arrive for a high-precision Reformer class, a bowl of coastal fare at the café, or to browse an archive fashion piece, Aora House is curated to feel like an extension of home.
               </p>
             </div>
@@ -52,25 +52,25 @@ export default function OurHouse() {
           />
 
           <div className={styles.pillarsGrid}>
-            <div className={styles.pillarCard}>
+            <div className={`${styles.pillarCard} reveal reveal-delay-1`}>
               <div className={styles.pillarNum}>01</div>
               <h3>Movement</h3>
               <p>Reformer Pilates, Lagree, and Strength training. Built for alignment, posture, and longevity.</p>
             </div>
 
-            <div className={styles.pillarCard}>
+            <div className={`${styles.pillarCard} reveal reveal-delay-2`}>
               <div className={styles.pillarNum}>02</div>
               <h3>Café</h3>
               <p>Nourishing coastal bowls, ceremonial matcha, and specialty roast coffee crafted for daily ritual.</p>
             </div>
 
-            <div className={styles.pillarCard}>
+            <div className={`${styles.pillarCard} reveal reveal-delay-3`}>
               <div className={styles.pillarNum}>03</div>
               <h3>Fashion</h3>
               <p>A rotating edit of vintage archives, independent global labels, and emerging Nigerian designers.</p>
             </div>
 
-            <div className={styles.pillarCard}>
+            <div className={`${styles.pillarCard} reveal reveal-delay-4`}>
               <div className={styles.pillarNum}>04</div>
               <h3>The Loft &amp; Spaces</h3>
               <p>Architectural venue spaces crafted for gatherings, private events, pop-ups, and creative thought.</p>

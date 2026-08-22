@@ -164,6 +164,16 @@
   color: var(--taupe);
 }
 
+.resultType {
+  margin-left: auto;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--taupe);
+  opacity: 0.7;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 @media (max-width: 768px) {
   .overlay {
     padding-top: 0;

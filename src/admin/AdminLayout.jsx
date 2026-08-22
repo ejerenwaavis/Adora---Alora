@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, NavLink, Navigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/ui/Icon';
 import styles from './AdminLayout.module.css';
@@ -7,11 +7,23 @@ import styles from './AdminLayout.module.css';
 export default function AdminLayout() {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   // Basic guard (middleware also protects the API, but we protect the UI here too)
   if (!user || (user.role !== 'admin' && user.role !== 'content_editor')) {
     return <Navigate to="/login" replace />;
   }
+
+  const isLinkActive = (path, tab = null) => {
+    if (path === '/admin' && !tab) {
+      return location.pathname === '/admin';
+    }
+    const currentTab = new URLSearchParams(location.search).get('tab');
+    if (tab) {
+      return location.pathname === path && currentTab === tab;
+    }
+    return location.pathname === path && !currentTab;
+  };
 
   return (
     <div className={styles.adminContainer}>
@@ -26,10 +38,10 @@ export default function AdminLayout() {
             <span></span><span></span><span></span>
           </div>
         </div>
-        <div className={styles.mhBrand}>
+        <Link to="/" className={styles.mhBrand} title="Visit Public Site" style={{ textDecoration: 'none' }}>
           <span className={styles.mhWordmark}>Aora House</span>
           <span className={styles.badge}>Admin</span>
-        </div>
+        </Link>
       </header>
 
       {/* Sidebar Overlay */}
@@ -39,12 +51,18 @@ export default function AdminLayout() {
       ></div>
 
       <aside className={`${styles.sidebar} ${isMobileMenuOpen ? styles.open : ''}`}>
-        <div className={styles.brand}>
-          <span className="wordmark">Aora House</span>
+        <Link to="/" className={styles.brand} title="Visit Public Site" style={{ textDecoration: 'none' }}>
+          <span className={styles.wordmark}>Aora House</span>
           <span className={styles.badge}>Admin</span>
-        </div>
+        </Link>
         
         <nav className={styles.nav}>
+          <div className={styles.navGroup} style={{ marginBottom: '1.25rem' }}>
+            <NavLink to="/admin" end className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="site-content" size={16} className={styles.navIcon} /> Dashboard
+            </NavLink>
+          </div>
+
           <div className={styles.navGroup}>
             <span className={styles.groupTitle}>
               <Icon name="site-content" size={14} className={styles.groupIcon} />
@@ -63,9 +81,12 @@ export default function AdminLayout() {
               <Icon name="cafe" size={14} className={styles.groupIcon} />
               Café Menu
             </span>
-            <NavLink to="/admin/menu" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon name="cafe-items" size={16} className={styles.navIcon} /> Categories & Items
-            </NavLink>
+            <Link to="/admin/menu" className={isLinkActive('/admin/menu') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="cafe-items" size={16} className={styles.navIcon} /> Menu Items
+            </Link>
+            <Link to="/admin/menu?tab=categories" className={isLinkActive('/admin/menu', 'categories') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="layers" size={16} className={styles.navIcon} /> Menu Categories
+            </Link>
           </div>
 
           <div className={styles.navGroup}>
@@ -73,9 +94,12 @@ export default function AdminLayout() {
               <Icon name="movement" size={14} className={styles.groupIcon} />
               Movement
             </span>
-            <NavLink to="/admin/classes" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon name="classes" size={16} className={styles.navIcon} /> Classes & Instructors
-            </NavLink>
+            <Link to="/admin/classes" className={isLinkActive('/admin/classes') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="classes" size={16} className={styles.navIcon} /> Class Types
+            </Link>
+            <Link to="/admin/classes?tab=instructors" className={isLinkActive('/admin/classes', 'instructors') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="site-content" size={16} className={styles.navIcon} /> Instructors
+            </Link>
             <NavLink to="/admin/timetable" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
               <Icon name="timetable" size={16} className={styles.navIcon} /> Timetable
             </NavLink>
@@ -86,9 +110,12 @@ export default function AdminLayout() {
               <Icon name="fashion" size={14} className={styles.groupIcon} />
               Fashion
             </span>
-            <NavLink to="/admin/fashion" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon name="layers" size={16} className={styles.navIcon} /> Layers & Items
-            </NavLink>
+            <Link to="/admin/fashion" className={isLinkActive('/admin/fashion') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="fashion" size={16} className={styles.navIcon} /> Fashion Items
+            </Link>
+            <Link to="/admin/fashion?tab=layers" className={isLinkActive('/admin/fashion', 'layers') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="layers" size={16} className={styles.navIcon} /> Fashion Layers
+            </Link>
           </div>
 
           <div className={styles.navGroup}>
@@ -96,9 +123,28 @@ export default function AdminLayout() {
               <Icon name="venues-events" size={14} className={styles.groupIcon} />
               Venues & Events
             </span>
-            <NavLink to="/admin/events" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon name="spaces-events" size={16} className={styles.navIcon} /> Spaces & Events
-            </NavLink>
+            <Link to="/admin/events" className={isLinkActive('/admin/events') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="spaces-events" size={16} className={styles.navIcon} /> Loft Events
+            </Link>
+            <Link to="/admin/events?tab=venues" className={isLinkActive('/admin/events', 'venues') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="site-content" size={16} className={styles.navIcon} /> Spaces & Facilities
+            </Link>
+          </div>
+
+          <div className={styles.navGroup}>
+            <span className={styles.groupTitle}>
+              <Icon name="site-content" size={14} className={styles.groupIcon} />
+              People & Access
+            </span>
+            <Link to="/admin/users" className={isLinkActive('/admin/users') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="site-content" size={16} className={styles.navIcon} /> Member Directory
+            </Link>
+            <Link to="/admin/users?tab=staff" className={isLinkActive('/admin/users', 'staff') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="classes" size={16} className={styles.navIcon} /> Staff Management
+            </Link>
+            <Link to="/admin/users?tab=access" className={isLinkActive('/admin/users', 'access') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+              <Icon name="settings" size={16} className={styles.navIcon} /> Access Matrix
+            </Link>
           </div>
 
           <div className={styles.navGroup}>
@@ -110,7 +156,7 @@ export default function AdminLayout() {
               <Icon name="credit-packs" size={16} className={styles.navIcon} /> Credit Packs
             </NavLink>
             <NavLink to="/admin/settings" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-              <Icon name="settings" size={16} className={styles.navIcon} /> Settings
+              <Icon name="settings" size={16} className={styles.navIcon} /> Global Settings
             </NavLink>
           </div>
         </nav>

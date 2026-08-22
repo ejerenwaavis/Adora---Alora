@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import { useToast } from '../contexts/ToastContext';
 import styles from './CMS.module.css';
 
 export default function CreditPacksCMS() {
   const { authFetch } = useAuth();
   const { confirmAction } = useModal();
+  const { toast } = useToast();
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [formData, setFormData] = useState({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' });
+  const defaultForm = { name: '', credits: 1, price: '', expiresInDays: 30, isActive: true, description: '' };
+  const [formData, setFormData] = useState(defaultForm);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState('list'); // 'list' | 'form'
   const [searchQuery, setSearchQuery] = useState('');
@@ -28,26 +31,46 @@ export default function CreditPacksCMS() {
     e.preventDefault();
     try {
       const url = editingId ? `/api/cms/credit-packs/${editingId}` : '/api/cms/credit-packs';
+      const payload = {
+        ...formData,
+        priceKobo: Math.round(parseFloat(formData.price || 0) * 100)
+      };
       const res = await authFetch(url, {
         method: editingId ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
-        setFormData({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' });
+        toast.success(editingId ? 'Credit pack updated successfully.' : 'Credit pack created successfully.');
+        setFormData(defaultForm);
         setEditingId(null);
         setView('list');
         loadPacks();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save credit pack.');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Error saving credit pack.');
+    }
   }
 
   function handleDelete(id) {
     confirmAction('Delete Credit Pack', 'Are you sure you want to delete this credit pack?', async () => {
       try {
         const res = await authFetch(`/api/cms/credit-packs/${id}`, { method: 'DELETE' });
-        if (res.ok) loadPacks();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Credit pack deleted.');
+          loadPacks();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.error || 'Failed to delete credit pack.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete credit pack.');
+      }
     });
   }
 
@@ -57,7 +80,7 @@ export default function CreditPacksCMS() {
     setFormData({ 
       name: pack.name, 
       credits: pack.credits, 
-      priceKobo: pack.priceKobo, 
+      price: pack.priceKobo !== undefined ? (pack.priceKobo / 100) : '', 
       expiresInDays: pack.expiresInDays, 
       isActive: pack.isActive,
       description: pack.description || ''
@@ -84,15 +107,15 @@ export default function CreditPacksCMS() {
         <>
           <div className={styles.actionBar}>
             <div className={styles.filterGroup}>
-              <input type="text" placeholder="Search credit packs..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              <input type="text" placeholder="Search packs..." className={styles.searchInput} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
               <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                <option value="all">All Statuses</option>
-                <option value="active">Active</option>
+                <option value="all">All Status</option>
+                <option value="active">Active Only</option>
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            <button className={styles.btn} onClick={() => { setEditingId(null); setFormData({ name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: '' }); setView('form'); }}>
-              + Create New
+            <button className={styles.btn} onClick={() => { setEditingId(null); setFormData(defaultForm); setView('form'); }}>
+              + Create New Pack
             </button>
           </div>
 
@@ -134,8 +157,16 @@ export default function CreditPacksCMS() {
               
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label>Price (Naira) *</label>
-                  <input type="number" value={formData.priceKobo / 100} onChange={e => setFormData({...formData, priceKobo: Number(e.target.value) * 100})} required />
+                  <label>Price (₦) *</label>
+                  <input 
+                    type="number" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="e.g. 5000 or 5000.50" 
+                    value={formData.price} 
+                    onChange={e => setFormData({...formData, price: e.target.value})} 
+                    required 
+                  />
                 </div>
                 <div className={styles.field}>
                   <label>Expires In (Days) *</label>
@@ -155,7 +186,7 @@ export default function CreditPacksCMS() {
 
               <div className={styles.actions}>
                 <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
-                <button type="button" onClick={() => { setEditingId(null); setFormData({name: '', credits: 1, priceKobo: 0, expiresInDays: 30, isActive: true, description: ''}); setView('list'); }} className={styles.btnGhost}>Cancel</button>
+                <button type="button" onClick={() => { setEditingId(null); setFormData(defaultForm); setView('list'); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
           </div>

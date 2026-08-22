@@ -146,7 +146,14 @@ router.get('/fashion', async (req, res) => {
 
 router.get('/venue/spaces', async (req, res) => {
   try {
-    const spaces = await VenueSpace.find({ isActive: true }).sort('sortOrder');
+    const spaces = await VenueSpace.find({
+      isActive: true,
+      $or: [
+        { isHireableVenue: true },
+        { spaceType: 'venue_hire' },
+        { spaceType: { $exists: false } }
+      ]
+    }).sort('sortOrder');
     res.json(spaces);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch venue spaces' });

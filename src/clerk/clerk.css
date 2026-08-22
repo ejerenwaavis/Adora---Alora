@@ -117,7 +117,30 @@
 .wf-label { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--taupe); }
 .wf-input { padding:9px 12px; border:1px solid var(--line); border-radius:3px; font-size:13px; color:var(--ink); background:var(--cream); font-family:'Jost',sans-serif; outline:none; transition:border-color .2s; }
 .wf-input:focus { border-color:var(--taupe-lt); }
-.wf-select { padding:9px 12px; border:1px solid var(--line); border-radius:3px; font-size:13px; color:var(--ink); background:var(--cream); font-family:'Jost',sans-serif; outline:none; }
+.wf-select { 
+  padding: 9px 30px 9px 12px; 
+  border: 1px solid var(--line); 
+  border-radius: 4px; 
+  font-size: 13px; 
+  color: var(--ink); 
+  background: var(--cream); 
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23C89B4A' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 11px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  font-family: 'Jost', sans-serif; 
+  outline: none; 
+  cursor: pointer;
+  transition: all .2s;
+}
+.wf-select:focus {
+  border-color: var(--gold);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(200, 155, 74, 0.15);
+}
 .walkin-warn { background:var(--warn-bg, #FDF5D9); border:1px solid var(--warn-bd, #E8D080); border-radius:3px; padding:10px 14px; margin-top:10px; display:flex; align-items:center; gap:10px; font-size:12px; color:var(--warn, #7A5C0A); }
 
 /* two-col layout */

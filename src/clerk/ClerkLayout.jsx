@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './clerk.css';
 import WalkinModal from './WalkinModal';
@@ -23,9 +23,9 @@ export default function ClerkLayout() {
       const hh = h % 12 || 12;
       const formattedTime = `${hh}:${String(m).padStart(2, '0')} ${ampm}`;
       
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      const formattedDate = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
       
       setTime(formattedTime);
       setDate(formattedDate);
@@ -55,7 +55,9 @@ export default function ClerkLayout() {
             <span></span><span></span><span></span>
           </div>
         </div>
-        <div className="c-wordmark">Aora House <small>Clerk</small></div>
+        <Link to="/" className="c-wordmark" title="Visit Public Site" style={{ textDecoration: 'none' }}>
+          Aora House <small>Clerk</small>
+        </Link>
         <div className="c-clock">{time}</div>
       </div>
 
@@ -67,10 +69,10 @@ export default function ClerkLayout() {
 
       {/* ── SIDEBAR / DRAWER ── */}
       <div className={`sidebar ${drawerOpen ? 'open' : ''}`}>
-        <div className="sb-brand">
+        <Link to="/" className="sb-brand" title="Visit Public Site" style={{ textDecoration: 'none', display: 'block' }}>
           <div className="sb-wordmark">Aora House</div>
           <div className="sb-sub">Clerk station</div>
-        </div>
+        </Link>
         
         <div className="sb-clerk">
           <div className="sb-avatar">

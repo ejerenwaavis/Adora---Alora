@@ -46,8 +46,12 @@ export default function SearchOverlay({ onClose }) {
   }, [query]);
 
   const handleResultClick = (path) => {
-    navigate(path);
     onClose();
+    // Small delay to let the overlay close before navigating
+    // This prevents visual jank during route transitions
+    setTimeout(() => {
+      navigate(path);
+    }, 50);
   };
 
   const hasResults = results && (
@@ -57,6 +61,18 @@ export default function SearchOverlay({ onClose }) {
     results.instructors.length > 0 || 
     results.fashion.length > 0
   );
+
+  // Type label mapping for a unified result list
+  const getTypeLabel = (type) => {
+    switch(type) {
+      case 'event': return 'Event';
+      case 'venue': return 'Venue';
+      case 'class': return 'Class';
+      case 'instructor': return 'Instructor';
+      case 'fashion': return 'Fashion';
+      default: return type;
+    }
+  };
 
   return (
     <div className={styles.overlay}>
@@ -94,13 +110,14 @@ export default function SearchOverlay({ onClose }) {
                   <h3>Events</h3>
                   <ul>
                     {results.events.map(event => (
-                      <li key={event._id} onClick={() => handleResultClick(`/events#${event.slug}`)}>
+                      <li key={event._id} onClick={() => handleResultClick(`/events/${event.slug || event._id}`)}>
                         <div className={styles.resultItem}>
                           {event.coverImage && <img src={event.coverImage} alt="" />}
                           <div className={styles.resultText}>
                             <strong>{event.title}</strong>
                             <span>{new Date(event.startDate).toLocaleDateString()}</span>
                           </div>
+                          <span className={styles.resultType}>{getTypeLabel('event')}</span>
                         </div>
                       </li>
                     ))}
@@ -118,8 +135,9 @@ export default function SearchOverlay({ onClose }) {
                           {venue.images?.[0] && <img src={venue.images[0]} alt="" />}
                           <div className={styles.resultText}>
                             <strong>{venue.name}</strong>
-                            <span>Cap: {venue.capacity}</span>
+                            <span>Capacity: {venue.capacity}</span>
                           </div>
+                          <span className={styles.resultType}>{getTypeLabel('venue')}</span>
                         </div>
                       </li>
                     ))}
@@ -137,8 +155,9 @@ export default function SearchOverlay({ onClose }) {
                           {cls.coverImage && <img src={cls.coverImage} alt="" />}
                           <div className={styles.resultText}>
                             <strong>{cls.name}</strong>
-                            <span>{cls.level}</span>
+                            <span>{cls.level} · {cls.durationMinutes || '—'} min</span>
                           </div>
+                          <span className={styles.resultType}>{getTypeLabel('class')}</span>
                         </div>
                       </li>
                     ))}
@@ -158,6 +177,7 @@ export default function SearchOverlay({ onClose }) {
                             <strong>{inst.firstName} {inst.lastName}</strong>
                             <span>Instructor</span>
                           </div>
+                          <span className={styles.resultType}>{getTypeLabel('instructor')}</span>
                         </div>
                       </li>
                     ))}
@@ -177,6 +197,7 @@ export default function SearchOverlay({ onClose }) {
                             <strong>{item.name}</strong>
                             <span>₦{(item.priceKobo / 100).toLocaleString()}</span>
                           </div>
+                          <span className={styles.resultType}>{getTypeLabel('fashion')}</span>
                         </div>
                       </li>
                     ))}

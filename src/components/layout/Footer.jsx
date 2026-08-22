@@ -40,7 +40,7 @@ export default function Footer() {
 
         {/* Newsletter */}
         <div className={`${styles.newsletter} reveal`}>
-          <span className="script">Notes from the House</span>
+          <h3 className={styles.newsletterTitle}>Notes from the House</h3>
           <p>New classes, menu drops, seller features and upcoming events — straight to your inbox, roughly twice a month.</p>
           {submitted ? (
             <p className={styles.successMsg}>You're on the list. Welcome to the House.</p>

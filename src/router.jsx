@@ -38,6 +38,7 @@ import FashionCMS      from './admin/FashionCMS.jsx';
 import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
+import UsersCMS        from './admin/UsersCMS.jsx';
 
 // Clerk Dashboard
 import ClerkLayout     from './clerk/ClerkLayout.jsx';
@@ -114,6 +115,7 @@ export const router = createBrowserRouter([
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
       { path: 'credit-packs', element: <CreditPacksCMS /> },
+      { path: 'users', element: <UsersCMS /> },
       { path: 'settings', element: <SettingsCMS /> },
       { path: '*', element: <AdminDashboard /> }
     ]

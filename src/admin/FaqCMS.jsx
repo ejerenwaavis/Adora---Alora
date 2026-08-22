@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import { useToast } from '../contexts/ToastContext';
 import styles from './CMS.module.css';
 
 export default function FaqCMS() {
   const { authFetch } = useAuth();
   const { confirmAction } = useModal();
+  const { toast } = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ question: '', answer: '', category: 'General', isActive: true, sortOrder: 0 });
@@ -36,20 +38,36 @@ export default function FaqCMS() {
         body: JSON.stringify(formData)
       });
       if (res.ok) {
+        toast.success(editingId ? 'FAQ updated successfully.' : 'FAQ created successfully.');
         setFormData({ question: '', answer: '', category: 'General', isActive: true, sortOrder: 0 });
         setEditingId(null);
         setView('list');
         loadItems();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.error || 'Failed to save FAQ.');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Error saving FAQ.');
+    }
   }
 
   function handleDelete(id) {
     confirmAction('Delete FAQ', 'Are you sure you want to delete this FAQ?', async () => {
       try {
         const res = await authFetch(`/api/cms/faqs/${id}`, { method: 'DELETE' });
-        if (res.ok) loadItems();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('FAQ deleted.');
+          loadItems();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          toast.error(errData.error || 'Failed to delete FAQ.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete FAQ.');
+      }
     });
   }
 

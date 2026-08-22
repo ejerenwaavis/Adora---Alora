@@ -14,6 +14,7 @@ const VenueSpace      = require('../models/VenueSpace');
 const EventRecord     = require('../models/EventRecord');
 const ClassType       = require('../models/ClassType');
 const Instructor      = require('../models/Instructor');
+const ClassSession    = require('../models/ClassSession');
 const Setting         = require('../models/Setting');
 const CreditPack      = require('../models/CreditPack');
 
@@ -191,39 +192,66 @@ router.get('/menu-items', async (req, res) => {
     res.json(await MenuItem.find().populate('category').sort({ sortOrder: 1 }));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
+
+function normalizeDietaryTags(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map(t => String(t).trim()).filter(Boolean);
+  if (typeof raw === 'string') {
+    return raw.split(',').map(t => t.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 router.post('/menu-items', upload.single('image'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.image = req.file.path;
     
-    // Parse dietaryTags from comma-separated string to array
-    if (typeof data.dietaryTags === 'string') {
-      data.dietaryTags = data.dietaryTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    if (!data.name || !data.name.trim()) {
+      return res.status(400).json({ error: 'Item name is required.' });
     }
+    if (!data.category) {
+      return res.status(400).json({ error: 'Please select a menu category.' });
+    }
+
+    if (!data.slug || !data.slug.trim()) {
+      data.slug = data.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    }
+
+    data.dietaryTags = normalizeDietaryTags(data.dietaryTags);
 
     const item = new MenuItem(data);
     await item.save();
     res.status(201).json(await item.populate('category'));
-  } catch (err) { res.status(400).json({ error: err.message }); }
+  } catch (err) { 
+    console.error('Menu Item Create Error:', err);
+    res.status(400).json({ error: err.message || 'Failed to create menu item.' }); 
+  }
 });
+
 router.patch('/menu-items/:id', upload.single('image'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.image = req.file.path;
     
-    // Parse dietaryTags from comma-separated string to array
-    if (typeof data.dietaryTags === 'string') {
-      data.dietaryTags = data.dietaryTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+    if (data.dietaryTags !== undefined) {
+      data.dietaryTags = normalizeDietaryTags(data.dietaryTags);
     }
 
-    const item = await MenuItem.findByIdAndUpdate(req.params.id, data, { new: true }).populate('category');
+    const item = await MenuItem.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }).populate('category');
+    if (!item) return res.status(404).json({ error: 'Menu item not found.' });
     res.json(item);
-  } catch (err) { res.status(400).json({ error: err.message }); }
+  } catch (err) { 
+    console.error('Menu Item Update Error:', err);
+    res.status(400).json({ error: err.message || 'Failed to update menu item.' }); 
+  }
 });
+
 router.delete('/menu-items/:id', async (req, res) => {
   try {
-    await MenuItem.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Deleted' });
+    const item = await MenuItem.findByIdAndDelete(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Menu item not found.' });
+    res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -332,13 +360,35 @@ router.delete('/fashion-items/:id', async (req, res) => {
    MOVEMENT (CLASSES & INSTRUCTORS)
    ========================================================================== */
 router.get('/instructors', async (req, res) => {
-  try { res.json(await Instructor.find().sort({ name: 1 })); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const instructors = await Instructor.find().sort({ sortOrder: 1, firstName: 1 }).lean();
+    const counts = await ClassSession.aggregate([
+      { $group: { _id: '$instructor', totalClasses: { $sum: 1 } } }
+    ]);
+    const countMap = {};
+    counts.forEach(c => { if (c._id) countMap[c._id.toString()] = c.totalClasses; });
+
+    const enriched = instructors.map(inst => ({
+      ...inst,
+      classesCount: (countMap[inst._id.toString()] || 0) + (inst.classesCount || 0)
+    }));
+
+    res.json(enriched);
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 router.post('/instructors', upload.single('photo'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.photo = req.file.path;
+    if (typeof data.specialities === 'string') {
+      data.specialities = data.specialities.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (typeof data.certifications === 'string') {
+      data.certifications = data.certifications.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (data.isActive !== undefined) {
+      data.isActive = data.isActive === true || data.isActive === 'true';
+    }
     res.status(201).json(await new Instructor(data).save());
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -346,6 +396,15 @@ router.patch('/instructors/:id', upload.single('photo'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.photo = req.file.path;
+    if (typeof data.specialities === 'string') {
+      data.specialities = data.specialities.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (typeof data.certifications === 'string') {
+      data.certifications = data.certifications.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    if (data.isActive !== undefined) {
+      data.isActive = data.isActive === true || data.isActive === 'true';
+    }
     res.json(await Instructor.findByIdAndUpdate(req.params.id, data, { new: true }));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -381,7 +440,13 @@ router.delete('/class-types/:id', async (req, res) => {
    VENUES & EVENTS
    ========================================================================== */
 router.get('/venue-spaces', async (req, res) => {
-  try { res.json(await VenueSpace.find().sort({ sortOrder: 1 })); } 
+  try { 
+    const query = {};
+    if (req.query.type) query.spaceType = req.query.type;
+    if (req.query.classStudio === 'true') query.isClassStudio = true;
+    if (req.query.hireable === 'true') query.isHireableVenue = true;
+    res.json(await VenueSpace.find(query).sort({ sortOrder: 1, name: 1 })); 
+  } 
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 router.post('/venue-spaces', upload.array('gallery', 5), async (req, res) => {
@@ -399,11 +464,20 @@ router.post('/venue-spaces', upload.array('gallery', 5), async (req, res) => {
       });
       data.images = finalImages;
     } else {
-      if (req.files) data.images = req.files.map(f => f.path);
+      if (req.files && req.files.length > 0) data.images = req.files.map(f => f.path);
     }
 
-    if (data.features) data.amenities = data.features.split(',').map(f => f.trim());
-    if (data.suitableFor) data.suitableFor = data.suitableFor.split(',').map(s => s.trim());
+    if (data.features) data.amenities = data.features.split(',').map(f => f.trim()).filter(Boolean);
+    if (data.suitableFor) data.suitableFor = data.suitableFor.split(',').map(s => s.trim()).filter(Boolean);
+    if (data.isActive !== undefined) data.isActive = data.isActive === true || data.isActive === 'true';
+    if (data.isClassStudio !== undefined) data.isClassStudio = data.isClassStudio === true || data.isClassStudio === 'true';
+    if (data.isHireableVenue !== undefined) data.isHireableVenue = data.isHireableVenue === true || data.isHireableVenue === 'true';
+    if (data.isCafeArea !== undefined) data.isCafeArea = data.isCafeArea === true || data.isCafeArea === 'true';
+    if (data.defaultCapacity) data.defaultCapacity = Number(data.defaultCapacity);
+    if (data.capacity) data.capacity = Number(data.capacity);
+    if (data.price) data.priceKobo = Math.round(Number(data.price) * 100);
+    if (data.sortOrder) data.sortOrder = Number(data.sortOrder);
+    
     res.status(201).json(await new VenueSpace(data).save());
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -425,8 +499,17 @@ router.patch('/venue-spaces/:id', upload.array('gallery', 5), async (req, res) =
       if (req.files && req.files.length > 0) data.images = req.files.map(f => f.path);
     }
 
-    if (data.features && typeof data.features === 'string') data.amenities = data.features.split(',').map(f => f.trim());
-    if (data.suitableFor && typeof data.suitableFor === 'string') data.suitableFor = data.suitableFor.split(',').map(s => s.trim());
+    if (data.features && typeof data.features === 'string') data.amenities = data.features.split(',').map(f => f.trim()).filter(Boolean);
+    if (data.suitableFor && typeof data.suitableFor === 'string') data.suitableFor = data.suitableFor.split(',').map(s => s.trim()).filter(Boolean);
+    if (data.isActive !== undefined) data.isActive = data.isActive === true || data.isActive === 'true';
+    if (data.isClassStudio !== undefined) data.isClassStudio = data.isClassStudio === true || data.isClassStudio === 'true';
+    if (data.isHireableVenue !== undefined) data.isHireableVenue = data.isHireableVenue === true || data.isHireableVenue === 'true';
+    if (data.isCafeArea !== undefined) data.isCafeArea = data.isCafeArea === true || data.isCafeArea === 'true';
+    if (data.defaultCapacity) data.defaultCapacity = Number(data.defaultCapacity);
+    if (data.capacity) data.capacity = Number(data.capacity);
+    if (data.price !== undefined) data.priceKobo = Math.round(Number(data.price) * 100);
+    if (data.sortOrder) data.sortOrder = Number(data.sortOrder);
+
     res.json(await VenueSpace.findByIdAndUpdate(req.params.id, data, { new: true }));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -435,29 +518,233 @@ router.delete('/venue-spaces/:id', async (req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Helper for recurring event dates
+function generateEventOccurrences({ baseStart, baseEnd, frequency, daysOfWeek = [], repeatCount = 4, repeatUntil = null }) {
+  const occurrences = [];
+  const durationMs = baseEnd.getTime() - baseStart.getTime();
+  const maxSafetyLimit = 24;
+  const targetCount = repeatUntil ? maxSafetyLimit : Math.min(Math.max(parseInt(repeatCount) || 1, 1), maxSafetyLimit);
+  const untilDate = repeatUntil ? new Date(repeatUntil) : null;
+
+  if (frequency === 'daily') {
+    let currStart = new Date(baseStart);
+    while (occurrences.length < targetCount) {
+      if (untilDate && currStart > untilDate) break;
+      const currEnd = new Date(currStart.getTime() + durationMs);
+      occurrences.push({ startDate: new Date(currStart), endDate: currEnd });
+      currStart.setDate(currStart.getDate() + 1);
+    }
+  } else if (frequency === 'weekly' || frequency === 'biweekly') {
+    const stepWeeks = frequency === 'biweekly' ? 2 : 1;
+    const activeDays = Array.isArray(daysOfWeek) && daysOfWeek.length > 0 ? daysOfWeek.map(Number) : [baseStart.getDay()];
+    
+    let weekStart = new Date(baseStart);
+    const dayOffset = weekStart.getDay();
+    weekStart.setDate(weekStart.getDate() - dayOffset);
+
+    let weekCounter = 0;
+    while (occurrences.length < targetCount && weekCounter < 52) {
+      for (const day of [0, 1, 2, 3, 4, 5, 6]) {
+        if (activeDays.includes(day)) {
+          const occStart = new Date(weekStart);
+          occStart.setDate(occStart.getDate() + day);
+          occStart.setHours(baseStart.getHours(), baseStart.getMinutes(), 0, 0);
+
+          if (occStart >= baseStart) {
+            if (untilDate && occStart > untilDate) break;
+            const occEnd = new Date(occStart.getTime() + durationMs);
+            occurrences.push({ startDate: occStart, endDate: occEnd });
+            if (occurrences.length >= targetCount) break;
+          }
+        }
+      }
+      weekStart.setDate(weekStart.getDate() + (7 * stepWeeks));
+      weekCounter += stepWeeks;
+    }
+  } else if (frequency === 'monthly') {
+    let currStart = new Date(baseStart);
+    while (occurrences.length < targetCount) {
+      if (untilDate && currStart > untilDate) break;
+      const currEnd = new Date(currStart.getTime() + durationMs);
+      occurrences.push({ startDate: new Date(currStart), endDate: currEnd });
+      currStart.setMonth(currStart.getMonth() + 1);
+    }
+  } else {
+    occurrences.push({ startDate: new Date(baseStart), endDate: new Date(baseEnd) });
+  }
+
+  return occurrences;
+}
+
 router.get('/events', async (req, res) => {
   try { res.json(await EventRecord.find().populate('venueSpace').sort({ startDate: -1 })); } 
   catch (err) { res.status(500).json({ error: err.message }); }
 });
+
 router.post('/events', upload.single('coverImage'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.coverImage = req.file.path;
+    
+    let recurrence = {};
+    if (typeof data.recurrence === 'string') {
+      try { recurrence = JSON.parse(data.recurrence); } catch (e) {}
+    } else if (typeof data.recurrence === 'object') {
+      recurrence = data.recurrence || {};
+    }
+
+    const isRecurring = data.isRecurring === true || data.isRecurring === 'true';
+
+    if (isRecurring && data.startDate && data.endDate) {
+      const baseStart = new Date(data.startDate);
+      const baseEnd = new Date(data.endDate);
+      const occurrences = generateEventOccurrences({
+        baseStart,
+        baseEnd,
+        frequency: recurrence.frequency || 'weekly',
+        daysOfWeek: recurrence.daysOfWeek || [],
+        repeatCount: recurrence.repeatCount || 4,
+        repeatUntil: recurrence.repeatUntil || null
+      });
+
+      if (occurrences.length === 0) {
+        return res.status(400).json({ error: 'Could not generate recurring occurrences with the specified options.' });
+      }
+
+      const seriesId = 'evt_series_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+      const baseSlug = (data.slug || data.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')).replace(/^-|-$/g, '');
+
+      const docsToInsert = occurrences.map((occ, idx) => {
+        const dateStr = occ.startDate.toISOString().split('T')[0].replace(/-/g, '');
+        const slug = idx === 0 ? baseSlug : `${baseSlug}-${dateStr}`;
+        return {
+          ...data,
+          slug,
+          startDate: occ.startDate,
+          endDate: occ.endDate,
+          isRecurring: true,
+          seriesId,
+          recurrence: {
+            frequency: recurrence.frequency || 'weekly',
+            daysOfWeek: recurrence.daysOfWeek || [baseStart.getDay()],
+            repeatCount: occurrences.length,
+            repeatUntil: recurrence.repeatUntil || null
+          }
+        };
+      });
+
+      const createdEvents = await EventRecord.insertMany(docsToInsert);
+      return res.status(201).json({
+        message: `Created ${createdEvents.length} recurring event occurrences.`,
+        count: createdEvents.length,
+        seriesId,
+        events: createdEvents
+      });
+    }
+
     const evt = new EventRecord(data);
     await evt.save();
     res.status(201).json(await evt.populate('venueSpace'));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
+
 router.patch('/events/:id', upload.single('coverImage'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.coverImage = req.file.path;
-    res.json(await EventRecord.findByIdAndUpdate(req.params.id, data, { new: true }).populate('venueSpace'));
+
+    const existing = await EventRecord.findById(req.params.id);
+    if (!existing) return res.status(404).json({ error: 'Event not found' });
+
+    let recurrence = {};
+    if (typeof data.recurrence === 'string') {
+      try { recurrence = JSON.parse(data.recurrence); } catch (e) {}
+    } else if (typeof data.recurrence === 'object') {
+      recurrence = data.recurrence || {};
+    }
+
+    const isRecurring = data.isRecurring === true || data.isRecurring === 'true';
+
+    // Convert single event to recurring series
+    if (isRecurring && (!existing.isRecurring || !existing.seriesId) && (data.startDate || existing.startDate)) {
+      const baseStart = new Date(data.startDate || existing.startDate);
+      const baseEnd = new Date(data.endDate || existing.endDate || baseStart);
+      const occurrences = generateEventOccurrences({
+        baseStart,
+        baseEnd,
+        frequency: recurrence.frequency || 'weekly',
+        daysOfWeek: recurrence.daysOfWeek || [baseStart.getDay()],
+        repeatCount: recurrence.repeatCount || 4,
+        repeatUntil: recurrence.repeatUntil || null
+      });
+
+      const seriesId = 'evt_series_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+      const baseSlug = (data.slug || existing.slug || 'event').replace(/^-|-$/g, '');
+
+      // 1. Update current event as #1
+      const updatedFirst = await EventRecord.findByIdAndUpdate(
+        req.params.id,
+        {
+          ...data,
+          isRecurring: true,
+          seriesId,
+          recurrence: {
+            frequency: recurrence.frequency || 'weekly',
+            daysOfWeek: recurrence.daysOfWeek || [baseStart.getDay()],
+            repeatCount: occurrences.length,
+            repeatUntil: recurrence.repeatUntil || null
+          }
+        },
+        { new: true }
+      ).populate('venueSpace');
+
+      // 2. Insert remaining occurrences
+      if (occurrences.length > 1) {
+        const remainingDocs = occurrences.slice(1).map(occ => {
+          const dateStr = occ.startDate.toISOString().split('T')[0].replace(/-/g, '');
+          return {
+            ...existing.toObject(),
+            ...data,
+            _id: undefined,
+            slug: `${baseSlug}-${dateStr}`,
+            startDate: occ.startDate,
+            endDate: occ.endDate,
+            isRecurring: true,
+            seriesId,
+            recurrence: {
+              frequency: recurrence.frequency || 'weekly',
+              daysOfWeek: recurrence.daysOfWeek || [baseStart.getDay()],
+              repeatCount: occurrences.length,
+              repeatUntil: recurrence.repeatUntil || null
+            }
+          };
+        });
+        await EventRecord.insertMany(remainingDocs);
+      }
+
+      return res.json({
+        message: `Converted event to recurring series with ${occurrences.length} total occurrences.`,
+        event: updatedFirst,
+        count: occurrences.length,
+        seriesId
+      });
+    }
+
+    const updated = await EventRecord.findByIdAndUpdate(req.params.id, data, { new: true }).populate('venueSpace');
+    res.json(updated);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
+
 router.delete('/events/:id', async (req, res) => {
   try { await EventRecord.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
   catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/events/series/:seriesId', async (req, res) => {
+  try {
+    const result = await EventRecord.deleteMany({ seriesId: req.params.seriesId });
+    res.json({ message: `Successfully deleted ${result.deletedCount} events in recurring series.`, count: result.deletedCount });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

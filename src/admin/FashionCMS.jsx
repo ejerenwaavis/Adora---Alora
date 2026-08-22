@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import { useToast } from '../contexts/ToastContext';
 import styles from './CMS.module.css';
 
 export default function FashionCMS() {
   const { authFetch } = useAuth();
   const { confirmAction, showAlert } = useModal();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [layers, setLayers] = useState([]);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +19,7 @@ export default function FashionCMS() {
   const [layerForm, setLayerForm] = useState({ name: '', slug: '', description: '', sortOrder: 0, isActive: true });
   
   const defaultItemForm = { 
-    name: '', slug: '', description: '', layer: '', displayPriceKobo: 0, 
+    name: '', slug: '', description: '', layer: '', displayPrice: '', 
     sizes: '', colors: '', isFeatured: false, isActive: true, sortOrder: 0,
     galleryItems: []
   };
@@ -23,7 +27,14 @@ export default function FashionCMS() {
   
   const [editingLayerId, setEditingLayerId] = useState(null);
   const [editingItemId, setEditingItemId] = useState(null);
-  const [activeTab, setActiveTab] = useState('items');
+  
+  const activeTab = searchParams.get('tab') === 'layers' ? 'layers' : 'items';
+  const setActiveTab = (tab) => {
+    setSearchParams(tab === 'layers' ? { tab: 'layers' } : {});
+    setView('list');
+    setEditingLayerId(null);
+    setEditingItemId(null);
+  };
   const [view, setView] = useState('list'); // 'list' | 'form'
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all' | 'active' | 'inactive'
@@ -57,15 +68,19 @@ export default function FashionCMS() {
         body: JSON.stringify(layerForm) // stringify sets content type in authFetch
       });
       if (res.ok) {
+        toast.success(editingLayerId ? 'Fashion layer updated successfully.' : 'Fashion layer created successfully.');
         setLayerForm({ name: '', slug: '', description: '', sortOrder: 0, isActive: true });
         setEditingLayerId(null);
         setView('list');
         loadData();
       } else {
-        const errorData = await res.json();
-        showAlert('Error', errorData.error);
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Failed to save layer.');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Error saving fashion layer.');
+    }
     setIsSubmitting(false);
   }
 
@@ -73,8 +88,17 @@ export default function FashionCMS() {
     confirmAction('Delete Layer', 'Are you sure you want to delete this layer AND all its items?', async () => {
       try {
         const res = await authFetch(`/api/cms/fashion-layers/${id}`, { method: 'DELETE' });
-        if (res.ok) loadData();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Fashion layer deleted.');
+          loadData();
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          toast.error(errorData.error || 'Failed to delete layer.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete layer.');
+      }
     });
   }
 
@@ -82,7 +106,6 @@ export default function FashionCMS() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setEditingLayerId(layer._id);
     setLayerForm({ name: layer.name, slug: layer.slug, description: layer.description || '', sortOrder: layer.sortOrder, isActive: layer.isActive });
-    setActiveTab('layers');
     setView('form');
   }
 
@@ -107,7 +130,7 @@ export default function FashionCMS() {
       formData.append('slug', itemForm.slug);
       formData.append('description', itemForm.description);
       formData.append('layer', itemForm.layer);
-      formData.append('displayPriceKobo', itemForm.displayPriceKobo);
+      formData.append('displayPriceKobo', Math.round(parseFloat(itemForm.displayPrice || 0) * 100));
       formData.append('sizes', itemForm.sizes);
       formData.append('colors', itemForm.colors);
       formData.append('isFeatured', itemForm.isFeatured);
@@ -132,15 +155,19 @@ export default function FashionCMS() {
         body: formData // No content-type header, authFetch handles it
       });
       if (res.ok) {
+        toast.success(editingItemId ? 'Fashion item updated successfully.' : 'Fashion item created successfully.');
         setItemForm(defaultItemForm);
         setEditingItemId(null);
         setView('list');
         loadData();
       } else {
-        const errorData = await res.json();
-        showAlert('Error', errorData.error);
+        const errorData = await res.json().catch(() => ({}));
+        toast.error(errorData.error || 'Failed to save fashion item.');
       }
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err);
+      toast.error('Error saving fashion item.');
+    }
     setIsSubmitting(false);
   }
 
@@ -148,8 +175,17 @@ export default function FashionCMS() {
     confirmAction('Delete Fashion Item', 'Are you sure you want to delete this fashion item?', async () => {
       try {
         const res = await authFetch(`/api/cms/fashion-items/${id}`, { method: 'DELETE' });
-        if (res.ok) loadData();
-      } catch (err) { console.error(err); }
+        if (res.ok) {
+          toast.success('Fashion item deleted.');
+          loadData();
+        } else {
+          const errorData = await res.json().catch(() => ({}));
+          toast.error(errorData.error || 'Failed to delete fashion item.');
+        }
+      } catch (err) { 
+        console.error(err);
+        toast.error('Failed to delete fashion item.');
+      }
     });
   }
 
@@ -158,12 +194,12 @@ export default function FashionCMS() {
     setEditingItemId(item._id);
     setItemForm({ 
       name: item.name, slug: item.slug, description: item.description || '', 
-      layer: item.layer?._id || '', displayPriceKobo: item.displayPriceKobo || 0, 
+      layer: item.layer?._id || '', 
+      displayPrice: item.displayPriceKobo !== undefined ? (item.displayPriceKobo / 100) : '', 
       sizes: item.sizes?.join(', ') || '', colors: item.colors?.join(', ') || '',
       isFeatured: item.isFeatured, isActive: item.isActive, sortOrder: item.sortOrder,
       galleryItems: item.images ? item.images.map(url => ({ type: 'existing', url })) : []
     });
-    setActiveTab('items');
     setView('form');
   }
 
@@ -201,12 +237,7 @@ export default function FashionCMS() {
   return (
     <div>
       <div className="eyebrow">CMS</div>
-      <h1 className={styles.title}>Fashion</h1>
-      
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <button className={activeTab === 'items' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('items'); setView('list'); setSearchQuery(''); }}>Fashion Items</button>
-        <button className={activeTab === 'layers' ? styles.btn : styles.btnOutline} onClick={() => { setActiveTab('layers'); setView('list'); setSearchQuery(''); }}>Layers (Categories)</button>
-      </div>
+      <h1 className={styles.title}>{activeTab === 'layers' ? 'Fashion Layers (Categories)' : 'Fashion Collection Items'}</h1>
 
       {activeTab === 'layers' && (
         <>
@@ -309,16 +340,36 @@ export default function FashionCMS() {
               <div className={styles.list}>
                 {filteredItems.map(item => (
                   <div key={item._id} className={`${styles.listItem} ${!item.isActive ? styles.inactive : ''}`}>
-                    <div className={styles.itemContent} style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      {item.images && item.images.length > 0 && (
-                         <img src={item.images[0]} alt="" style={{width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px'}} />
+                    <div className={styles.cardMain}>
+                      {item.images && item.images.length > 0 ? (
+                        <img src={item.images[0]} alt={item.name} className={styles.cardThumb} />
+                      ) : (
+                        <div className={styles.cardThumbPlaceholder}>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" x2="21" y1="6" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" />
+                          </svg>
+                        </div>
                       )}
-                      <div>
-                        <strong>{item.name}</strong> 
-                        <span className={styles.meta} style={{marginLeft: '0.5rem'}}>
-                          {item.layer?.name} • ₦{((item.displayPriceKobo || 0) / 100).toFixed(2)}
-                        </span>
-                        {item.isFeatured && <span className={styles.badge} style={{marginLeft: '0.5rem'}}>Featured</span>}
+                      <div className={styles.itemContent}>
+                        <div className={styles.itemTitle}>
+                          <span>{item.name}</span>
+                          {item.isFeatured && <span className={styles.badge}>Featured</span>}
+                          {!item.isActive && <span className={styles.badge} style={{ color: 'var(--rust)', background: 'rgba(164, 69, 31, 0.1)' }}>Inactive</span>}
+                        </div>
+                        <div className={styles.meta}>
+                          {item.layer?.name && <span>{item.layer.name}</span>}
+                          <span>•</span>
+                          <span className={styles.itemPrice}>₦{((item.displayPriceKobo || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          {item.sizes && item.sizes.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--cocoa)', background: 'rgba(42, 29, 20, 0.06)', padding: '1px 6px', borderRadius: '3px' }}>
+                                Sizes: {item.sizes.join(', ')}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {item.description && <p className={styles.itemDesc}>{item.description}</p>}
                       </div>
                     </div>
                     <div className={styles.itemActions}>
@@ -360,8 +411,16 @@ export default function FashionCMS() {
                       </select>
                     </div>
                     <div className={styles.field}>
-                      <label>Price (in Kobo / Cents) *</label>
-                      <input type="number" value={itemForm.displayPriceKobo} onChange={e => setItemForm({...itemForm, displayPriceKobo: Number(e.target.value)})} required />
+                      <label>Price (₦) *</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        min="0" 
+                        placeholder="e.g. 25000 or 2500.50" 
+                        value={itemForm.displayPrice} 
+                        onChange={e => setItemForm({...itemForm, displayPrice: e.target.value})} 
+                        required 
+                      />
                     </div>
                   </div>
 

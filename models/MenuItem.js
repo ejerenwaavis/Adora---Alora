@@ -8,7 +8,7 @@ const menuItemSchema = new mongoose.Schema({
   priceKobo:   { type: Number },
   dietaryTags: [{
     type: String,
-    enum: ['vegan', 'vegetarian', 'gluten-free', 'dairy-free', 'nut-free', 'sugar-free'],
+    trim: true
   }],
   allergens:   [{ type: String }],
   image:       { type: String },

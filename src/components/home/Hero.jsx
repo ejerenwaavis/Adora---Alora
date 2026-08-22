@@ -3,20 +3,15 @@ import { Link } from 'react-router-dom';
 import styles from './Hero.module.css';
 
 const words = ['movement,', 'food,', 'fashion,', 'community.'];
-const INTERVAL = 2800;
-const TICK = 60;
+const INTERVAL = 3200;
 
 export default function Hero({ imageSrc }) {
   const trackRef = useRef(null);
   const windowRef = useRef(null);
   const [current, setCurrent] = useState(0);
-  const [fills, setFills] = useState([0, 0, 0, 0]);
-  const jumpToIdxRef = useRef(null);
 
   useEffect(() => {
     let currentIdx = 0;
-    let elapsed = 0;
-    let fillTimer = null;
     let transitioning = false;
 
     function getWordHeight() {
@@ -24,79 +19,37 @@ export default function Hero({ imageSrc }) {
     }
 
     function advance() {
-      if(transitioning) return;
+      if (transitioning) return;
       transitioning = true;
-      elapsed = 0;
 
       const next = (currentIdx + 1) % words.length;
       const h = getWordHeight();
 
       if (trackRef.current) {
-        trackRef.current.style.transition = 'transform 0.6s cubic-bezier(0.77,0,0.18,1)';
+        trackRef.current.style.transition = 'transform 0.65s cubic-bezier(0.77, 0, 0.18, 1)';
         trackRef.current.style.transform = `translateY(-${(currentIdx + 1) * h}px)`;
       }
 
       setTimeout(() => {
-        if(next === 0 && trackRef.current) {
+        if (next === 0 && trackRef.current) {
           trackRef.current.style.transition = 'none';
           trackRef.current.style.transform = 'translateY(0)';
           void trackRef.current.offsetHeight;
         }
         currentIdx = next;
         setCurrent(next);
-        setFills(prev => prev.map(() => 0));
         transitioning = false;
-      }, 620);
+      }, 660);
     }
 
-    function tick() {
-      elapsed += TICK;
-      const pct = Math.min((elapsed / INTERVAL) * 100, 100);
-      setFills(prev => {
-        const newFills = [...prev];
-        newFills[currentIdx] = pct;
-        return newFills;
-      });
-      if (elapsed >= INTERVAL) {
-        advance();
-      }
-    }
-
-    jumpToIdxRef.current = (idx) => {
-      if (idx === currentIdx || transitioning) return;
-      
-      clearInterval(fillTimer);
-      elapsed = 0;
-      setFills(prev => {
-        const newFills = [...prev];
-        newFills[currentIdx] = 0;
-        return newFills;
-      });
-
-      const h = getWordHeight();
-      if (trackRef.current) {
-        trackRef.current.style.transition = 'transform 0.6s cubic-bezier(0.77,0,0.18,1)';
-        trackRef.current.style.transform = `translateY(-${idx * h}px)`;
-      }
-      
-      transitioning = true;
-      setTimeout(() => {
-        currentIdx = idx;
-        setCurrent(idx);
-        transitioning = false;
-        fillTimer = setInterval(tick, TICK);
-      }, 640);
-    };
-
-    const startTimeout = setTimeout(() => {
-      fillTimer = setInterval(tick, TICK);
-    }, 300);
+    const intervalTimer = setInterval(advance, INTERVAL);
 
     return () => {
-      clearTimeout(startTimeout);
-      if (fillTimer) clearInterval(fillTimer);
+      clearInterval(intervalTimer);
     };
   }, []);
+
+  const heroImage = imageSrc || '/assets/hero-house-architectural.jpg';
 
   return (
     <section className={styles.hero}>
@@ -117,35 +70,26 @@ export default function Hero({ imageSrc }) {
           </div>
         </h1>
 
-        <p>Made in Lagos by a mother and daughter, Aora House brings together the rituals that make everyday life feel fuller.</p>
+        <p className={styles.heroDesc}>
+          Made in Lagos by a mother and daughter, Aora House brings together the rituals that make everyday life feel fuller.
+        </p>
+
         <div className={styles.heroActions}>
-          <Link to="/movement" className={`${styles.btn} ${styles.btnSolid}`}>Book a Class</Link>
-          <a href="#house" className={`${styles.btn} ${styles.btnOutline}`}>Explore the House</a>
+          <Link to="/movement" className={`${styles.btn} ${styles.btnSolid}`}>
+            Book a Class
+          </Link>
+          <a href="#house" className={`${styles.btn} ${styles.btnOutline}`}>
+            Explore the House
+          </a>
         </div>
       </div>
       
-      <div className={styles.heroVisual} data-caption="photography — house interior, first light">
-        {imageSrc ? (
-          <img src={imageSrc} alt="House interior" className={styles.heroImg} />
-        ) : (
-          <div className={styles.placeholderBg}></div>
-        )}
-        
-        <div className={styles.wordProgress}>
-          {words.map((_, idx) => (
-            <div 
-              key={idx} 
-              className={`${styles.progressPip} ${current === idx ? styles.progressPipActive : ''}`}
-              onClick={() => jumpToIdxRef.current && jumpToIdxRef.current(idx)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div 
-                className={styles.progressFill} 
-                style={{ height: `${fills[idx] || 0}%` }}
-              ></div>
-            </div>
-          ))}
-        </div>
+      <div className={styles.heroVisual} data-caption="photography — Aora House living room & courtyard">
+        <img
+          src={heroImage}
+          alt="Aora House interior"
+          className={styles.heroImg}
+        />
       </div>
     </section>
   );
