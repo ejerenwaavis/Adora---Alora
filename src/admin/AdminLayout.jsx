@@ -15,20 +15,20 @@ export default function AdminLayout() {
 
   return (
     <div className={styles.adminContainer}>
-      {/* Mobile Header */}
+      {/* Mobile Topbar */}
       <header className={styles.mobileHeader}>
-        <div className={styles.mhBrand}>
-          <span className={styles.mhWordmark}>Aora House</span>
-          <span className={styles.badge}>Admin</span>
-        </div>
         <div 
           className={`${styles.cHamburger} ${isMobileMenuOpen ? styles.open : ''}`} 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          title="Open menu"
+          title="Toggle menu"
         >
           <div className={styles.cHamburgerIcon}>
             <span></span><span></span><span></span>
           </div>
+        </div>
+        <div className={styles.mhBrand}>
+          <span className={styles.mhWordmark}>Aora House</span>
+          <span className={styles.badge}>Admin</span>
         </div>
       </header>
 

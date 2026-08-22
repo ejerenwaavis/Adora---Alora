@@ -9,7 +9,7 @@ export default function ClerkLayout() {
   const { user } = useAuth();
   const [walkinOpen, setWalkinOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   
   // Real-time clock for footer
   const [time, setTime] = useState('');
@@ -40,31 +40,33 @@ export default function ClerkLayout() {
     return `${first?.charAt(0) || ''}${last?.charAt(0) || ''}`.toUpperCase();
   };
 
+  const closeDrawer = () => setDrawerOpen(false);
+
   return (
     <div className="shell">
-      <div className="mobile-header">
-        <div className="mh-brand">
-          <div className="mh-wordmark">Aora House</div>
-          <div className="mh-sub">Clerk station</div>
-        </div>
+      {/* ── MOBILE TOPBAR ── */}
+      <div className="c-topbar">
         <div 
-          className={`c-hamburger ${isMobileMenuOpen ? 'open' : ''}`} 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          title="Open menu"
+          className={`c-hamburger ${drawerOpen ? 'open' : ''}`} 
+          onClick={() => setDrawerOpen(!drawerOpen)}
+          title="Toggle menu"
         >
           <div className="c-hamburger-icon">
             <span></span><span></span><span></span>
           </div>
         </div>
+        <div className="c-wordmark">Aora House <small>Clerk</small></div>
+        <div className="c-clock">{time}</div>
       </div>
 
-      {/* Sidebar Overlay */}
+      {/* ── OFF-CANVAS OVERLAY (absolute inside .shell) ── */}
       <div 
-        className={`sidebar-overlay ${isMobileMenuOpen ? 'show' : ''}`}
-        onClick={() => setIsMobileMenuOpen(false)}
+        className={`c-overlay ${drawerOpen ? 'show' : ''}`}
+        onClick={closeDrawer}
       ></div>
 
-      <div className={`sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
+      {/* ── SIDEBAR / DRAWER ── */}
+      <div className={`sidebar ${drawerOpen ? 'open' : ''}`}>
         <div className="sb-brand">
           <div className="sb-wordmark">Aora House</div>
           <div className="sb-sub">Clerk station</div>
@@ -83,27 +85,27 @@ export default function ClerkLayout() {
         
         <nav className="sb-nav">
           <div className="sb-section">Today</div>
-          <NavLink to="/clerk" end className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <NavLink to="/clerk" end className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
           </NavLink>
-          <NavLink to="/clerk/classes" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <NavLink to="/clerk/classes" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-users" aria-hidden="true"></i> Class roster
           </NavLink>
-          <NavLink to="/clerk/cafe" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <NavLink to="/clerk/cafe" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-coffee" aria-hidden="true"></i> Café bookings
           </NavLink>
-          <NavLink to="/clerk/events" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <NavLink to="/clerk/events" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-building" aria-hidden="true"></i> Loft events
           </NavLink>
           
           <div className="sb-section">Tools</div>
-          <div className="sb-item" onClick={() => { setWalkinOpen(true); setIsMobileMenuOpen(false); }} style={{ cursor: 'pointer' }}>
+          <div className="sb-item" onClick={() => { setWalkinOpen(true); closeDrawer(); }} style={{ cursor: 'pointer' }}>
             <i className="ti ti-user-plus" aria-hidden="true"></i> Walk-in
           </div>
-          <div className="sb-item" onClick={() => { setQrScannerOpen(true); setIsMobileMenuOpen(false); }} style={{ cursor: 'pointer' }}>
+          <div className="sb-item" onClick={() => { setQrScannerOpen(true); closeDrawer(); }} style={{ cursor: 'pointer' }}>
             <i className="ti ti-qrcode" aria-hidden="true"></i> QR check-in
           </div>
-          <NavLink to="/clerk/logs" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <NavLink to="/clerk/logs" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-clock" aria-hidden="true"></i> Activity log
           </NavLink>
         </nav>
@@ -114,25 +116,26 @@ export default function ClerkLayout() {
         </div>
       </div>
       
+      {/* ── MAIN CONTENT — bounded, scrollable ── */}
       <div className="main">
         <Outlet context={{ setWalkinOpen }} />
       </div>
 
-      {/* bottom nav — phone only */}
+      {/* ── BOTTOM NAV — phone only, 4 high-frequency actions ── */}
       <div className="c-bottomnav">
-        <NavLink to="/clerk" end className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+        <NavLink to="/clerk" end className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`}>
           <i className="ti ti-layout-dashboard"></i>
           <div className="c-bnav-label">Today</div>
         </NavLink>
-        <NavLink to="/clerk/classes" className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+        <NavLink to="/clerk/classes" className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`}>
           <i className="ti ti-users"></i>
           <div className="c-bnav-label">Roster</div>
         </NavLink>
-        <div className="c-bnav-item" onClick={() => { setWalkinOpen(true); setIsMobileMenuOpen(false); }}>
+        <div className="c-bnav-item" onClick={() => { setWalkinOpen(true); closeDrawer(); }}>
           <i className="ti ti-user-plus"></i>
           <div className="c-bnav-label">Walk-in</div>
         </div>
-        <div className="c-bnav-item" onClick={() => { setQrScannerOpen(true); setIsMobileMenuOpen(false); }}>
+        <div className="c-bnav-item" onClick={() => { setQrScannerOpen(true); closeDrawer(); }}>
           <i className="ti ti-qrcode"></i>
           <div className="c-bnav-label">QR Scan</div>
         </div>
