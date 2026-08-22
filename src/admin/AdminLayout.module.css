@@ -140,6 +140,9 @@
   flex: 1;
   padding: 40px;
   overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  width: 100%;
 }
 
 /* ── MOBILE HEADER (hidden on desktop) ── */
@@ -153,6 +156,7 @@
   position: sticky;
   top: 0;
   z-index: 90;
+  flex-shrink: 0;
 }
 
 .mhBrand {
@@ -167,16 +171,50 @@
   color: var(--gold);
 }
 
-.mhToggle {
-  background: transparent;
-  border: none;
-  color: var(--gold);
-  font-size: 24px;
-  cursor: pointer;
-  padding: 0;
+/* Hamburger animation */
+.cHamburger {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(247, 239, 225, 0.08);
+  border: 1px solid rgba(247, 239, 225, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.cHamburger:hover {
+  background: rgba(247, 239, 225, 0.14);
+}
+
+.cHamburgerIcon {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 14px;
+}
+
+.cHamburgerIcon span {
+  display: block;
+  height: 1.5px;
+  background: #F7EFE1;
+  border-radius: 1px;
+  transition: all 0.25s;
+}
+
+.cHamburger.open .cHamburgerIcon span:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.cHamburger.open .cHamburgerIcon span:nth-child(2) {
+  opacity: 0;
+}
+
+.cHamburger.open .cHamburgerIcon span:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
 }
 
 /* ── SIDEBAR OVERLAY ── */
@@ -204,6 +242,7 @@
 @media (max-width: 768px) {
   .adminContainer {
     flex-direction: column;
+    overflow: hidden;
   }
 
   .mobileHeader {

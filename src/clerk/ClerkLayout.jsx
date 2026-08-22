@@ -42,15 +42,20 @@ export default function ClerkLayout() {
 
   return (
     <div className="shell">
-      {/* Mobile Header */}
       <div className="mobile-header">
         <div className="mh-brand">
           <div className="mh-wordmark">Aora House</div>
           <div className="mh-sub">Clerk station</div>
         </div>
-        <button className="mh-toggle" onClick={() => setIsMobileMenuOpen(true)}>
-          <i className="ti ti-menu-2"></i>
-        </button>
+        <div 
+          className={`c-hamburger ${isMobileMenuOpen ? 'open' : ''}`} 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          title="Open menu"
+        >
+          <div className="c-hamburger-icon">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
       </div>
 
       {/* Sidebar Overlay */}
@@ -111,6 +116,26 @@ export default function ClerkLayout() {
       
       <div className="main">
         <Outlet context={{ setWalkinOpen }} />
+      </div>
+
+      {/* bottom nav — phone only */}
+      <div className="c-bottomnav">
+        <NavLink to="/clerk" end className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <i className="ti ti-layout-dashboard"></i>
+          <div className="c-bnav-label">Today</div>
+        </NavLink>
+        <NavLink to="/clerk/classes" className={({isActive}) => `c-bnav-item ${isActive ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+          <i className="ti ti-users"></i>
+          <div className="c-bnav-label">Roster</div>
+        </NavLink>
+        <div className="c-bnav-item" onClick={() => { setWalkinOpen(true); setIsMobileMenuOpen(false); }}>
+          <i className="ti ti-user-plus"></i>
+          <div className="c-bnav-label">Walk-in</div>
+        </div>
+        <div className="c-bnav-item" onClick={() => { setQrScannerOpen(true); setIsMobileMenuOpen(false); }}>
+          <i className="ti ti-qrcode"></i>
+          <div className="c-bnav-label">QR Scan</div>
+        </div>
       </div>
 
       <WalkinModal isOpen={walkinOpen} onClose={() => setWalkinOpen(false)} />

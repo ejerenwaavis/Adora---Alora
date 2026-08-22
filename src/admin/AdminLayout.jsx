@@ -21,13 +21,15 @@ export default function AdminLayout() {
           <span className={styles.mhWordmark}>Aora House</span>
           <span className={styles.badge}>Admin</span>
         </div>
-        <button className={styles.mhToggle} onClick={() => setIsMobileMenuOpen(true)}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" y1="6" x2="20" y2="6"></line>
-            <line x1="4" y1="12" x2="20" y2="12"></line>
-            <line x1="4" y1="18" x2="20" y2="18"></line>
-          </svg>
-        </button>
+        <div 
+          className={`${styles.cHamburger} ${isMobileMenuOpen ? styles.open : ''}`} 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          title="Open menu"
+        >
+          <div className={styles.cHamburgerIcon}>
+            <span></span><span></span><span></span>
+          </div>
+        </div>
       </header>
 
       {/* Sidebar Overlay */}
