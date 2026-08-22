@@ -108,6 +108,22 @@ export default function DashboardHome() {
     return `${h}:${m} ${ampm}`;
   };
 
+  const getFormatTimeRange = (item) => {
+    if (!item || !item.startTime) return '';
+    const startTimeStr = getFormatTime(item.startTime);
+    let endTimeStr = '';
+    if (item.endTime) {
+      endTimeStr = getFormatTime(item.endTime);
+    } else if (item.classType?.durationMinutes) {
+      const d = new Date(new Date(item.startTime).getTime() + item.classType.durationMinutes * 60000);
+      endTimeStr = getFormatTime(d);
+    } else if (item.durationMinutes) {
+      const d = new Date(new Date(item.startTime).getTime() + item.durationMinutes * 60000);
+      endTimeStr = getFormatTime(d);
+    }
+    return endTimeStr ? `${startTimeStr} – ${endTimeStr}` : startTimeStr;
+  };
+
   if (loading) return <div style={{ padding: '40px' }}>Loading dashboard...</div>;
 
   const checkedInCount = roster.filter(r => r.checkedInAt).length;
@@ -138,7 +154,7 @@ export default function DashboardHome() {
           {nextClass ? (
             <>
               <div className="stat-value-sub">{nextClass.classType?.name}</div>
-              <div className="stat-sub">{getFormatTime(nextClass.startTime)} · {roster.length}/{nextClass.maxCapacity} booked</div>
+              <div className="stat-sub">{getFormatTimeRange(nextClass)} · {roster.length}/{nextClass.maxCapacity} booked</div>
               <div className="cap-bar">
                 <div className={`cap-fill ${roster.length >= nextClass.maxCapacity ? 'danger' : 'warn'}`} style={{ width: `${(roster.length/nextClass.maxCapacity)*100}%` }}></div>
               </div>
@@ -175,7 +191,7 @@ export default function DashboardHome() {
           <div className="alert-row">
             <div className="alert alert-danger">
               <i className="ti ti-alert-circle" aria-hidden="true"></i>
-              <span className="alert-text">{nextClass.classType?.name} {getFormatTime(nextClass.startTime)} is almost full ({roster.length}/{nextClass.maxCapacity}). Walk-ins will be placed on the standby list.</span>
+              <span className="alert-text">{nextClass.classType?.name} ({getFormatTimeRange(nextClass)}) is almost full ({roster.length}/{nextClass.maxCapacity}). Walk-ins will be placed on the standby list.</span>
               <span className="alert-action">Manage</span>
             </div>
           </div>
@@ -186,7 +202,7 @@ export default function DashboardHome() {
         {nextClass && (
           <div>
             <div className="sec-head">
-              <div className="sec-title">{getFormatTime(nextClass.startTime)} · {nextClass.classType?.name} check-in</div>
+              <div className="sec-title">{nextClass.classType?.name} · {getFormatTimeRange(nextClass)} check-in</div>
               <div className="sec-count">{roster.length} booked · {checkedInCount} checked in · {Math.max(0, nextClass.maxCapacity - roster.length)} spots free</div>
             </div>
             

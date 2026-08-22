@@ -81,6 +81,22 @@ export default function ClassManagement() {
     return `${h}:${m} ${ampm}`;
   };
 
+  const getFormatTimeRange = (item) => {
+    if (!item || !item.startTime) return '';
+    const startTimeStr = getFormatTime(item.startTime);
+    let endTimeStr = '';
+    if (item.endTime) {
+      endTimeStr = getFormatTime(item.endTime);
+    } else if (item.classType?.durationMinutes) {
+      const d = new Date(new Date(item.startTime).getTime() + item.classType.durationMinutes * 60000);
+      endTimeStr = getFormatTime(d);
+    } else if (item.durationMinutes) {
+      const d = new Date(new Date(item.startTime).getTime() + item.durationMinutes * 60000);
+      endTimeStr = getFormatTime(d);
+    }
+    return endTimeStr ? `${startTimeStr} – ${endTimeStr}` : startTimeStr;
+  };
+
   if (loading) return <div style={{ padding: '40px' }}>Loading...</div>;
 
   const selectedClass = classes.find(c => c._id === selectedClassId);
@@ -115,9 +131,8 @@ export default function ClassManagement() {
               </div>
             ) : classes.map(c => {
               const isSelected = c._id === selectedClassId;
-              const time = getFormatTime(c.startTime);
+              const timeRange = getFormatTimeRange(c);
               
-              // We'll mimic the loft-card style but for class selection
               return (
                 <div 
                   key={c._id} 
@@ -126,38 +141,82 @@ export default function ClassManagement() {
                     background: isSelected ? 'var(--cocoa-deep)' : 'var(--paper)',
                     border: '1px solid',
                     borderColor: isSelected ? 'var(--cocoa-deep)' : 'var(--line)',
-                    borderRadius: '4px',
-                    padding: '14px 18px',
+                    borderRadius: '6px',
+                    padding: '14px 16px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s ease',
+                    boxShadow: isSelected ? '0 4px 12px rgba(42,29,20,0.12)' : '0 1px 3px rgba(42,29,20,0.02)'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ 
                         fontFamily: 'var(--f-display)', 
-                        fontSize: '16px', 
+                        fontSize: '15px', 
                         color: isSelected ? '#F7EFE1' : 'var(--ink)', 
-                        fontWeight: 500 
+                        fontWeight: 600,
+                        lineHeight: 1.3
                       }}>
-                        {time} · {c.classType?.name || 'Class'}
+                        {c.classType?.name || 'Class'}
                       </div>
+                      
+                      {/* Discreet Time Range & Location */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginTop: '4px',
+                        flexWrap: 'wrap'
+                      }}>
+                        <span style={{ 
+                          fontSize: '11.5px', 
+                          fontWeight: 600,
+                          color: isSelected ? 'var(--gold-light, #E3D3B8)' : 'var(--cocoa-deep)',
+                          letterSpacing: '0.01em'
+                        }}>
+                          {timeRange}
+                        </span>
+                        {c.location && (
+                          <span style={{
+                            fontSize: '10px',
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            background: isSelected ? 'rgba(255,255,255,0.12)' : 'rgba(200,155,74,0.12)',
+                            color: isSelected ? '#F7EFE1' : '#8C5815',
+                            fontWeight: 600
+                          }}>
+                            {c.location}
+                          </span>
+                        )}
+                      </div>
+
                       <div style={{ 
                         fontSize: '11px', 
-                        color: isSelected ? 'rgba(220,203,178,.55)' : 'var(--taupe)', 
-                        marginTop: '2px' 
+                        color: isSelected ? 'rgba(220,203,178,.65)' : 'var(--taupe)', 
+                        marginTop: '4px' 
                       }}>
-                        Instructor: {c.instructor?.firstName || 'Staff'}
+                        Instructor: {c.instructor?.firstName || 'Staff'} {c.instructor?.lastName || ''}
                       </div>
                     </div>
                   </div>
                   
                   <div style={{ 
-                    marginTop: '12px',
+                    marginTop: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
                     fontSize: '11px',
-                    color: isSelected ? 'rgba(220,203,178,.8)' : 'var(--ink)'
+                    color: isSelected ? 'rgba(220,203,178,.85)' : 'var(--ink)',
+                    borderTop: isSelected ? '1px solid rgba(255,255,255,0.08)' : '1px solid var(--line)',
+                    paddingTop: '6px'
                   }}>
-                    {c.bookedCount} / {c.maxCapacity} Booked
+                    <span>{c.bookedCount || 0} / {c.maxCapacity || 14} Booked</span>
+                    <span style={{ 
+                      color: isSelected ? 'rgba(220,203,178,.6)' : 'var(--taupe)', 
+                      fontSize: '10.5px' 
+                    }}>
+                      {Math.max(0, (c.maxCapacity || 14) - (c.bookedCount || 0))} open
+                    </span>
                   </div>
                 </div>
               );
@@ -171,8 +230,13 @@ export default function ClassManagement() {
             <>
               <div>
                 <div className="sec-head">
-                  <div className="sec-title">{getFormatTime(selectedClass.startTime)} · {selectedClass.classType?.name} check-in</div>
-                  <div className="sec-count">{roster.length} booked · {checkedInCount} checked in · {Math.max(0, selectedClass.maxCapacity - roster.length)} spots free</div>
+                  <div className="sec-title">
+                    {selectedClass.classType?.name} · {getFormatTimeRange(selectedClass)} check-in
+                  </div>
+                  <div className="sec-count">
+                    {roster.length} booked · {checkedInCount} checked in · {Math.max(0, selectedClass.maxCapacity - roster.length)} spots free
+                    {selectedClass.location ? ` · ${selectedClass.location}` : ''}
+                  </div>
                 </div>
                 
                 <div className="tabs">
