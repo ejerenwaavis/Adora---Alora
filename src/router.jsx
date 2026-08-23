@@ -52,22 +52,41 @@ import ActivityLogs    from './clerk/ActivityLogs.jsx';
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <div style={{ display:'flex', justifyContent:'center', padding:'8rem', color:'var(--taupe)', fontFamily:'var(--f-body)' }}>Loading…</div>;
-  if (!user)   return <Navigate to="/" replace />;
+  if (!user)   return <Navigate to="/login" replace />;
   return children;
 }
 
 function RequireRole({ roles, children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 
-// ── Router ────────────────────────────────────────────────────────────────────
-export const router = createBrowserRouter([
-  // ── Public marketing site ──
+// ── Role-Based Home Redirect ──────────────────────────────────────────────────
+function StaffHomeRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  
+  if (['admin', 'content_editor', 'finance'].includes(user.role)) return <Navigate to="/admin" replace />;
+  if (user.role === 'clerk') return <Navigate to="/clerk" replace />;
+  if (user.role === 'kitchen' || user.role === 'chef') return <Navigate to="/kitchen" replace />;
+  
+  // Fallback for normal users who accidentally hit the internal domain
+  return <Navigate to="/login" replace />;
+}
+
+// ── Hostname Detection ────────────────────────────────────────────────────────
+const host = window.location.hostname;
+const isInternal = host.startsWith('hq.') || host.startsWith('staff.') || host.startsWith('portal.') || host.startsWith('admin.');
+// Note: localhost will resolve to public, but you can override by accessing http://hq.localhost:5175 if supported by your OS.
+
+// ── Public Router ─────────────────────────────────────────────────────────────
+const publicRouter = createBrowserRouter([
   {
-    path:    '/',
+    path: '/',
     element: <PageShell />,
     children: [
       { index: true,                    element: <Home /> },
@@ -82,15 +101,12 @@ export const router = createBrowserRouter([
       { path: 'visit',                  element: <Visit /> },
       { path: 'check-in',               element: <KioskCheckIn /> },
       
-      // Public Auth routes inside PageShell so they get the main nav/footer
       { path: 'login',                  element: <Login /> },
       { path: 'register',               element: <Register /> },
       { path: 'forgot-password',        element: <ForgotPassword /> },
       { path: 'reset-password',         element: <ResetPassword /> },
     ],
   },
-
-  // ── Protected: member account ──
   {
     path: '/account',
     element: <RequireAuth><AccountLayout /></RequireAuth>,
@@ -100,10 +116,21 @@ export const router = createBrowserRouter([
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
     ]
   },
+  { path: '*', element: <Navigate to="/" replace /> },
+]);
 
-  // ── Protected: admin panel ──
+// ── Internal Staff Router ─────────────────────────────────────────────────────
+const internalRouter = createBrowserRouter([
   {
-    path:    '/admin',
+    path: '/',
+    element: <StaffHomeRedirect />
+  },
+  {
+    path: '/login',
+    element: <Login /> // You might want a custom StaffLogin later
+  },
+  {
+    path: '/admin',
     element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminLayout /></RequireRole>,
     children: [
       { index: true, element: <AdminDashboard /> },
@@ -120,10 +147,8 @@ export const router = createBrowserRouter([
       { path: '*', element: <AdminDashboard /> }
     ]
   },
-
-  // ── Protected: clerk front desk ──
   {
-    path:    '/clerk',
+    path: '/clerk',
     element: <RequireRole roles={['admin','clerk']}><ClerkLayout /></RequireRole>,
     children: [
       { index: true, element: <ClerkDashboard /> },
@@ -133,7 +158,12 @@ export const router = createBrowserRouter([
       { path: 'logs', element: <ActivityLogs /> },
     ]
   },
-
-  // ── 404 fallback ──
+  {
+    path: '/kitchen',
+    element: <RequireRole roles={['admin','kitchen','chef']}><div style={{padding: '2rem'}}>Kitchen Display System (KDS) - Coming Soon</div></RequireRole>
+  },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
+
+// Export the active router based on the domain
+export const router = isInternal ? internalRouter : publicRouter;
