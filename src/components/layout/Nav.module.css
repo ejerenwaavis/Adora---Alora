@@ -33,9 +33,9 @@
 .logo { 
   font-family: var(--f-display); 
   font-size: 22px; 
-  font-weight: 700; 
+  font-weight: 600; 
   letter-spacing: .01em; 
-  color: var(--cocoa); 
+  color: var(--cocoa-deep); 
 }
 .logo em { 
   font-style: italic; 
