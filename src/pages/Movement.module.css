@@ -224,6 +224,15 @@
   background: var(--cocoa-deep);
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  scrollbar-width: none; /* Hide scrollbar for cleaner look */
+}
+.vcDetail::-webkit-scrollbar {
+  display: none;
 }
 .vcDetImg {
   height: 240px;
