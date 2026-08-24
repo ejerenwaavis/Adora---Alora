@@ -159,9 +159,9 @@ const internalRouter = createBrowserRouter([
       { path: 'timetable', element: <ScheduleCMS /> },
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
-      { path: 'credit-packs', element: <CreditPacksCMS /> },
-      { path: 'users', element: <UsersCMS /> },
-      { path: 'settings', element: <SettingsCMS /> },
+      { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
+      { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
+      { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },
       { path: '*', element: <AdminDashboard /> }
     ]
   },

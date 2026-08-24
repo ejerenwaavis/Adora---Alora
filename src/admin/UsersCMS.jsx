@@ -114,6 +114,10 @@ export default function UsersCMS() {
   };
 
   const fetchUsers = async () => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await authFetch('/api/admin/users');
@@ -132,8 +136,12 @@ export default function UsersCMS() {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, [authFetch]);
+    if (currentUser?.role === 'admin') {
+      fetchUsers();
+    } else {
+      setLoading(false);
+    }
+  }, [authFetch, currentUser]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -438,6 +446,42 @@ export default function UsersCMS() {
     document.body.removeChild(link);
     showToast('Exported CSV file successfully!');
   };
+
+  if (currentUser && currentUser.role !== 'admin') {
+    return (
+      <div style={{ maxWidth: '680px', margin: '60px auto', padding: '0 20px', textAlign: 'center' }}>
+        <div style={{
+          background: 'var(--paper, #FFFDF9)',
+          border: '1px solid rgba(227, 211, 184, 0.8)',
+          borderRadius: '8px',
+          padding: '48px 32px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ fontSize: '36px', marginBottom: '14px' }}>🔒</div>
+          <h2 style={{ fontFamily: 'var(--f-serif, "Fraunces", serif)', fontSize: '24px', color: 'var(--cocoa-deep)', marginBottom: '10px' }}>
+            Restricted Access
+          </h2>
+          <p style={{ color: 'var(--taupe)', fontSize: '13.5px', lineHeight: 1.6, marginBottom: '24px', maxWidth: '440px', margin: '0 auto 24px' }}>
+            User and Staff Operations are reserved for Super Administrators. Your account ({currentUser.role?.replace('_', ' ')}) has access to Content Management.
+          </p>
+          <a href="/admin" style={{
+            display: 'inline-block',
+            background: 'var(--cocoa-deep)',
+            color: '#F7EFE1',
+            padding: '11px 24px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            textDecoration: 'none',
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontWeight: 600
+          }}>
+            Return to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

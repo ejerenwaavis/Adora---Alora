@@ -127,15 +127,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const isAdmin = user?.role === 'admin';
+  const isContentEditor = user?.role === 'content_editor';
+  const isFinance = user?.role === 'finance';
+
   const quickLinks = [
-    { title: 'User & Staff Ops', desc: `${metrics.totalMembers} members · ${metrics.activeStaff} staff`, to: '/admin/users', icon: 'site-content', count: metrics.totalMembers, color: '#C89B4A' },
+    ...(isAdmin ? [{ title: 'User & Staff Ops', desc: `${metrics.totalMembers} members · ${metrics.activeStaff} staff`, to: '/admin/users', icon: 'site-content', count: metrics.totalMembers, color: '#C89B4A' }] : []),
     { title: 'Café Menu', desc: `${stats.menuItems} items & categories`, to: '/admin/menu', icon: 'cafe', count: stats.menuItems, color: '#C89B4A' },
     { title: 'Classes & Movement', desc: `${stats.classes} classes & timetable`, to: '/admin/classes', icon: 'classes', count: stats.classes, color: '#414F36' },
     { title: 'Venues & Events', desc: `${stats.events} loft & house events`, to: '/admin/events', icon: 'spaces-events', count: stats.events, color: '#A4451F' },
     { title: 'Fashion Collection', desc: `${stats.fashion} curated fashion items`, to: '/admin/fashion', icon: 'layers', count: stats.fashion, color: '#4A3527' },
-    { title: 'Credit Packs', desc: `${stats.creditPacks} pricing bundles`, to: '/admin/credit-packs', icon: 'credit-packs', count: stats.creditPacks, color: '#8B3318' },
+    ...((isAdmin || isFinance) ? [{ title: 'Credit Packs', desc: `${stats.creditPacks} pricing bundles`, to: '/admin/credit-packs', icon: 'credit-packs', count: stats.creditPacks, color: '#8B3318' }] : []),
     { title: 'Announcements', desc: `${stats.announcements} active banners`, to: '/admin/announcements', icon: 'announcements', count: stats.announcements, color: '#8B3318' },
-    { title: 'Global Settings', desc: 'Booking rules, payments, socials', to: '/admin/settings', icon: 'settings', count: 'Config', color: '#633806' }
+    ...(isAdmin ? [{ title: 'Global Settings', desc: 'Booking rules, payments, socials', to: '/admin/settings', icon: 'settings', count: 'Config', color: '#633806' }] : [])
   ];
 
   const formatLogTime = (dateStr) => {
@@ -149,16 +153,22 @@ export default function AdminDashboard() {
       {/* Top Welcome Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2.5rem' }}>
         <div>
-          <div className="eyebrow" style={{ color: 'var(--rust)', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: '0.75rem', marginBottom: '0.4rem' }}>Admin Control Center</div>
-          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: '2.25rem', color: 'var(--cocoa-deep)', margin: 0 }}>Executive Dashboard</h1>
+          <div className="eyebrow" style={{ color: 'var(--rust)', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: '0.75rem', marginBottom: '0.4rem' }}>
+            {isContentEditor ? 'Content Management CMS' : isFinance ? 'Finance Control Center' : 'Admin Control Center'}
+          </div>
+          <h1 style={{ fontFamily: 'var(--f-display)', fontSize: '2.25rem', color: 'var(--cocoa-deep)', margin: 0 }}>
+            {isContentEditor ? 'Content Editor Dashboard' : isFinance ? 'Finance Dashboard' : 'Executive Dashboard'}
+          </h1>
           <p style={{ color: 'var(--taupe)', marginTop: '0.35rem', fontSize: '0.95rem' }}>
-            Welcome back, <strong>{user?.firstName || 'Admin'} {user?.lastName || ''}</strong>. Real-time overview of house community, operations, and spaces.
+            Welcome back, <strong>{user?.firstName || 'Admin'} {user?.lastName || ''}</strong>. {isContentEditor ? 'Manage café menus, movement classes, loft events, fashion catalogue, and house announcements.' : 'Real-time overview of house community, operations, and spaces.'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <Link to="/clerk" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            <Icon name="site-content" size={14} /> Clerk Front Desk
-          </Link>
+          {isAdmin && (
+            <Link to="/clerk" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+              <Icon name="site-content" size={14} /> Clerk Front Desk
+            </Link>
+          )}
           <Link to="/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
             View Public Site <span className="btn-arrow">↗</span>
           </Link>
