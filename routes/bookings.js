@@ -10,6 +10,7 @@ const CreditPack = require('../models/CreditPack');
 const Setting = require('../models/Setting');
 const CreditGrant = require('../models/CreditGrant');
 const { sendBookingConfirmation, sendWaitlistPromotion } = require('../services/mailer');
+const { promoteNextWaitlisted } = require('../services/waitlistManager');
 
 // Purchase a credit pack
 router.post('/purchase-pack', requireAuth, async (req, res) => {
@@ -189,42 +190,6 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
       classSession.waitlistCount = Math.max(0, classSession.waitlistCount - 1);
     } else if (booking.status === 'confirmed' || booking.status === 'promoted') {
       classSession.bookedCount = Math.max(0, classSession.bookedCount - 1);
-      
-      // Waitlist Promotion Logic
-      if (classSession.waitlistCount > 0) {
-        // Find next person
-        const nextInLine = await Booking.findOne({ 
-          classSession: classSession._id, 
-          status: 'waitlisted' 
-        }).sort({ createdAt: 1 }).session(session);
-
-        if (nextInLine) {
-          // Get expiration setting
-          let expSetting = await Setting.findOne({ key: 'waitlist_expiration_hours' }).session(session);
-          const expHours = expSetting ? Number(expSetting.value) : 2;
-          
-          const expiresAt = new Date();
-          expiresAt.setHours(expiresAt.getHours() + expHours);
-
-          nextInLine.status = 'promoted';
-          nextInLine.promotedAt = new Date();
-          nextInLine.promotionExpiresAt = expiresAt;
-          await nextInLine.save({ session });
-
-          // Decrease waitlist count, but wait, do we increment bookedCount yet?
-          // No, 'promoted' means they have to confirm, OR we can just auto-confirm them.
-          // In standard boutique fitness, they are auto-confirmed if they have a credit (which we already deducted).
-          // Let's auto-confirm since we already took their credit!
-          nextInLine.status = 'confirmed';
-          classSession.bookedCount += 1;
-          classSession.waitlistCount -= 1;
-          await nextInLine.save({ session });
-          
-          // Capture promoted user for background notification
-          var promotedBookingId = nextInLine._id;
-          var promotedUserId = nextInLine.user;
-        }
-      }
     }
 
     await classSession.save({ session });
@@ -237,17 +202,9 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
-    // Trigger waitlist promotion notification in background
-    if (promotedBookingId && promotedUserId) {
-      Promise.all([
-        User.findById(promotedUserId),
-        ClassSession.findById(classSession._id).populate('classType').populate('instructor'),
-        Booking.findById(promotedBookingId)
-      ]).then(([pUser, pSession, pBooking]) => {
-        if (pUser && pSession && pBooking) {
-          sendWaitlistPromotion({ user: pUser, classSession: pSession, booking: pBooking }).catch(e => console.warn('Waitlist email error:', e.message));
-        }
-      }).catch(e => console.warn('Waitlist populate error:', e.message));
+    // Trigger promotion cascade for the next person in line
+    if (booking.status === 'cancelled' && (classSession.bookedCount < classSession.maxCapacity)) {
+      promoteNextWaitlisted(classSession._id).catch(e => console.warn('Waitlist cascade error:', e.message));
     }
 
     res.json(booking);
@@ -255,6 +212,106 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     res.status(400).json({ error: err.message });
+  }
+});
+
+// Member claims promoted waitlist spot (5-min window)
+router.post('/:id/claim-waitlist', requireAuth, async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const booking = await Booking.findById(req.params.id)
+      .populate('classSession')
+      .session(session);
+
+    if (!booking) throw new Error('Booking not found');
+    if (booking.user.toString() !== req.user.id) throw new Error('Unauthorized');
+    if (booking.status !== 'promoted') throw new Error(`Booking cannot be claimed (current status: ${booking.status})`);
+
+    const now = new Date();
+    if (booking.promotionExpiresAt && booking.promotionExpiresAt < now) {
+      throw new Error('Claim window has expired. Spot has been passed to the next member.');
+    }
+
+    const classSession = booking.classSession;
+    if (classSession.bookedCount >= classSession.maxCapacity) {
+      throw new Error('Class is currently full.');
+    }
+
+    // Deduct 1 credit from user
+    const user = await User.findById(req.user.id).session(session);
+    if ((user.classCredits || 0) < 1) {
+      throw new Error('Insufficient studio credits. Please top up your credit pack to claim this spot.');
+    }
+
+    user.classCredits -= 1;
+    await user.save({ session });
+
+    // Deduct from earliest expiring CreditGrant (FIFO)
+    const activeGrant = await CreditGrant.findOne({
+      user: user._id,
+      status: 'active',
+      creditsRemaining: { $gt: 0 },
+      expiresAt: { $gte: now }
+    }).sort({ expiresAt: 1 }).session(session);
+
+    if (activeGrant) {
+      activeGrant.creditsRemaining -= 1;
+      if (activeGrant.creditsRemaining <= 0) activeGrant.status = 'exhausted';
+      await activeGrant.save({ session });
+    }
+
+    // Confirm booking
+    booking.status = 'confirmed';
+    booking.paymentMethod = 'credit';
+    booking.paymentStatus = 'paid';
+    booking.creditsUsed = 1;
+    await booking.save({ session });
+
+    classSession.bookedCount += 1;
+    classSession.waitlistCount = Math.max(0, classSession.waitlistCount - 1);
+    await classSession.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Trigger confirmation email with pass & calendar invite
+    ClassSession.findById(classSession._id)
+      .populate('classType')
+      .populate('instructor')
+      .then(popSession => {
+        if (popSession) {
+          sendBookingConfirmation({ user, classSession: popSession, booking }).catch(e => console.warn('Claim email error:', e.message));
+        }
+      })
+      .catch(e => console.warn('Populate claim session error:', e.message));
+
+    res.json({ success: true, message: 'Spot claimed successfully! Class is confirmed.', booking });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Member voluntarily declines / passes the waitlist spot
+router.post('/:id/decline-waitlist', requireAuth, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (booking.user.toString() !== req.user.id) return res.status(403).json({ error: 'Unauthorized' });
+
+    booking.status = 'cancelled';
+    booking.cancelledAt = new Date();
+    booking.cancellationReason = 'Declined by member (passed to next person)';
+    await booking.save();
+
+    // Trigger cascade to next member immediately
+    promoteNextWaitlisted(booking.classSession).catch(e => console.warn('Cascade error on decline:', e.message));
+
+    res.json({ success: true, message: 'Spot passed to next member in line.', booking });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

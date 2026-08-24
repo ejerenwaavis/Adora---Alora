@@ -271,35 +271,39 @@ async function sendPasswordReset({ user, token }) {
   });
 }
 
-// Waitlist promotion / auto-confirmation
-async function sendWaitlistPromotion({ user, classSession, booking }) {
+// Waitlist promotion / timed claim opportunity
+async function sendWaitlistPromotion({ user, classSession, booking, expiresMinutes = 5 }) {
   const className = classSession?.classType?.name || 'Movement Studio Class';
   const instructor = classSession?.instructor ? `${classSession.instructor.firstName} ${classSession.instructor.lastName}` : 'Resident Instructor';
   const startTime = new Date(classSession?.startTime || Date.now());
   const room = classSession?.classType?.room || 'Movement Studio · Level 2';
-  const passRef = booking?.ticketReference || `#MB-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
   const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const claimUrl = `${appUrl}/account?claimBookingId=${booking._id}`;
 
   return send({
     to: user.email,
-    subject: `Spot Confirmed: You're In for ${className} — Aora House`,
+    subject: `Spot Available! Claim your spot in ${className} (${expiresMinutes} Mins) — Aora House`,
     html: shell(`
       <p>Hi ${user.firstName || 'Member'},</p>
-      <p>Great news! A spot opened up and your reservation for <strong>${className}</strong> has been confirmed from the waitlist.</p>
+      <p>A spot has just opened up in <strong>${className}</strong>! As the next member on the waitlist, you have priority access to claim this spot.</p>
       
+      <div style="background:#FEF7E0; border:1px solid #FEEFC3; border-radius:6px; padding:14px; margin:16px 0; color:#B06000; font-size:13px; font-weight:500;">
+        ⏱️ <strong>You have ${expiresMinutes} minutes to claim this spot.</strong> If you do not claim within ${expiresMinutes} minutes, the spot will be passed to the next person in line and <em>no credits will be deducted from your account</em>.
+      </div>
+
       <div class="card">
         <div class="card-row">
           <div><div class="card-label">Class</div><div class="card-val">${className}</div></div>
-          <div style="text-align:right;"><div class="card-label">Pass Reference</div><div class="card-val" style="color:#A4451F;">${passRef}</div></div>
+          <div style="text-align:right;"><div class="card-label">Required Credit</div><div class="card-val" style="color:#A4451F;">1 Studio Pass</div></div>
         </div>
         <div class="card-row" style="margin-top:12px; margin-bottom:0;">
           <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor}</div></div>
+          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor} · ${room}</div></div>
         </div>
       </div>
 
-      <div style="margin-top:24px;">
-        <a href="${appUrl}/account" class="btn">View Digital Pass &rarr;</a>
+      <div style="margin-top:24px; text-align:center;">
+        <a href="${claimUrl}" class="btn" style="background:#A4451F; font-size:13px; padding:16px 32px;">Claim My Spot Now &rarr;</a>
       </div>
     `)
   });

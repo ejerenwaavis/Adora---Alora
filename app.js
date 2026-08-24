@@ -178,6 +178,13 @@ mongoose
   .connect(process.env.MONGO_URI || process.env.MONGODB_URI)
   .then(() => {
     console.log('✓ MongoDB connected');
+
+    // Start background waitlist promotion expiration worker (every 30s)
+    const { processExpiredPromotions } = require('./services/waitlistManager');
+    setInterval(() => {
+      processExpiredPromotions().catch(e => console.warn('[Waitlist Worker Error]', e.message));
+    }, 30000);
+
     server.listen(PORT, () => {
       console.log(`✓ Aora House server running on port ${PORT}`);
       console.log(`  → API:      http://localhost:${PORT}/api`);

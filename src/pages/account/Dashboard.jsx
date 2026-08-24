@@ -18,6 +18,85 @@ import {
 } from '../../components/ui/LineIcons';
 import styles from './AccountLayout.module.css';
 
+function WaitlistClaimCard({ booking, onClaim, onDecline, claimingId, decliningId }) {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    function calculateTime() {
+      const expiresAt = new Date(booking.promotionExpiresAt || Date.now() + 5 * 60000).getTime();
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) {
+        setTimeLeft('00:00');
+        setIsExpired(true);
+        return;
+      }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`);
+    }
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [booking.promotionExpiresAt]);
+
+  const classSession = booking.classSession;
+  const className = classSession?.classType?.name || 'Movement Studio Class';
+  const startTime = classSession?.startTime ? new Date(classSession.startTime) : new Date();
+
+  return (
+    <div style={{
+      background: '#FFFDF9',
+      border: '2px solid #C89B4A',
+      borderRadius: '8px',
+      padding: '1.4rem 1.6rem',
+      marginBottom: '2rem',
+      boxShadow: '0 4px 20px rgba(200, 155, 74, 0.15)',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '1.25rem'
+    }}>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <span style={{ background: '#C89B4A', color: '#FFF', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Spot Open (Waitlist Priority)
+          </span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: isExpired ? '#8B2020' : '#A4451F' }}>
+            ⏱️ {isExpired ? 'Claim window expired' : `${timeLeft} remaining to claim`}
+          </span>
+        </div>
+        <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', margin: '0.2rem 0', color: 'var(--cocoa-deep)' }}>
+          {className}
+        </h3>
+        <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--taupe)' }}>
+          {startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {classSession?.instructor?.firstName} {classSession?.instructor?.lastName}
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          onClick={() => onClaim(booking._id)}
+          disabled={claimingId === booking._id || isExpired}
+          className="btn btn-primary"
+          style={{ background: '#A4451F', padding: '10px 20px', fontSize: '0.85rem' }}
+        >
+          {claimingId === booking._id ? 'Claiming...' : 'Claim Spot (1 Credit)'}
+        </button>
+        <button
+          onClick={() => onDecline(booking._id)}
+          disabled={decliningId === booking._id}
+          className="btn btn-outline"
+          style={{ padding: '10px 16px', fontSize: '0.85rem' }}
+        >
+          {decliningId === booking._id ? 'Passing...' : 'Pass to Next'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user, authFetch, refreshUser } = useAuth();
   const navigate = useNavigate();
@@ -42,6 +121,8 @@ export default function Dashboard() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isWaiverModalOpen, setIsWaiverModalOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
+  const [claimingId, setClaimingId] = useState(null);
+  const [decliningId, setDecliningId] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
 
   useEffect(() => {
@@ -66,6 +147,52 @@ export default function Dashboard() {
   const handleOpenQR = (pass, type = 'class') => {
     setSelectedPass({ ...pass, type });
     setIsQRModalOpen(true);
+  };
+
+  const handleClaimWaitlist = async (bookingId) => {
+    setClaimingId(bookingId);
+    try {
+      const res = await authFetch(`/api/bookings/${bookingId}/claim-waitlist`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage({ text: 'Spot claimed! Your class is confirmed and pass is active.', isError: false });
+        if (refreshUser) await refreshUser();
+        await loadUserBookings();
+      } else {
+        setActionMessage({ text: data.error || 'Failed to claim spot.', isError: true });
+      }
+    } catch (err) {
+      console.error(err);
+      setActionMessage({ text: 'Error connecting to booking service.', isError: true });
+    } finally {
+      setClaimingId(null);
+      setTimeout(() => setActionMessage(null), 5000);
+    }
+  };
+
+  const handleDeclineWaitlist = async (bookingId) => {
+    if (!window.confirm('Pass this spot to the next member on the waitlist?')) return;
+    setDecliningId(bookingId);
+    try {
+      const res = await authFetch(`/api/bookings/${bookingId}/decline-waitlist`, {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setActionMessage({ text: 'Spot passed to next member in line.', isError: false });
+        await loadUserBookings();
+      } else {
+        setActionMessage({ text: data.error || 'Failed to pass spot.', isError: true });
+      }
+    } catch (err) {
+      console.error(err);
+      setActionMessage({ text: 'Error connecting to booking service.', isError: true });
+    } finally {
+      setDecliningId(null);
+      setTimeout(() => setActionMessage(null), 4000);
+    }
   };
 
   const handleCancelClassBooking = async (bookingId) => {
@@ -181,6 +308,18 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Promoted Waitlist Priority Claim Cards */}
+      {dashboardData.upcomingClasses?.filter(b => b.status === 'promoted').map(booking => (
+        <WaitlistClaimCard
+          key={booking._id}
+          booking={booking}
+          onClaim={handleClaimWaitlist}
+          onDecline={handleDeclineWaitlist}
+          claimingId={claimingId}
+          decliningId={decliningId}
+        />
+      ))}
 
       {/* Waiver Warning Alert Banner (If unsigned) */}
       {!isWaiverSigned && (
