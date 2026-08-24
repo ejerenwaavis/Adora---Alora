@@ -21,9 +21,16 @@ const userSchema = new mongoose.Schema({
     default: 'member',
   },
 
-  // ── Two-Factor Auth (TOTP) ──
-  twoFactorSecret:  { type: String },
-  twoFactorEnabled: { type: Boolean, default: false },
+  // ── Two-Factor Auth (Email OTP / TOTP) ──
+  twoFactorSecret:    { type: String },
+  twoFactorEnabled:   { type: Boolean, default: false },
+  twoFactorCode:      { type: String },
+  twoFactorExpiresAt: { type: Date },
+  tempAuthToken:      { type: String },
+
+  // ── Security & Brute-force Lockout ──
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockUntil:           { type: Date },
 
   // ── Profile ──
   avatar:      { type: String },
@@ -78,6 +85,8 @@ userSchema.methods.toJSON = function () {
   const obj = this.toObject({ virtuals: true });
   delete obj.passwordHash;
   delete obj.twoFactorSecret;
+  delete obj.twoFactorCode;
+  delete obj.tempAuthToken;
   delete obj.emailVerifyToken;
   delete obj.passwordResetToken;
   return obj;

@@ -5,6 +5,7 @@ import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { IconShieldCheck, IconCheck, IconClock, IconX } from '../components/ui/LineIcons';
+import HoneypotField from '../components/common/HoneypotField';
 
 const FALLBACK_VENUES = {
   'the-loft': {
@@ -266,6 +267,7 @@ export default function VenueHire({ section }) {
         )}
 
         <form className={styles.hireForm} onSubmit={handleFormSubmit}>
+          <HoneypotField values={formData} onChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })} />
           <div className={styles.formGrid}>
             <div className={styles.inputGroup}>
               <label>First Name *</label>

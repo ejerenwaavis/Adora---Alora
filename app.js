@@ -13,6 +13,8 @@ const helmet    = require('helmet');
 const cors      = require('cors');
 const path      = require('path');
 const fs        = require('fs');
+const mongoSanitize = require('express-mongo-sanitize');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 
@@ -23,7 +25,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. SECURITY
+// 2. SECURITY HEADERS & CORS
 // ─────────────────────────────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: {
@@ -37,20 +39,23 @@ app.use(helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
+  frameguard: { action: 'sameorigin' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5175',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Form-Token'],
 }));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. BODY PARSING
+// 3. BODY PARSING & NoSQL INJECTION SANITIZATION
 // ─────────────────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(mongoSanitize()); // Strip malicious MongoDB operators ($ and .)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. STATIC FILES
@@ -103,8 +108,10 @@ app.get('/health', healthHandler);
 app.get('/api/health', healthHandler);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 6. API ROUTES
+// 6. API ROUTES & SECURITY SHIELDS
 // ─────────────────────────────────────────────────────────────────────────────
+app.use('/api', apiLimiter);
+app.use('/api/security', require('./routes/security'));
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/bookings', require('./routes/bookings'));
 app.use('/api/classes',  require('./routes/classes'));

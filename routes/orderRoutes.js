@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Order = require('../models/Order');
+const { formLimiter } = require('../middleware/rateLimiter');
+const { antiBotShield } = require('../middleware/antiBot');
 
 // Create a new order (Checkout)
-router.post('/', async (req, res) => {
+router.post('/', formLimiter, antiBotShield(), async (req, res) => {
   try {
     const { customerName, customerPhone, customerEmail, items, totalAmountKobo } = req.body;
     

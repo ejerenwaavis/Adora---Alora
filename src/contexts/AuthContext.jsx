@@ -50,10 +50,35 @@ export function AuthProvider({ children }) {
       throw new Error(`Server connection failed. Please try again.`);
     }
     if (!res.ok) throw new Error(data.error || 'Login failed');
-    if (data.requires2FA) return { requires2FA: true };
+    if (data.requires2FA) return data;
     localStorage.setItem('aa_access_token',  data.accessToken);
     localStorage.setItem('aa_refresh_token', data.refreshToken);
     setUser(data.user);
+    return data;
+  }, []);
+
+  const verify2FA = useCallback(async ({ tempToken, code }) => {
+    const res = await fetch('/api/auth/verify-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Verification failed');
+    localStorage.setItem('aa_access_token',  data.accessToken);
+    localStorage.setItem('aa_refresh_token', data.refreshToken);
+    setUser(data.user);
+    return data;
+  }, []);
+
+  const resend2FA = useCallback(async ({ tempToken }) => {
+    const res = await fetch('/api/auth/resend-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to resend code');
     return data;
   }, []);
 
@@ -135,7 +160,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{
       user, loading,
-      login, logout, register, authFetch,
+      login, logout, register, authFetch, verify2FA, resend2FA,
       isAdmin, isClerk, isContentEditor, isInstructor, isFinance, isMember, isStaff,
     }}>
       {children}

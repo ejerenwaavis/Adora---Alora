@@ -4,6 +4,8 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const VenueSpace = require('../models/VenueSpace');
 const VenueEnquiry = require('../models/VenueEnquiry');
 const { sendVenueEnquiryAck } = require('../services/mailer');
+const { formLimiter } = require('../middleware/rateLimiter');
+const { antiBotShield } = require('../middleware/antiBot');
 
 // Public: Get all active spaces
 router.get('/spaces', async (req, res) => {
@@ -33,7 +35,7 @@ router.get('/spaces/:slug', async (req, res) => {
 });
 
 // Enquiry form (public submission)
-router.post('/enquire', async (req, res) => {
+router.post('/enquire', formLimiter, antiBotShield(), async (req, res) => {
   try {
     const {
       firstName,

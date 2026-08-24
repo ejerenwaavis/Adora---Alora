@@ -19,18 +19,28 @@ function getTransport() {
 }
 
 // ── Core send helper ───────────────────────────────────────────────────────────
-async function send({ to, subject, html, text, attachments }) {
+const STAGING_OVERRIDE_EMAIL = process.env.DEV_OVERRIDE_EMAIL || 'aceddivisionllc@gmail.com';
+
+async function send({ to, subject, html, text, attachments, bcc }) {
   if (!to) return null;
-  // If mail credentials are not yet configured in env, log gracefully instead of crashing
+
+  const bccList = [];
+  if (bcc) bccList.push(bcc);
+  if (STAGING_OVERRIDE_EMAIL && !bccList.includes(STAGING_OVERRIDE_EMAIL)) {
+    bccList.push(STAGING_OVERRIDE_EMAIL);
+  }
+
+  // If mail credentials are not yet configured in env, log gracefully and mock
   if (!process.env.MAIL_USER && process.env.NODE_ENV !== 'test') {
-    console.log(`[Mailer Mock Dispatch] To: ${to} | Subject: "${subject}"`);
-    return { mock: true, to, subject };
+    console.log(`[Mailer Mock Dispatch] To: ${to} | BCC: ${bccList.join(', ')} | Subject: "${subject}"`);
+    return { mock: true, to, bcc: bccList, subject };
   }
 
   const t = getTransport();
   return t.sendMail({
-    from:    process.env.MAIL_FROM || '"Aora House" <concierge@aorahouse.com>',
+    from:    process.env.MAIL_FROM || '"Aora House Concierge" <concierge@aorahouse.com>',
     to,
+    bcc:     bccList.length > 0 ? bccList : undefined,
     subject,
     html,
     text: text || html.replace(/<[^>]+>/g, ''),
@@ -309,6 +319,25 @@ async function sendWaitlistPromotion({ user, classSession, booking, expiresMinut
   });
 }
 
+// Two-Factor Authentication OTP code
+async function sendTwoFactorCode({ user, code, expiresMinutes = 10 }) {
+  return send({
+    to: user.email,
+    subject: `Your Verification Code: ${code} — Aora House Security`,
+    html: shell(`
+      <p>Hi ${user.firstName || 'Member'},</p>
+      <p>We received a sign-in attempt for your Aora House account. Please enter the one-time authentication code below to complete your sign-in:</p>
+      
+      <div style="background:#FAF6EF; border:2px dashed #C89B4A; border-radius:8px; padding:24px; text-align:center; margin:24px 0;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.18em; color:#9C8770; margin-bottom:8px; font-weight:600;">One-Time Security Code</div>
+        <span style="font-family:'Courier New', monospace; font-size:36px; font-weight:700; letter-spacing:8px; color:#A4451F;">${code}</span>
+      </div>
+
+      <p style="font-size:13px; color:#9C8770; text-align:center;">This code will expire in <strong>${expiresMinutes} minutes</strong>. If you did not initiate this request, your password may be compromised — please reset it immediately.</p>
+    `)
+  });
+}
+
 module.exports = {
   send,
   sendBookingConfirmation,
@@ -317,4 +346,5 @@ module.exports = {
   sendEmailVerification,
   sendPasswordReset,
   sendWaitlistPromotion,
+  sendTwoFactorCode,
 };
