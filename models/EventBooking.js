@@ -6,6 +6,7 @@ const eventBookingSchema = new mongoose.Schema({
 
   customerName:  { type: String, required: true, trim: true },
   customerEmail: { type: String, required: true, lowercase: true, trim: true },
+  customerPhone: { type: String, trim: true },
   
   ticketQuantity: { type: Number, required: true, default: 1 },
   amountPaidKobo: { type: Number, default: 0 },

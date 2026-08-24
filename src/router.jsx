@@ -48,6 +48,9 @@ import CafeManagement  from './clerk/CafeManagement.jsx';
 import EventManagement from './clerk/EventManagement.jsx';
 import ActivityLogs    from './clerk/ActivityLogs.jsx';
 
+// Kitchen KDS
+import KitchenKDS from './kitchen/KitchenKDS.jsx';
+
 // ── Route Guards ──────────────────────────────────────────────────────────────
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -73,6 +76,7 @@ function StaffHomeRedirect() {
   if (['admin', 'content_editor', 'finance'].includes(user.role)) return <Navigate to="/admin" replace />;
   if (user.role === 'clerk') return <Navigate to="/clerk" replace />;
   if (user.role === 'kitchen' || user.role === 'chef') return <Navigate to="/kitchen" replace />;
+  if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
   
   // Fallback for normal users who accidentally hit the internal domain
   return <Navigate to="/login" replace />;
@@ -80,8 +84,12 @@ function StaffHomeRedirect() {
 
 // ── Hostname Detection ────────────────────────────────────────────────────────
 const host = window.location.hostname;
-const isInternal = host.startsWith('hq.') || host.startsWith('staff.') || host.startsWith('portal.') || host.startsWith('admin.');
-// Note: localhost will resolve to public, but you can override by accessing http://hq.localhost:5175 if supported by your OS.
+
+// Enable testing HQ mode on devices via IP address by using ?hq=true
+if (window.location.search.includes('hq=true')) localStorage.setItem('hq_override', 'true');
+if (window.location.search.includes('hq=false')) localStorage.removeItem('hq_override');
+
+const isInternal = host.startsWith('hq.') || host.startsWith('staff.') || host.startsWith('portal.') || host.startsWith('admin.') || localStorage.getItem('hq_override') === 'true';
 
 // ── Public Router ─────────────────────────────────────────────────────────────
 const publicRouter = createBrowserRouter([
@@ -119,6 +127,9 @@ const publicRouter = createBrowserRouter([
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
 
+import InstructorLayout from './instructor/InstructorLayout.jsx';
+import InstructorDashboard from './instructor/InstructorDashboard.jsx';
+
 // ── Internal Staff Router ─────────────────────────────────────────────────────
 const internalRouter = createBrowserRouter([
   {
@@ -130,8 +141,15 @@ const internalRouter = createBrowserRouter([
     element: <Login /> // You might want a custom StaffLogin later
   },
   {
+    path: '/instructor',
+    element: <InstructorLayout />,
+    children: [
+      { index: true, element: <InstructorDashboard /> }
+    ]
+  },
+  {
     path: '/admin',
-    element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminLayout /></RequireRole>,
+    element: <RequireRole roles={['admin','content_editor','finance']}><AdminLayout /></RequireRole>,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'announcements', element: <AnnouncementCMS /> },
@@ -160,7 +178,7 @@ const internalRouter = createBrowserRouter([
   },
   {
     path: '/kitchen',
-    element: <RequireRole roles={['admin','kitchen','chef']}><div style={{padding: '2rem'}}>Kitchen Display System (KDS) - Coming Soon</div></RequireRole>
+    element: <RequireRole roles={['admin','kitchen','chef']}><KitchenKDS /></RequireRole>
   },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);

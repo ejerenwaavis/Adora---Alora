@@ -244,6 +244,66 @@
   box-shadow: 0 0 0 3px rgba(200, 155, 74, 0.15);
 }
 
+.filterPillsRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+  padding: 8px 12px;
+  background: rgba(200, 155, 74, 0.05);
+  border: 1px solid rgba(227, 211, 184, 0.5);
+  border-radius: 6px;
+}
+
+.filterPillsLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--taupe);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.filterPillBtn {
+  background: #FFFDF9;
+  border: 1px solid rgba(227, 211, 184, 0.8);
+  color: var(--cocoa-deep);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 4px 11px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.filterPillBtn:hover {
+  border-color: var(--gold);
+  background: #FAF6EF;
+}
+
+.filterPillBtnActive {
+  background: var(--cocoa-deep) !important;
+  color: #FFFFFF !important;
+  border-color: var(--cocoa-deep) !important;
+  font-weight: 600;
+}
+
+.pillCount {
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.filterPillBtnActive .pillCount {
+  background: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -264,21 +324,40 @@
   transition: all 0.2s ease;
 }
 
-.listItem:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(42, 29, 20, 0.08);
-  border-color: rgba(200, 155, 74, 0.5);
+.listItem.draftEvent {
+  border: 1px solid rgba(229, 169, 60, 0.45);
+  border-left: 5px solid #E5A93C;
+  background: #FFFDF9;
+  opacity: 1;
+  filter: none;
 }
 
-.listItem.inactive, .listItem.pastEvent {
+.listItem.publishedEvent {
+  border-left: 5px solid #2E6B3E;
+  background: #FFFFFF;
+  opacity: 1;
+  filter: none;
+}
+
+.listItem.inactive {
   border-left-color: var(--taupe);
   opacity: 0.6;
   filter: grayscale(0.8);
   box-shadow: none;
 }
 
+.listItem.pastEvent {
+  border-left: 5px solid #9CA3AF !important;
+  border-color: #E5E7EB;
+  background: #F9F8F6;
+  opacity: 0.55;
+  filter: grayscale(0.9);
+  box-shadow: none;
+}
+
 .listItem.pastEvent:hover {
   transform: none;
+  border-color: #D1D5DB;
 }
 
 .cardMain {
@@ -374,7 +453,25 @@
   color: var(--taupe);
   border-radius: 4px;
 }
-.listItem:not(.inactive):not(.pastEvent) .badge {
+.badgeDraft {
+  background: #FEF3C7 !important;
+  color: #92400E !important;
+  border: 1px solid #FDE68A;
+  font-weight: 600;
+}
+.badgePublished {
+  background: rgba(46, 107, 62, 0.12) !important;
+  color: #2E6B3E !important;
+  border: 1px solid rgba(46, 107, 62, 0.25);
+  font-weight: 600;
+}
+.badgePast {
+  background: #E5E7EB !important;
+  color: #6B7280 !important;
+  border: 1px solid #D1D5DB;
+  font-weight: 500;
+}
+.listItem:not(.inactive):not(.pastEvent):not(.draftEvent):not(.publishedEvent) .badge {
   background: rgba(184, 134, 11, 0.1);
   color: var(--gold);
 }

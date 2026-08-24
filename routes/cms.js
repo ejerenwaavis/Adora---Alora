@@ -586,6 +586,24 @@ router.post('/events', upload.single('coverImage'), async (req, res) => {
     const data = { ...req.body };
     if (req.file) data.coverImage = req.file.path;
     
+    if (data.startDate) {
+      const eventStart = new Date(data.startDate);
+      const minStartTime = new Date(Date.now() + 6 * 60 * 60 * 1000);
+      if (eventStart < minStartTime) {
+        return res.status(400).json({ error: 'Events must be scheduled at least 6 hours in advance.' });
+      }
+    }
+
+    if (data.startDate && data.endDate) {
+      if (new Date(data.endDate) <= new Date(data.startDate)) {
+        return res.status(400).json({ error: 'End date & time must be after start date & time.' });
+      }
+    }
+
+    if (typeof data.customFields === 'string') {
+      try { data.customFields = JSON.parse(data.customFields); } catch (e) { data.customFields = []; }
+    }
+    
     let recurrence = {};
     if (typeof data.recurrence === 'string') {
       try { recurrence = JSON.parse(data.recurrence); } catch (e) {}
@@ -655,6 +673,25 @@ router.patch('/events/:id', upload.single('coverImage'), async (req, res) => {
 
     const existing = await EventRecord.findById(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Event not found' });
+
+    if (data.startDate) {
+      const eventStart = new Date(data.startDate);
+      const minStartTime = new Date(Date.now() + 6 * 60 * 60 * 1000);
+      const originalStart = new Date(existing.startDate);
+      if (eventStart.getTime() !== originalStart.getTime() && eventStart < minStartTime) {
+        return res.status(400).json({ error: 'Events must be scheduled at least 6 hours in advance.' });
+      }
+    }
+
+    const effectiveStart = data.startDate ? new Date(data.startDate) : new Date(existing.startDate);
+    const effectiveEnd = data.endDate ? new Date(data.endDate) : (existing.endDate ? new Date(existing.endDate) : null);
+    if (effectiveEnd && effectiveEnd <= effectiveStart) {
+      return res.status(400).json({ error: 'End date & time must be after start date & time.' });
+    }
+
+    if (typeof data.customFields === 'string') {
+      try { data.customFields = JSON.parse(data.customFields); } catch (e) { data.customFields = []; }
+    }
 
     let recurrence = {};
     if (typeof data.recurrence === 'string') {

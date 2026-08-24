@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import Button from '../components/ui/Button';
+import FashionCheckoutModal from '../components/FashionCheckoutModal';
 import styles from './Fashion.module.css';
 
 // Utility to determine if a color is light or dark to set text contrast
@@ -22,6 +23,7 @@ export default function Fashion() {
   const [data, setData] = useState([]);
   const [activeLayer, setActiveLayer] = useState(null);
   const [activeItem, setActiveItem] = useState(null);
+  const [selectedSize, setSelectedSize] = useState('');
   const [loading, setLoading] = useState(true);
   const [displayItem, setDisplayItem] = useState(null);
   const [displayImageIndex, setDisplayImageIndex] = useState(0);
@@ -29,6 +31,7 @@ export default function Fashion() {
   const [showCatalog, setShowCatalog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/fashion')
@@ -39,6 +42,7 @@ export default function Fashion() {
           setActiveLayer(json[0].layer);
           if (json[0].items && json[0].items.length > 0) {
             setActiveItem(json[0].items[0]);
+            setSelectedSize(json[0].items[0].sizes?.[0] || '');
           }
         }
         setLoading(false);
@@ -57,10 +61,12 @@ export default function Fashion() {
       setActiveItem(layerObj.items[0]);
       setDisplayItem(layerObj.items[0]);
       setDisplayImageIndex(0);
+      setSelectedSize(layerObj.items[0].sizes?.[0] || '');
     } else {
       setActiveItem(null);
       setDisplayItem(null);
       setDisplayImageIndex(0);
+      setSelectedSize('');
     }
   };
 
@@ -89,6 +95,7 @@ export default function Fashion() {
     // Update the shell state immediately for background change
     setActiveItem(item);
     setIsExpanded(false);
+    setSelectedSize(item.sizes?.[0] || '');
     
     // Animate the image out, then update image, then animate in
     setAnimState('out');
@@ -190,8 +197,8 @@ export default function Fashion() {
                       View on Raireapp &rarr;
                     </Button>
                   ) : (
-                    <Button variant="primary">
-                      Reserve Item &rarr;
+                    <Button variant="primary" onClick={() => setIsCheckoutOpen(true)}>
+                      Buy Item &rarr;
                     </Button>
                   )}
                 </div>
@@ -251,7 +258,14 @@ export default function Fashion() {
                       <div className={styles.vcSizeLbl2}>AVAILABLE SIZE</div>
                       <div className={styles.vcSzRow}>
                         {currentRenderItem.sizes.map((size, idx) => (
-                          <div key={idx} className={styles.vcSz2}>{size}</div>
+                          <div 
+                            key={idx} 
+                            className={`${styles.vcSz2} ${selectedSize === size ? styles.vcSzOn : ''}`}
+                            onClick={() => setSelectedSize(size)}
+                            title={`Select size ${size}`}
+                          >
+                            {size}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -363,6 +377,15 @@ export default function Fashion() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Fashion Checkout Modal */}
+      {isCheckoutOpen && currentRenderItem && (
+        <FashionCheckoutModal 
+          item={currentRenderItem} 
+          initialSize={selectedSize} 
+          onClose={() => setIsCheckoutOpen(false)} 
+        />
       )}
     </div>
   );

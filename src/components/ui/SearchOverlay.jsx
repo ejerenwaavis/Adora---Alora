@@ -59,7 +59,8 @@ export default function SearchOverlay({ onClose }) {
     results.venues.length > 0 || 
     results.classes.length > 0 || 
     results.instructors.length > 0 || 
-    results.fashion.length > 0
+    results.fashion.length > 0 ||
+    results.cafe?.length > 0
   );
 
   // Type label mapping for a unified result list
@@ -70,6 +71,7 @@ export default function SearchOverlay({ onClose }) {
       case 'class': return 'Class';
       case 'instructor': return 'Instructor';
       case 'fashion': return 'Fashion';
+      case 'cafe': return 'Café';
       default: return type;
     }
   };
@@ -198,6 +200,26 @@ export default function SearchOverlay({ onClose }) {
                             <span>₦{(item.priceKobo / 100).toLocaleString()}</span>
                           </div>
                           <span className={styles.resultType}>{getTypeLabel('fashion')}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {results.cafe?.length > 0 && (
+                <div className={styles.resultGroup}>
+                  <h3>Café Menu</h3>
+                  <ul>
+                    {results.cafe.map(item => (
+                      <li key={item._id} onClick={() => handleResultClick('/cafe')}>
+                        <div className={styles.resultItem}>
+                          {item.image && <img src={item.image} alt="" />}
+                          <div className={styles.resultText}>
+                            <strong>{item.name}</strong>
+                            <span>₦{((item.priceKobo || 0) / 100).toLocaleString()}</span>
+                          </div>
+                          <span className={styles.resultType}>{getTypeLabel('cafe')}</span>
                         </div>
                       </li>
                     ))}

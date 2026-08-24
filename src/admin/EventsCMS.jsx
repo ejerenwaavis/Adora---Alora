@@ -5,6 +5,15 @@ import { useModal } from '../contexts/ModalContext';
 import { useToast } from '../contexts/ToastContext';
 import styles from './CMS.module.css';
 
+const PRESET_CUSTOM_FIELDS = [
+  'Dress Code',
+  'Hospitality / Refreshments',
+  'Door & Age Policy',
+  'Guest Speaker / Host',
+  'What to Bring',
+  'Special Perks'
+];
+
 export default function EventsCMS() {
   const { authFetch } = useAuth();
   const { confirmAction } = useModal();
@@ -46,7 +55,8 @@ export default function EventsCMS() {
     daysOfWeek: [new Date().getDay()],
     repeatEndType: 'count',
     repeatCount: 4,
-    repeatUntil: ''
+    repeatUntil: '',
+    customFields: []
   };
 
   const [venueForm, setVenueForm] = useState(defaultVenueForm);
@@ -65,6 +75,7 @@ export default function EventsCMS() {
   const [view, setView] = useState('list'); // 'list' | 'form'
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, published, draft, past
+  const [dateFilter, setDateFilter] = useState('all'); // all, this_week, next_week, this_month, next_month, series, past
   const [spaceTypeFilter, setSpaceTypeFilter] = useState('all'); // all, studio, venue_hire, cafe
 
   const dragItem = useRef(null);
@@ -240,10 +251,67 @@ export default function EventsCMS() {
     return `Recurring Rule: ${freqText}, repeating ${endText}.`;
   }
 
+  const getMinStartDateTime = () => {
+    const d = new Date(Date.now() + 6 * 60 * 60 * 1000);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const isStartDateInvalid = (() => {
+    if (!eventForm.startDate) return false;
+    const eventStart = new Date(eventForm.startDate);
+    const minStartTime = new Date(Date.now() + 6 * 60 * 60 * 1000);
+    if (editingEventId) {
+      const originalEvt = events.find(ev => ev._id === editingEventId);
+      if (originalEvt && new Date(originalEvt.startDate).getTime() === eventStart.getTime()) {
+        return false;
+      }
+    }
+    return eventStart < minStartTime;
+  })();
+
+  const isEndDateInvalid = (() => {
+    if (!eventForm.startDate || !eventForm.endDate) return false;
+    return new Date(eventForm.endDate) <= new Date(eventForm.startDate);
+  })();
+
+  const addCustomField = (label = '', value = '') => {
+    setEventForm(prev => ({
+      ...prev,
+      customFields: [...(prev.customFields || []), { label, value }]
+    }));
+  };
+
+  const updateCustomField = (index, key, val) => {
+    setEventForm(prev => {
+      const updated = [...(prev.customFields || [])];
+      updated[index] = { ...updated[index], [key]: val };
+      return { ...prev, customFields: updated };
+    });
+  };
+
+  const removeCustomField = (index) => {
+    setEventForm(prev => ({
+      ...prev,
+      customFields: (prev.customFields || []).filter((_, i) => i !== index)
+    }));
+  };
+
   // Events
   async function handleEventSubmit(e) {
     e.preventDefault();
+    
     try {
+      if (isStartDateInvalid) {
+        toast.error('Events must be scheduled at least 6 hours in advance.');
+        return;
+      }
+
+      if (isEndDateInvalid) {
+        toast.error('End date & time must be after the start date & time.');
+        return;
+      }
+
       const url = editingEventId ? `/api/cms/events/${editingEventId}` : '/api/cms/events';
       const method = editingEventId ? 'PATCH' : 'POST';
       
@@ -267,6 +335,10 @@ export default function EventsCMS() {
       formData.append('status', eventForm.status);
       formData.append('isFeatured', eventForm.isFeatured);
       if (eventForm.coverImage) formData.append('coverImage', eventForm.coverImage);
+
+      formData.append('customFields', JSON.stringify(
+        (eventForm.customFields || []).filter(f => f.label && f.label.trim())
+      ));
 
       const isRecurring = eventForm.isRecurring;
       formData.append('isRecurring', isRecurring);
@@ -300,24 +372,31 @@ export default function EventsCMS() {
   }
 
   function handleEventDelete(evt) {
-    if (evt.isRecurring && evt.seriesId) {
-      confirmAction('Delete Recurring Event Series', 'This event is part of a recurring series. Do you want to delete this event series?', async () => {
-        try {
-          const res = await authFetch(`/api/cms/events/series/${evt.seriesId}`, { method: 'DELETE' });
-          if (res.ok) {
-            toast.success('Event series deleted successfully.');
-            loadData();
-          } else {
-            const errData = await res.json().catch(() => ({}));
-            toast.error(errData.error || 'Failed to delete event series.');
+    const isSeries = evt.isRecurring && !!evt.seriesId;
+    if (isSeries) {
+      confirmAction(
+        'Delete Recurring Event Series',
+        `"${evt.title}" is part of a recurring series. Do you want to delete ONLY this specific occurrence, or the ENTIRE recurring series?`,
+        async () => {
+          try {
+            const res = await authFetch(`/api/cms/events/${evt._id}?deleteAllSeries=true`, { method: 'DELETE' });
+            if (res.ok) {
+              toast.success('Event series deleted successfully.');
+              loadData();
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              toast.error(errData.error || 'Failed to delete event series.');
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error('Failed to delete event series.');
           }
-        } catch (err) { 
-          console.error(err);
-          toast.error('Failed to delete event series.');
-        }
-      });
+        },
+        'Delete Entire Series',
+        'var(--rust)'
+      );
     } else {
-      confirmAction('Delete Event', 'Are you sure you want to permanently delete this event?', async () => {
+      confirmAction('Delete Event', `Are you sure you want to permanently delete event "${evt.title}"?`, async () => {
         try {
           const res = await authFetch(`/api/cms/events/${evt._id}`, { method: 'DELETE' });
           if (res.ok) {
@@ -357,7 +436,8 @@ export default function EventsCMS() {
         : [evt.startDate ? new Date(evt.startDate).getDay() : new Date().getDay()],
       repeatEndType: evt.recurrence?.repeatUntil ? 'until' : 'count',
       repeatCount: evt.recurrence?.repeatCount || 4,
-      repeatUntil: evt.recurrence?.repeatUntil ? new Date(evt.recurrence.repeatUntil).toISOString().slice(0, 10) : ''
+      repeatUntil: evt.recurrence?.repeatUntil ? new Date(evt.recurrence.repeatUntil).toISOString().slice(0, 10) : '',
+      customFields: evt.customFields && evt.customFields.length > 0 ? evt.customFields.map(f => ({ label: f.label || '', value: f.value || '' })) : []
     });
     setView('form');
   }
@@ -366,6 +446,55 @@ export default function EventsCMS() {
     if (!dateStr) return false;
     return new Date(dateStr) < new Date();
   };
+
+  const matchesDateFilter = (evt, filter) => {
+    if (filter === 'all') return true;
+    if (filter === 'series') return !!evt.isRecurring;
+    if (filter === 'past') return isPast(evt.endDate || evt.startDate);
+
+    const eventDate = new Date(evt.startDate);
+    const now = new Date();
+
+    if (filter === 'this_week') {
+      const day = now.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday, 0, 0, 0);
+      const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6, 23, 59, 59, 999);
+      return eventDate >= weekStart && eventDate <= weekEnd;
+    }
+
+    if (filter === 'next_week') {
+      const day = now.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const nextWeekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + 7, 0, 0, 0);
+      const nextWeekEnd = new Date(nextWeekStart.getFullYear(), nextWeekStart.getMonth(), nextWeekStart.getDate() + 6, 23, 59, 59, 999);
+      return eventDate >= nextWeekStart && eventDate <= nextWeekEnd;
+    }
+
+    if (filter === 'this_month') {
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      return eventDate >= monthStart && eventDate <= monthEnd;
+    }
+
+    if (filter === 'next_month') {
+      const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0);
+      const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59, 999);
+      return eventDate >= nextMonthStart && eventDate <= nextMonthEnd;
+    }
+
+    return true;
+  };
+
+  const dateFilterOptions = [
+    { id: 'all', label: 'All Dates' },
+    { id: 'this_week', label: 'This Week' },
+    { id: 'next_week', label: 'Next Week' },
+    { id: 'this_month', label: 'This Month' },
+    { id: 'next_month', label: 'Next Month' },
+    { id: 'series', label: 'Recurring Series' },
+    { id: 'past', label: 'Past Archive' }
+  ];
 
   const filteredVenues = venues.filter(v => {
     if (searchQuery && !v.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -388,6 +517,8 @@ export default function EventsCMS() {
     if (statusFilter === 'upcoming' && past) return false;
     if (statusFilter === 'published' && e.status !== 'published') return false;
     if (statusFilter === 'draft' && e.status !== 'draft') return false;
+
+    if (!matchesDateFilter(e, dateFilter)) return false;
     
     return true;
   }).sort((a, b) => new Date(b.startDate) - new Date(a.startDate)); // Newest first
@@ -717,17 +848,49 @@ export default function EventsCMS() {
                 </button>
               </div>
 
+              {/* Date Filter Pills */}
+              <div className={styles.filterPillsRow}>
+                <span className={styles.filterPillsLabel}>Date Range:</span>
+                {dateFilterOptions.map(opt => {
+                  const count = events.filter(e => {
+                    const past = isPast(e.endDate || e.startDate);
+                    if (statusFilter === 'past' && !past) return false;
+                    if (statusFilter === 'upcoming' && past) return false;
+                    if (statusFilter === 'published' && e.status !== 'published') return false;
+                    if (statusFilter === 'draft' && e.status !== 'draft') return false;
+                    if (searchQuery && !e.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                    return matchesDateFilter(e, opt.id);
+                  }).length;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      className={`${styles.filterPillBtn} ${dateFilter === opt.id ? styles.filterPillBtnActive : ''}`}
+                      onClick={() => setDateFilter(opt.id)}
+                    >
+                      {opt.label}
+                      <span className={styles.pillCount}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <div className={styles.list}>
                 {filteredEvents.length === 0 ? (
                   <div className={styles.empty}>No events found.</div>
                 ) : (
                   filteredEvents.map(evt => {
                     const past = isPast(evt.endDate || evt.startDate);
+                    const isDraft = evt.status === 'draft';
+                    const isPublished = evt.status === 'published';
                     return (
-                      <div key={evt._id} className={`${styles.listItem} ${evt.status === 'draft' ? styles.inactive : ''} ${past ? styles.pastEvent : ''}`}>
+                      <div 
+                        key={evt._id} 
+                        className={`${styles.listItem} ${past ? styles.pastEvent : (isDraft ? styles.draftEvent : styles.publishedEvent)}`}
+                      >
                         <div className={styles.cardMain}>
                           {evt.coverImage ? (
-                            <img src={evt.coverImage} alt={evt.title} className={styles.cardThumb} style={{ opacity: past ? 0.7 : 1 }} />
+                            <img src={evt.coverImage} alt={evt.title} className={styles.cardThumb} style={{ opacity: past ? 0.6 : 1 }} />
                           ) : (
                             <div className={styles.cardThumbPlaceholder}>
                               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -746,7 +909,13 @@ export default function EventsCMS() {
                                   {evt.recurrence?.frequency || 'Series'}
                                 </span>
                               )}
-                              <span className={styles.badge}>{past ? 'PAST' : evt.status.toUpperCase()}</span>
+                              {past ? (
+                                <span className={`${styles.badge} ${styles.badgePast}`}>PAST</span>
+                              ) : isDraft ? (
+                                <span className={`${styles.badge} ${styles.badgeDraft}`}>DRAFT</span>
+                              ) : (
+                                <span className={`${styles.badge} ${styles.badgePublished}`}>PUBLISHED</span>
+                              )}
                               {evt.isFeatured && <span className={styles.badge} style={{ background: 'rgba(200, 155, 74, 0.15)', color: 'var(--gold)' }}>Featured</span>}
                             </div>
                             <div className={styles.meta}>
@@ -818,14 +987,58 @@ export default function EventsCMS() {
                 </div>
               )}
 
+              <div className={styles.field}>
+                <label>Short Summary / Subtitle</label>
+                <input 
+                  type="text" 
+                  value={eventForm.shortDescription} 
+                  onChange={e => setEventForm({...eventForm, shortDescription: e.target.value})} 
+                  placeholder="e.g. An intimate evening of style, conversation and community."
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label>Full Event Description &amp; Details</label>
+                <textarea 
+                  rows="4" 
+                  value={eventForm.description} 
+                  onChange={e => setEventForm({...eventForm, description: e.target.value})} 
+                  placeholder="Describe the full schedule, guest speakers, refreshments, dress code, and what attendees should expect..."
+                />
+              </div>
+
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label>Start Date & Time *</label>
-                  <input type="datetime-local" value={eventForm.startDate} onChange={e => setEventForm({...eventForm, startDate: e.target.value})} required />
+                  <input 
+                    type="datetime-local" 
+                    value={eventForm.startDate} 
+                    min={editingEventId ? undefined : getMinStartDateTime()}
+                    onChange={e => setEventForm({...eventForm, startDate: e.target.value})} 
+                    required 
+                    style={isStartDateInvalid ? { borderColor: '#d32f2f', backgroundColor: '#fff8f8' } : {}}
+                  />
+                  {isStartDateInvalid && (
+                    <div style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                      ⚠️ Start date & time must be at least 6 hours from now.
+                    </div>
+                  )}
                 </div>
                 <div className={styles.field}>
                   <label>End Date & Time *</label>
-                  <input type="datetime-local" value={eventForm.endDate} onChange={e => setEventForm({...eventForm, endDate: e.target.value})} required />
+                  <input 
+                    type="datetime-local" 
+                    value={eventForm.endDate} 
+                    min={eventForm.startDate || (editingEventId ? undefined : getMinStartDateTime())}
+                    onChange={e => setEventForm({...eventForm, endDate: e.target.value})} 
+                    required 
+                    style={isEndDateInvalid ? { borderColor: '#d32f2f', backgroundColor: '#fff8f8' } : {}}
+                  />
+                  {isEndDateInvalid && (
+                    <div style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                      ⚠️ End date & time must be after the start date & time.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1013,6 +1226,102 @@ export default function EventsCMS() {
                     <div className={styles.recurringPreview}>
                       {getEventRecurrenceSummary()}
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Adaptive Event Specifications & Custom Fields ── */}
+              <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(227, 211, 184, 0.5)', paddingTop: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--cocoa-deep)', margin: 0 }}>
+                      Event Specifications &amp; Highlights (Adaptive)
+                    </label>
+                    <p style={{ fontSize: '0.76rem', color: 'var(--taupe)', margin: '2px 0 0 0' }}>
+                      Add custom key-value details tailored to this event (e.g. Dress Code, Hospitality, Age Policy, Speakers).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => addCustomField()}
+                    style={{
+                      background: 'none',
+                      border: '1px dashed var(--taupe)',
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '0.78rem',
+                      color: 'var(--cocoa-deep)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    + Add Custom Field
+                  </button>
+                </div>
+
+                {/* Quick Suggestion Chips */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '1rem', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--taupe)', fontWeight: 500 }}>Suggestions:</span>
+                  {PRESET_CUSTOM_FIELDS.map((preset, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => addCustomField(preset, '')}
+                      style={{
+                        background: '#FAF6EF',
+                        border: '1px solid rgba(200, 155, 74, 0.35)',
+                        color: 'var(--cocoa-deep)',
+                        fontSize: '0.72rem',
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Fields List */}
+                {eventForm.customFields && eventForm.customFields.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '1rem' }}>
+                    {eventForm.customFields.map((field, idx) => (
+                      <div key={idx} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder="Field Label (e.g. Dress Code)"
+                          value={field.label}
+                          onChange={e => updateCustomField(idx, 'label', e.target.value)}
+                          style={{ flex: '1', padding: '8px 10px', fontSize: '0.82rem' }}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Value (e.g. Earth Tones / Monochromatic)"
+                          value={field.value}
+                          onChange={e => updateCustomField(idx, 'value', e.target.value)}
+                          style={{ flex: '2', padding: '8px 10px', fontSize: '0.82rem' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeCustomField(idx)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#8B2020',
+                            cursor: 'pointer',
+                            fontSize: '1.2rem',
+                            padding: '4px 8px'
+                          }}
+                          title="Remove Field"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.78rem', color: '#999', fontStyle: 'italic', padding: '4px 0 12px' }}>
+                    No custom fields added yet.
                   </div>
                 )}
               </div>

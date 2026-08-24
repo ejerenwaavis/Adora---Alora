@@ -42,7 +42,7 @@ router.post('/:id/book', async (req, res) => {
       return res.status(400).json({ error: 'This event must be booked through the external partner URL.' });
     }
 
-    const { customerName, customerEmail, ticketQuantity } = req.body;
+    const { customerName, customerEmail, customerPhone, ticketQuantity } = req.body;
     if (!customerName || !customerEmail) return res.status(400).json({ error: 'Name and Email are required.' });
     
     const qty = ticketQuantity ? parseInt(ticketQuantity) : 1;
@@ -55,6 +55,7 @@ router.post('/:id/book', async (req, res) => {
       event: event._id,
       customerName,
       customerEmail,
+      customerPhone: customerPhone || '',
       ticketQuantity: qty,
       amountPaidKobo: event.priceKobo * qty,
       status: 'confirmed'

@@ -1122,9 +1122,9 @@ export default function UsersCMS() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
-                <button type="button" onClick={() => setProvisionModalOpen(false)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>Cancel</button>
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.8rem', background: 'var(--gold)', borderColor: 'var(--gold)', color: '#2B2015', fontWeight: 600 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setProvisionModalOpen(false)} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>Cancel</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '10px 14px', background: 'var(--gold)', borderColor: 'var(--gold)', color: '#2B2015', fontWeight: 600 }}>
                   {actionLoading ? 'Provisioning...' : 'Provision Staff Member'}
                 </button>
               </div>
@@ -1215,11 +1215,13 @@ export default function UsersCMS() {
                     borderRadius: '3px',
                     color: '#8B2020',
                     fontSize: '0.78rem',
-                    padding: '8px 12px',
-                    cursor: 'pointer'
+                    padding: '8px 10px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
                   }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
@@ -1227,9 +1229,9 @@ export default function UsersCMS() {
                   </span>
                 </button>
 
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button type="button" onClick={() => setEditModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>Cancel</button>
-                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.8rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 1 }}>
+                  <button type="button" onClick={() => setEditModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>Cancel</button>
+                  <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>
                     {actionLoading ? 'Saving...' : 'Save Profile Changes'}
                   </button>
                 </div>
@@ -1267,9 +1269,9 @@ export default function UsersCMS() {
                 <input placeholder="e.g. Complimentary studio pass / Customer support" value={creditsForm.reason} onChange={e => setCreditsForm({ ...creditsForm, reason: e.target.value })} />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
-                <button type="button" onClick={() => setCreditsModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>Cancel</button>
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setCreditsModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>Cancel</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>
                   {actionLoading ? 'Applying...' : 'Apply Credit Adjustment'}
                 </button>
               </div>
@@ -1301,9 +1303,9 @@ export default function UsersCMS() {
                 <input required type="password" placeholder="Confirm new password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })} />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
-                <button type="button" onClick={() => setPasswordModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>Cancel</button>
-                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.8rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.5rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setPasswordModalUser(null)} className="btn btn-outline" style={{ fontSize: '0.75rem', padding: '10px 14px' }}>Cancel</button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '10px 14px', background: 'var(--cocoa-deep)', borderColor: 'var(--cocoa-deep)' }}>
                   {actionLoading ? 'Updating...' : 'Set New Password'}
                 </button>
               </div>

@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './EventCheckoutModal.module.css';
 
 export default function EventCheckoutModal({ event, onClose, onComplete }) {
+  const { user } = useAuth();
   const [form, setForm] = useState({
-    customerName: '',
-    customerEmail: '',
+    customerName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
+    customerEmail: user?.email || '',
+    customerPhone: user?.phone || '',
     ticketQuantity: 1
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        customerName: prev.customerName || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        customerEmail: prev.customerEmail || user.email || '',
+        customerPhone: prev.customerPhone || user.phone || ''
+      }));
+    }
+  }, [user]);
 
   const price = event.priceKobo || 0;
   const totalKobo = price * form.ticketQuantity;

@@ -79,12 +79,58 @@
 /* section header */
 .sec-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
 .sec-title { font-family:'Fraunces',serif; font-weight:500; font-size:16px; color:var(--ink); }
+.sec-subtitle { font-size:11px; color:var(--taupe); margin-top:2px; letter-spacing:0.02em; }
 .sec-count { font-size:11px; color:var(--taupe); }
+
+/* ── Station Multi-Column Layout ── */
+.clerk-station-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(350px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.station-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.station-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.empty-station-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 44px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--taupe);
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 1080px) {
+  .clerk-station-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
 
 /* guest list */
 .guest-table { background:var(--paper); border:1px solid var(--line); border-radius:4px; overflow:hidden; }
-.guest-thead { display:grid; grid-template-columns:30px 2fr 120px 100px 90px; gap:0; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--cream); }
+.guest-table-scroll { max-height:380px; overflow-y:auto; }
+.guest-thead { position:sticky; top:0; z-index:2; display:grid; grid-template-columns:30px 2fr 120px 100px 90px; gap:0; padding:9px 14px; border-bottom:1px solid var(--line); background:var(--cream); }
 .guest-thead span { font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--taupe); }
+.loft-body-scroll { max-height:380px; overflow-y:auto; }
 .guest-row { display:grid; grid-template-columns:30px 2fr 120px 100px 90px; gap:0; padding:11px 14px; border-bottom:1px solid var(--line); align-items:center; transition:background .18s; }
 .guest-row:last-child { border-bottom:none; }
 .guest-row:hover { background:rgba(200,155,74,.05); }

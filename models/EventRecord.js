@@ -53,7 +53,11 @@ const eventRecordSchema = new mongoose.Schema({
     daysOfWeek:  [{ type: Number }],
     repeatCount: { type: Number },
     repeatUntil: { type: Date }
-  }
+  },
+  customFields: [{
+    label: { type: String, trim: true },
+    value: { type: String, trim: true }
+  }]
 }, { timestamps: true });
 
 // Enforce: externalUrl required when bookingDestination = 'external_url'

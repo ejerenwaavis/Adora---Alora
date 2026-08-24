@@ -75,8 +75,10 @@ export default function Events({ detail }) {
         <div className={styles.detailHero}>
           <button onClick={() => navigate('/events')} className={styles.backBtn}>&larr; All Events</button>
           <div className={styles.detailGrid}>
-            <div className={styles.detailImageWrapper} style={{ background: event.gradient }}>
-              {/* In the detail view we could render a real image or just the gradient */}
+            <div className={styles.detailImageWrapper} style={{ background: event.gradient, position: 'relative' }}>
+              {event.coverImage ? (
+                <img src={event.coverImage} alt={event.title} className={styles.detailImg} />
+              ) : null}
             </div>
             <div className={styles.detailContent}>
               <div className={styles.eventMeta}>
@@ -87,20 +89,61 @@ export default function Events({ detail }) {
               <h1 className={styles.detailTitle}>{event.title}</h1>
               <p className={styles.organiser}>Organised by: <strong>{event.organiser}</strong></p>
               
+              {event.shortDescription && (
+                <p style={{ fontSize: '1.05rem', color: 'var(--rust, #A4451F)', fontStyle: 'italic', marginBottom: '1.25rem', lineHeight: '1.5' }}>
+                  {event.shortDescription}
+                </p>
+              )}
+              
               <div className={styles.detailBox}>
-                <p>{event.description}</p>
+                <p>{event.description || (!event.shortDescription && 'Join us for an exclusive gathering at Aora House. Space is limited, please RSVP or secure your ticket in advance.')}</p>
               </div>
               
               <div className={styles.infoRow}>
                 <div>
                   <span className={styles.infoLabel}>Capacity</span>
-                  <span className={styles.infoValue}>{event.capacity} Spots</span>
+                  <span className={styles.infoValue}>{event.capacity ? `${event.capacity} Spots` : 'Open'}</span>
                 </div>
                 <div>
                   <span className={styles.infoLabel}>Price</span>
-                  <span className={styles.infoValue}>{event.price}</span>
+                  <span className={styles.infoValue}>{event.priceText}</span>
                 </div>
               </div>
+
+              {event.customFields && event.customFields.length > 0 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                  gap: '14px',
+                  background: 'var(--paper, #F5F2E9)',
+                  border: '1px solid rgba(227, 211, 184, 0.7)',
+                  padding: '16px 18px',
+                  borderRadius: '6px',
+                  marginBottom: '28px'
+                }}>
+                  {event.customFields.map((cf, idx) => (
+                    <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                      <span style={{
+                        fontSize: '10px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.12em',
+                        color: 'var(--rust, #A4451F)',
+                        fontWeight: 600
+                      }}>
+                        {cf.label}
+                      </span>
+                      <span style={{
+                        fontSize: '13.5px',
+                        color: 'var(--black, #2B2015)',
+                        fontWeight: 500,
+                        lineHeight: 1.35
+                      }}>
+                        {cf.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <button className={styles.bookBtn} onClick={() => {
                 if (event.bookingDestination === 'external_url' && event.externalUrl) {
@@ -158,7 +201,15 @@ export default function Events({ detail }) {
       {/* HERO FEATURED */}
       {heroEvent && (
         <Link to={`/events/${heroEvent.slug}`} className={`${styles.evHero} ${styles.fadeIn}`}>
-          <div className={styles.evHeroImg} style={{ background: heroEvent.gradient }}></div>
+          <div className={styles.evHeroImg} style={{ background: heroEvent.gradient, position: 'relative' }}>
+            {heroEvent.coverImage ? (
+              <img 
+                src={heroEvent.coverImage} 
+                alt={heroEvent.title} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} 
+              />
+            ) : null}
+          </div>
           <div className={styles.evHeroBody}>
             <div className={styles.evHeroTop}>
               <div className={styles.evHeroHostRow}>
@@ -171,6 +222,11 @@ export default function Events({ detail }) {
                 <div className={styles.evDateTime}>{heroEvent.time}</div>
               </div>
               <div className={styles.evHeroName}>{heroEvent.title}</div>
+              {(heroEvent.shortDescription || heroEvent.description) && (
+                <div className={styles.evHeroDesc} style={{ margin: '8px 0 16px' }}>
+                  {heroEvent.shortDescription || heroEvent.description}
+                </div>
+              )}
               <div className={styles.evCta}>
                 {heroEvent.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.evCtaArrow}>&rarr;</span>
               </div>
@@ -185,12 +241,24 @@ export default function Events({ detail }) {
         <div className={styles.evGrid}>
           {gridEvents.map((ev, idx) => (
             <Link to={`/events/${ev.slug}`} key={ev.slug} className={`${styles.evCard} ${ev.eventType === 'partner' ? styles.partner : ''} ${styles.fadeIn}`} style={{ animationDelay: `${idx * 0.05}s` }}>
-              <div className={styles.evCardImg} style={{ background: ev.gradient }}>
+              <div className={styles.evCardImg} style={{ background: ev.gradient, position: 'relative' }}>
+                {ev.coverImage ? (
+                  <img 
+                    src={ev.coverImage} 
+                    alt={ev.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} 
+                  />
+                ) : null}
                 <div className={styles.evDateBadge}><span className={styles.mon}>{ev.badge.mon}</span><span className={styles.day}>{ev.badge.day}</span></div>
               </div>
               <div className={styles.evCardBody}>
                 <div className={styles.evCardHost}>{ev.organiser}</div>
                 <div className={styles.evCardName}>{ev.title}</div>
+                {(ev.shortDescription || ev.description) && (
+                  <div className={styles.evCardDesc}>
+                    {ev.shortDescription || ev.description}
+                  </div>
+                )}
                 <div className={styles.evCardLink} style={{ marginTop: '12px' }}>
                   {ev.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.arr}>&rarr;</span>
                 </div>
@@ -205,12 +273,24 @@ export default function Events({ detail }) {
         <div className={styles.evPair}>
           {pairEvents.map((ev, idx) => (
             <Link to={`/events/${ev.slug}`} key={ev.slug} className={`${styles.evCard} ${ev.eventType === 'partner' ? styles.partner : ''} ${styles.fadeIn}`} style={{ animationDelay: `${0.2 + (idx * 0.02)}s` }}>
-              <div className={styles.evCardImg} style={{ background: ev.gradient }}>
+              <div className={styles.evCardImg} style={{ background: ev.gradient, position: 'relative' }}>
+                {ev.coverImage ? (
+                  <img 
+                    src={ev.coverImage} 
+                    alt={ev.title} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }} 
+                  />
+                ) : null}
                 <div className={styles.evDateBadge}><span className={styles.mon}>{ev.badge.mon}</span><span className={styles.day}>{ev.badge.day}</span></div>
               </div>
               <div className={styles.evCardBody}>
                 <div className={styles.evCardHost}>{ev.organiser}</div>
                 <div className={styles.evCardName}>{ev.title}</div>
+                {(ev.shortDescription || ev.description) && (
+                  <div className={styles.evCardDesc}>
+                    {ev.shortDescription || ev.description}
+                  </div>
+                )}
                 <div className={styles.evCardLink} style={{ marginTop: '12px' }}>
                   {ev.eventType === 'house' ? 'Details & Booking' : 'Register with Partner'} <span className={styles.arr}>&rarr;</span>
                 </div>

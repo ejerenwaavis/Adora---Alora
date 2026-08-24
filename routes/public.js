@@ -127,6 +127,7 @@ router.get('/menu', async (req, res) => {
 
 const FashionLayer = require('../models/FashionLayer');
 const FashionItem  = require('../models/FashionItem');
+const FashionOrder = require('../models/FashionOrder');
 
 router.get('/fashion', async (req, res) => {
   try {
@@ -141,6 +142,40 @@ router.get('/fashion', async (req, res) => {
     res.json([]);
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch fashion data' });
+  }
+});
+
+router.post('/fashion/order', async (req, res) => {
+  try {
+    const { itemId, customerName, customerEmail, customerPhone, selectedSize, orderType } = req.body;
+    if (!itemId || !customerName || !customerEmail || !customerPhone) {
+      return res.status(400).json({ error: 'Missing required customer or item information.' });
+    }
+
+    const item = await FashionItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: 'Fashion item not found.' });
+    }
+
+    const order = new FashionOrder({
+      fashionItem: item._id,
+      itemName: item.name,
+      selectedSize: selectedSize || (item.sizes && item.sizes[0]) || 'Standard',
+      priceKobo: item.displayPriceKobo || 0,
+      customerName,
+      customerEmail,
+      customerPhone,
+      orderType: orderType === 'RESERVATION' ? 'RESERVATION' : 'PURCHASE',
+      status: 'CONFIRMED'
+    });
+
+    await order.save();
+    res.status(201).json({
+      message: 'Fashion order successfully created.',
+      order
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to place order.' });
   }
 });
 
@@ -188,15 +223,16 @@ router.get('/search', async (req, res) => {
 
     const regex = new RegExp(q, 'i');
 
-    const [events, venues, classes, instructors, fashion] = await Promise.all([
+    const [events, venues, classes, instructors, fashion, cafe] = await Promise.all([
       EventRecord.find({ status: 'published', $or: [{ title: regex }, { description: regex }] }).limit(5),
       VenueSpace.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
       ClassType.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
       Instructor.find({ isActive: true, $or: [{ firstName: regex }, { lastName: regex }, { bio: regex }] }).limit(5),
-      FashionItem.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5)
+      FashionItem.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      MenuItem.find({ isAvailable: true, $or: [{ name: regex }, { description: regex }] }).limit(5)
     ]);
 
-    res.json({ events, venues, classes, instructors, fashion });
+    res.json({ events, venues, classes, instructors, fashion, cafe });
   } catch (err) {
     res.status(500).json({ error: 'Search failed' });
   }

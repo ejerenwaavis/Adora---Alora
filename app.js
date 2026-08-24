@@ -92,7 +92,9 @@ app.use('/api/venue',    require('./routes/venue'));
 app.use('/api/admin',    require('./routes/admin'));
 app.use('/api/cms',      require('./routes/cms'));
 app.use('/api/clerk',    require('./routes/clerk'));
+app.use('/api/orders',   require('./routes/orderRoutes'));
 app.use('/api/user',     require('./routes/user'));
+app.use('/api/webhooks', require('./routes/webhooks'));
 app.use('/api',          require('./routes/public'));
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -130,12 +132,31 @@ app.use((err, req, res, next) => {
 // 9. DATABASE + START
 // ─────────────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3005;
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  }
+});
+
+// Attach io to app so routes can broadcast events
+app.set('io', io);
+
+io.on('connection', (socket) => {
+  console.log(`🔌 Client connected to KDS socket: ${socket.id}`);
+  socket.on('disconnect', () => {
+    console.log(`🔌 Client disconnected: ${socket.id}`);
+  });
+});
 
 mongoose
   .connect(process.env.MONGO_URI || process.env.MONGODB_URI)
   .then(() => {
     console.log('✓ MongoDB connected');
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
       console.log(`✓ Aora House server running on port ${PORT}`);
       console.log(`  → API:      http://localhost:${PORT}/api`);
       console.log(`  → Health:   http://localhost:${PORT}/health`);

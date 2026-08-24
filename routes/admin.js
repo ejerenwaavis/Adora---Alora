@@ -227,6 +227,18 @@ router.post('/users/provision', async (req, res) => {
       isEmailVerified: true
     });
 
+    if (userRole === 'instructor') {
+      const Instructor = require('../models/Instructor');
+      // Create corresponding public instructor profile
+      await Instructor.create({
+        userId: newUser._id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        isActive: true,
+        bio: 'New instructor profile',
+      });
+    }
+
     await ActivityLog.create({
       user: req.user._id,
       action: 'staff_provisioned',
@@ -271,6 +283,20 @@ router.put('/users/:id', async (req, res) => {
     }
 
     await targetUser.save();
+
+    if (role === 'instructor') {
+      const Instructor = require('../models/Instructor');
+      const existingInst = await Instructor.findOne({ userId: targetUser._id });
+      if (!existingInst) {
+        await Instructor.create({
+          userId: targetUser._id,
+          firstName: targetUser.firstName,
+          lastName: targetUser.lastName,
+          isActive: true,
+          bio: 'New instructor profile',
+        });
+      }
+    }
 
     await ActivityLog.create({
       user: req.user._id,

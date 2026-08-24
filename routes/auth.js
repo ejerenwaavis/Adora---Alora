@@ -209,8 +209,10 @@ router.post('/reset-password', [
   } catch (err) { next(err); }
 });
 
+const upload = require('../middleware/upload');
+
 // 🌸 PUT /api/auth/me (Update Profile) 🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸🌸
-router.put('/me', requireAuth, async (req, res, next) => {
+router.put('/me', requireAuth, upload.single('avatar'), async (req, res, next) => {
   try {
     const allowedUpdates = [
       'firstName', 'lastName', 'phone', 
@@ -231,6 +233,15 @@ router.put('/me', requireAuth, async (req, res, next) => {
         if (key === 'waiverVersion' && req.body.waiverVersion && !user.waiverSignedAt) {
           user.waiverSignedAt = new Date();
         }
+      }
+    }
+
+    if (req.file) {
+      user.avatar = req.file.path;
+      // Sync to instructor profile if applicable
+      if (user.role === 'instructor') {
+        const Instructor = require('../models/Instructor');
+        await Instructor.findOneAndUpdate({ userId: user._id }, { photo: user.avatar });
       }
     }
 

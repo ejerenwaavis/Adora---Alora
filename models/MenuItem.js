@@ -18,4 +18,33 @@ const menuItemSchema = new mongoose.Schema({
   badge:       { type: String },   // "New", "Popular", "Seasonal"
 }, { timestamps: true });
 
+menuItemSchema.post('save', async function(doc) {
+  try {
+    const priceWithMarkup = Math.round((doc.priceKobo || 0) * 1.15); // 15% Glovo markup
+    console.log(`[GLOVO SYNC] Mocking bulk update for ${doc.name} to Glovo with marked-up price ₦${priceWithMarkup/100}`);
+    
+    // In production, this would make an outbound fetch to Glovo's Bulk API:
+    /*
+    await fetch('https://api.glovoapp.com/webhook/products', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.GLOVO_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        products: [{
+          id: doc._id.toString(),
+          name: doc.name,
+          price: priceWithMarkup / 100,
+          description: doc.description || '',
+          available: doc.isAvailable
+        }]
+      })
+    });
+    */
+  } catch (error) {
+    console.error('[GLOVO SYNC ERROR]', error);
+  }
+});
+
 module.exports = mongoose.model('MenuItem', menuItemSchema);

@@ -145,27 +145,30 @@
 }
 
 .cmCat {
-  font-size: 11px;
-  letter-spacing: .07em;
+  font-family: var(--f-body, 'Jost', sans-serif);
+  font-size: var(--text-sm, 13px);
+  font-weight: 500;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  padding: 8px 16px;
-  border-radius: 20px;
-  border: 1px solid var(--line);
-  color: var(--taupe);
+  padding: 14px 26px;
+  border-radius: var(--radius-sm, 2px);
+  border: 1px solid var(--taupe, #E3D3B8);
+  color: var(--cocoa-deep, #9C8770);
   cursor: pointer;
-  transition: all .25s var(--ease);
   background: transparent;
+  transition: all .22s;
+  line-height: 1.2;
   white-space: nowrap;
 }
 .cmCatOn {
-  background: var(--cocoa-deep);
-  color: var(--paper);
-  border-color: var(--cocoa-deep);
+  background: var(--black, #2B2015);
+  color: var(--white, #F7EFE1);
+  border-color: var(--black, #2B2015);
 }
 .cmCat:hover:not(.cmCatOn) {
-  background: var(--paper);
-  color: var(--cocoa);
-  border-color: var(--taupe);
+  border-color: var(--black, #2B2015);
+  color: var(--black, #2B2015);
+  background: transparent;
 }
 
 .cmDivider {

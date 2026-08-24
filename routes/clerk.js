@@ -309,7 +309,9 @@ router.get('/events/upcoming', async (req, res) => {
 
 router.get('/events/:eventId/roster', async (req, res) => {
   try {
-    const bookings = await EventBooking.find({ event: req.params.eventId }).populate('user', 'firstName lastName');
+    const bookings = await EventBooking.find({ event: req.params.eventId })
+      .populate('user', 'firstName lastName email phone')
+      .populate('event', 'title startDate location venueSpace priceKobo isFree organiser');
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: err.message });

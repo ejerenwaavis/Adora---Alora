@@ -5,6 +5,7 @@ import Button from '../components/ui/Button.jsx';
 import PageHeader from '../components/ui/PageHeader';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import styles from './Cafe.module.css';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Cafe() {
   const [menuData, setMenuData] = useState([]);
@@ -12,6 +13,94 @@ export default function Cafe() {
   const [activeItem, setActiveItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showMobileModal, setShowMobileModal] = useState(false);
+
+  // Cart & Checkout State
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem('aora_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showCart, setShowCart] = useState(false);
+  
+  const { user } = useAuth();
+  const [checkoutForm, setCheckoutForm] = useState({ 
+    name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
+    phone: user?.phone || '' 
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setCheckoutForm(prev => ({
+        ...prev,
+        name: prev.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+        phone: prev.phone || user.phone || ''
+      }));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem('aora_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (item) => {
+    setCart(prev => {
+      const existing = prev.find(i => i._id === item._id);
+      if (existing) {
+        return prev.map(i => i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i);
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+    setShowCart(true);
+  };
+
+  const removeFromCart = (itemId) => {
+    setCart(prev => prev.filter(i => i._id !== itemId));
+  };
+
+  const cartTotal = cart.reduce((sum, item) => sum + ((item.priceKobo || 0) * item.quantity), 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  const handleCheckout = async (e) => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customerName: checkoutForm.name,
+          customerPhone: checkoutForm.phone,
+          items: cart.map(item => ({
+            menuItem: item._id,
+            name: item.name,
+            quantity: item.quantity,
+            priceKobo: item.priceKobo || 0
+          })),
+          totalAmountKobo: cartTotal
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        alert('Order placed! Mock Paystack URL: ' + data.authorizationUrl);
+        setCart([]);
+        setShowCart(false);
+        setCheckoutForm({ name: '', phone: '' });
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (err) {
+      alert('Network error.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     fetch('/api/menu')
@@ -210,6 +299,28 @@ export default function Cafe() {
                       <div className={styles.cmPanelAvail}>Available now</div>
                     </div>
 
+                    <button 
+                      style={{ 
+                        width: '100%', 
+                        marginTop: '1.5rem', 
+                        padding: '1rem', 
+                        fontSize: '1rem',
+                        backgroundColor: 'var(--cream)',
+                        color: 'var(--cocoa-deep)',
+                        border: 'none',
+                        borderRadius: '2px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        fontFamily: 'var(--f-body)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em'
+                      }}
+                      onClick={() => addToCart(activeItem)}
+                    >
+                      Add to Order
+                    </button>
+
+
                     {activeItem.dietaryTags && activeItem.dietaryTags.length > 0 && (
                       <div className={styles.cmPanelDietary}>
                         {activeItem.dietaryTags.map((tag, tIdx) => (
@@ -244,6 +355,112 @@ export default function Cafe() {
 
       {/* 7. Explore Doors */}
       <ExploreDoors />
+
+      {/* Floating Cart Button */}
+      {cartCount > 0 && (
+        <button 
+          onClick={() => setShowCart(true)}
+          style={{
+            position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9997,
+            background: 'var(--cocoa-deep)', color: 'var(--cream)',
+            border: 'none', borderRadius: '50px',
+            padding: '1rem 2rem', fontSize: '1rem', fontWeight: 600,
+            boxShadow: '0 8px 32px rgba(42,29,20,0.3)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+            fontFamily: 'var(--f-body)', textTransform: 'uppercase', letterSpacing: '0.05em'
+          }}
+        >
+          <span>View Order ({cartCount})</span>
+          <span>&bull;</span>
+          <span>₦{(cartTotal / 100).toLocaleString()}</span>
+        </button>
+      )}
+
+      {/* 8. Shopping Cart Drawer */}
+      <div 
+        style={{
+          position: 'fixed', top: 0, right: showCart ? 0 : '-100%',
+          width: '100%', maxWidth: '400px', height: '100vh',
+          background: 'var(--cream)', boxShadow: '-4px 0 24px rgba(0,0,0,0.1)',
+          transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 9999,
+          display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)'
+        }}
+      >
+        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontFamily: 'var(--f-display)', fontSize: '1.5rem', color: 'var(--cocoa-deep)', margin: 0 }}>Your Order</h2>
+          <button 
+            onClick={() => setShowCart(false)} 
+            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--taupe)' }}
+          >✕</button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+          {cart.length === 0 ? (
+            <p style={{ color: 'var(--taupe)', textAlign: 'center', marginTop: '2rem' }}>Your cart is empty.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {cart.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '1rem', borderBottom: '1px solid var(--line)' }}>
+                  <div>
+                    <div style={{ fontWeight: 500, color: 'var(--cocoa-deep)' }}>{item.quantity}x {item.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginTop: '0.25rem' }}>₦{(item.priceKobo / 100).toLocaleString()} each</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((item.priceKobo * item.quantity) / 100).toLocaleString()}</div>
+                    <button 
+                      onClick={() => removeFromCart(item._id)}
+                      style={{ background: 'none', border: 'none', color: 'var(--rust)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
+                    >Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {cart.length > 0 && (
+          <div style={{ padding: '1.5rem', background: '#F4F0EA', borderTop: '1px solid var(--line)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
+              <span>Total:</span>
+              <span>₦{(cartTotal / 100).toLocaleString()}</span>
+            </div>
+            
+            <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input 
+                type="text" 
+                placeholder="Full Name" 
+                required 
+                value={checkoutForm.name}
+                onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid var(--line)', borderRadius: '2px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)' }}
+              />
+              <input 
+                type="tel" 
+                placeholder="Phone Number" 
+                required 
+                value={checkoutForm.phone}
+                onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid var(--line)', borderRadius: '2px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)' }}
+              />
+              <button 
+                type="submit" 
+                disabled={isSubmitting}
+                className={`${styles.btn} ${styles.btnSolid}`}
+                style={{ width: '100%', padding: '1rem', marginTop: '0.5rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
+              >
+                {isSubmitting ? 'Processing...' : 'Place Takeout Order'}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      {showCart && (
+        <div 
+          onClick={() => setShowCart(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9998, backdropFilter: 'blur(2px)' }}
+        />
+      )}
     </div>
   );
 }
