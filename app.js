@@ -61,24 +61,46 @@ app.use(express.static(path.join(__dirname, 'public_html')));
 app.use('/static', express.static(path.join(__dirname, 'public')));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. HEALTH CHECK — required for Namecheap Passenger startup detection
+// 5. HEALTH & BUILD DIAGNOSTICS CHECK — /health and /api/health
 // ─────────────────────────────────────────────────────────────────────────────
-app.get('/health', (req, res) => {
+const healthHandler = (req, res) => {
   const dbState = mongoose.connection.readyState;
   let dbStatus = 'Disconnected';
   if (dbState === 1) dbStatus = 'Live';
   else if (dbState === 2) dbStatus = 'Connecting';
   else if (dbState === 3) dbStatus = 'Disconnecting';
 
+  let buildTimestamp = 'Unknown';
+  try {
+    const indexPath = path.join(__dirname, 'public_html', 'index.html');
+    if (fs.existsSync(indexPath)) {
+      buildTimestamp = fs.statSync(indexPath).mtime.toISOString();
+    }
+  } catch (e) {
+    // Ignore error
+  }
+
+  const memory = process.memoryUsage();
+
   res.status(200).json({
-    Status:      'running',
-    'DB-Status': dbStatus,
-    Uptime:      `${Math.floor(process.uptime())} seconds`,
+    status:      'healthy',
+    server:      'running',
+    dbStatus,
+    uptime:      `${Math.floor(process.uptime())}s`,
     app:         'aora-house',
     env:         process.env.NODE_ENV || 'development',
+    nodeVersion: process.version,
+    buildTime:   buildTimestamp,
+    memory: {
+      heapUsedMb: Math.round(memory.heapUsed / 1024 / 1024),
+      rssMb:      Math.round(memory.rss / 1024 / 1024)
+    },
     timestamp:   new Date().toISOString(),
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get('/api/health', healthHandler);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 6. API ROUTES
