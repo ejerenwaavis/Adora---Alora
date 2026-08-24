@@ -365,79 +365,115 @@ export default function Cafe() {
       <div 
         style={{
           position: 'fixed', top: 0, right: showCart ? 0 : '-100%',
-          width: '100%', maxWidth: '400px', height: '100vh',
-          background: 'var(--cream)', boxShadow: '-4px 0 24px rgba(0,0,0,0.1)',
+          width: '100%', maxWidth: '420px', height: '100%', maxHeight: '100dvh',
+          background: 'var(--cream)', boxShadow: '-4px 0 24px rgba(0,0,0,0.15)',
           transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 9999,
-          display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)'
+          display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--line)',
+          overflow: 'hidden'
         }}
       >
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontFamily: 'var(--f-display)', fontSize: '1.5rem', color: 'var(--cocoa-deep)', margin: 0 }}>Your Order</h2>
+        {/* Header */}
+        <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0, background: 'var(--cream)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h2 style={{ fontFamily: 'var(--f-display)', fontSize: '1.4rem', color: 'var(--cocoa-deep)', margin: 0 }}>Your Order</h2>
+            {cartCount > 0 && (
+              <span style={{ fontSize: '0.75rem', background: 'var(--rust)', color: '#FFF', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                {cartCount}
+              </span>
+            )}
+          </div>
           <button 
             onClick={() => setShowCart(false)} 
-            style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--taupe)' }}
-          >✕</button>
+            style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--taupe)', padding: '4px', display: 'flex', alignItems: 'center' }}
+            aria-label="Close cart"
+          >
+            ✕
+          </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
-          {cart.length === 0 ? (
-            <p style={{ color: 'var(--taupe)', textAlign: 'center', marginTop: '2rem' }}>Your cart is empty.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {cart.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '1rem', borderBottom: '1px solid var(--line)' }}>
-                  <div>
-                    <div style={{ fontWeight: 500, color: 'var(--cocoa-deep)' }}>{item.quantity}x {item.name}</div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginTop: '0.25rem' }}>₦{(item.priceKobo / 100).toLocaleString()} each</div>
+        {/* Scrollable Cart Content & Checkout Form */}
+        <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, padding: '1.5rem' }}>
+            {cart.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--taupe)' }}>
+                <p style={{ margin: '0 0 1rem', fontSize: '0.95rem' }}>Your cart is empty.</p>
+                <button 
+                  onClick={() => setShowCart(false)}
+                  className={`${styles.btn} ${styles.btnOutline}`}
+                  style={{ fontSize: '0.8rem', padding: '0.6rem 1.2rem' }}
+                >
+                  Browse Café Menu
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {cart.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '1rem', borderBottom: '1px solid var(--line)' }}>
+                    <div style={{ flex: 1, paddingRight: '1rem' }}>
+                      <div style={{ fontWeight: 500, color: 'var(--cocoa-deep)', fontSize: '0.95rem' }}>{item.quantity}x {item.name}</div>
+                      <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '0.2rem' }}>₦{(item.priceKobo / 100).toLocaleString()} each</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem', flexShrink: 0 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)', fontSize: '0.95rem' }}>₦{((item.priceKobo * item.quantity) / 100).toLocaleString()}</div>
+                      <button 
+                        onClick={() => removeFromCart(item._id)}
+                        style={{ background: 'none', border: 'none', color: 'var(--rust)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                    <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((item.priceKobo * item.quantity) / 100).toLocaleString()}</div>
-                    <button 
-                      onClick={() => removeFromCart(item._id)}
-                      style={{ background: 'none', border: 'none', color: 'var(--rust)', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}
-                    >Remove</button>
-                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <div style={{
+              padding: '1.5rem',
+              paddingBottom: 'max(2rem, env(safe-area-inset-bottom, 2rem))',
+              background: '#F4F0EA',
+              borderTop: '1px solid var(--line)',
+              flexShrink: 0
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '1.25rem', color: 'var(--cocoa-deep)' }}>
+                <span style={{ fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Total:</span>
+                <span style={{ fontSize: '1.35rem', fontWeight: 700, fontFamily: 'var(--f-display)' }}>₦{(cartTotal / 100).toLocaleString()}</span>
+              </div>
+              
+              <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div>
+                  <input 
+                    type="text" 
+                    placeholder="Full Name" 
+                    required 
+                    value={checkoutForm.name}
+                    onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--line)', borderRadius: '4px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.9rem' }}
+                  />
                 </div>
-              ))}
+                <div>
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    required 
+                    value={checkoutForm.phone}
+                    onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
+                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--line)', borderRadius: '4px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.9rem' }}
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className={`${styles.btn} ${styles.btnSolid}`}
+                  style={{ width: '100%', padding: '1rem', marginTop: '0.25rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                >
+                  {isSubmitting ? 'Processing...' : 'Place Takeout Order'}
+                </button>
+              </form>
             </div>
           )}
         </div>
-
-        {cart.length > 0 && (
-          <div style={{ padding: '1.5rem', background: '#F4F0EA', borderTop: '1px solid var(--line)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
-              <span>Total:</span>
-              <span>₦{(cartTotal / 100).toLocaleString()}</span>
-            </div>
-            
-            <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input 
-                type="text" 
-                placeholder="Full Name" 
-                required 
-                value={checkoutForm.name}
-                onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid var(--line)', borderRadius: '2px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)' }}
-              />
-              <input 
-                type="tel" 
-                placeholder="Phone Number" 
-                required 
-                value={checkoutForm.phone}
-                onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid var(--line)', borderRadius: '2px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)' }}
-              />
-              <button 
-                type="submit" 
-                disabled={isSubmitting}
-                className={`${styles.btn} ${styles.btnSolid}`}
-                style={{ width: '100%', padding: '1rem', marginTop: '0.5rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1 }}
-              >
-                {isSubmitting ? 'Processing...' : 'Place Takeout Order'}
-              </button>
-            </form>
-          </div>
-        )}
       </div>
 
       {showCart && (
