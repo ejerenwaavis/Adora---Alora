@@ -6,7 +6,7 @@ import PageHeader from '../components/ui/PageHeader';
 import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import styles from './Cafe.module.css';
 import { useAuth } from '../contexts/AuthContext';
-
+import HoneypotField from '../components/common/HoneypotField';
 import OrderConfirmationModal from '../components/OrderConfirmationModal';
 
 export default function Cafe() {
@@ -28,11 +28,13 @@ export default function Cafe() {
   const [showCart, setShowCart] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [honeypot, setHoneypot] = useState({});
   
   const { user } = useAuth();
   const [checkoutForm, setCheckoutForm] = useState({ 
     name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
-    phone: user?.phone || '' 
+    phone: user?.phone || '',
+    email: user?.email || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,7 +43,8 @@ export default function Cafe() {
       setCheckoutForm(prev => ({
         ...prev,
         name: prev.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
-        phone: prev.phone || user.phone || ''
+        phone: prev.phone || user.phone || '',
+        email: prev.email || user.email || ''
       }));
     }
   }, [user]);
@@ -80,7 +83,9 @@ export default function Cafe() {
         body: JSON.stringify({
           customerName: checkoutForm.name,
           customerPhone: checkoutForm.phone,
-          customerEmail: user?.email || undefined,
+          customerEmail: (checkoutForm.email && checkoutForm.email.trim()) || user?.email || undefined,
+          _hp_website: honeypot._hp_website,
+          _hp_company: honeypot._hp_company,
           items: cart.map(item => ({
             menuItem: item._id,
             name: item.name,
@@ -97,13 +102,18 @@ export default function Cafe() {
           orderNumber: `AH-ORD-${Date.now().toString().slice(-6)}`,
           customerName: checkoutForm.name,
           customerPhone: checkoutForm.phone,
+          customerEmail: checkoutForm.email || user?.email,
           items: [...cart],
           totalAmountKobo: cartTotal
         });
         setCart([]);
         setShowCart(false);
         setShowConfirmation(true);
-        setCheckoutForm({ name: '', phone: '' });
+        setCheckoutForm({ 
+          name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
+          phone: user?.phone || '', 
+          email: user?.email || '' 
+        });
       } else {
         alert('Error: ' + (data.error || 'Failed to place order.'));
       }
@@ -454,33 +464,71 @@ export default function Cafe() {
               </div>
               
               <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <HoneypotField values={honeypot} onChange={e => setHoneypot({ ...honeypot, [e.target.name]: e.target.value })} />
+                
                 <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cocoa)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Full Name *</label>
                   <input 
                     type="text" 
-                    placeholder="Full Name" 
+                    placeholder="e.g. Jane Doe" 
                     required 
                     value={checkoutForm.name}
                     onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
-                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--line)', borderRadius: '4px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.9rem' }}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
                   />
                 </div>
+
                 <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cocoa)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Phone Number *</label>
                   <input 
                     type="tel" 
-                    placeholder="Phone Number" 
+                    placeholder="e.g. +234 800 000 0000" 
                     required 
                     value={checkoutForm.phone}
                     onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
-                    style={{ width: '100%', padding: '0.8rem', border: '1px solid var(--line)', borderRadius: '4px', background: 'var(--cream)', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.9rem' }}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
                   />
                 </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cocoa)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Email Address (for Receipt &amp; Ready Alert) *</label>
+                  <input 
+                    type="email" 
+                    placeholder="name@example.com" 
+                    required 
+                    value={checkoutForm.email}
+                    onChange={e => setCheckoutForm({...checkoutForm, email: e.target.value})}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
+                  />
+                </div>
+
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className={`${styles.btn} ${styles.btnSolid}`}
-                  style={{ width: '100%', padding: '1rem', marginTop: '0.25rem', cursor: isSubmitting ? 'not-allowed' : 'pointer', opacity: isSubmitting ? 0.7 : 1, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '1.1rem 1.5rem', 
+                    marginTop: '0.5rem', 
+                    background: '#2A1D14', 
+                    color: '#FFFFFF',
+                    border: '1px solid #1E0F06',
+                    borderRadius: '6px',
+                    fontFamily: 'var(--f-body)',
+                    fontSize: '0.88rem',
+                    fontWeight: 700, 
+                    letterSpacing: '0.1em', 
+                    textTransform: 'uppercase',
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer', 
+                    opacity: isSubmitting ? 0.7 : 1,
+                    boxShadow: '0 4px 16px rgba(42, 29, 20, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s ease'
+                  }}
                 >
-                  {isSubmitting ? 'Processing...' : 'Place Takeout Order'}
+                  {isSubmitting ? 'Placing Order...' : 'Place Takeout Order →'}
                 </button>
               </form>
             </div>

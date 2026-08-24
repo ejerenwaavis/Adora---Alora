@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/Order');
 const { formLimiter } = require('../middleware/rateLimiter');
 const { antiBotShield } = require('../middleware/antiBot');
+const { sendCafeOrderReceipt, sendCafeOrderReady } = require('../services/mailer');
 
 // Create a new order (Checkout)
 router.post('/', formLimiter, antiBotShield(), async (req, res) => {
@@ -13,7 +14,7 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
     const newOrder = new Order({
       customerName,
       customerPhone,
-      customerEmail: customerEmail || 'guest@aorahouse.com',
+      customerEmail: (customerEmail && customerEmail.trim()) || 'guest@aorahouse.com',
       items,
       totalAmountKobo,
       status: 'PENDING'
@@ -57,11 +58,15 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
     newOrder.paymentReference = paystackRef;
     await newOrder.save();
     
-    // Broadcast via WebSockets to the KDS (usually we might wait until payment succeeds, 
-    // but for demo we broadcast it immediately, or KDS can filter for 'ACCEPTED' orders)
+    // Broadcast via WebSockets to the KDS
     const io = req.app.get('io');
     if (io) {
       io.emit('new_order', newOrder);
+    }
+
+    // Trigger instant email receipt to customer (and staging override)
+    if (newOrder.customerEmail && newOrder.customerEmail !== 'guest@aorahouse.com') {
+      sendCafeOrderReceipt({ order: newOrder }).catch(e => console.warn('Cafe order email receipt error:', e.message));
     }
     
     res.status(201).json({ 
@@ -109,7 +114,10 @@ router.patch('/:id/status', async (req, res) => {
       io.emit('order_updated', order);
     }
     
-    // TODO: Phase 4 - if orderType === 'GLOVO', fire outbound webhook to Glovo
+    // Trigger ready email notification when kitchen marks order READY
+    if (status === 'READY' && order.customerEmail && order.customerEmail !== 'guest@aorahouse.com') {
+      sendCafeOrderReady({ order }).catch(e => console.warn('Cafe order ready email error:', e.message));
+    }
     
     res.json({ success: true, order });
   } catch (error) {

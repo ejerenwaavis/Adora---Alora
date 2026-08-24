@@ -338,6 +338,68 @@ async function sendTwoFactorCode({ user, code, expiresMinutes = 10 }) {
   });
 }
 
+// Café Order Receipt (Placed)
+async function sendCafeOrderReceipt({ order }) {
+  const orderRef = `#ORD-${(order?._id || '').toString().slice(-6).toUpperCase()}`;
+  const totalNaira = Math.round((order?.totalAmountKobo || 0) / 100);
+  const itemsList = (order?.items || []).map(item => `
+    <div class="card-row">
+      <div><strong>${item.quantity}x</strong> ${item.name}</div>
+      <div style="font-weight:600; color:#A4451F;">₦${Math.round((item.priceKobo * item.quantity) / 100).toLocaleString()}</div>
+    </div>
+  `).join('');
+
+  return send({
+    to: order.customerEmail,
+    subject: `Order Received (${orderRef}) — Café at Aora House`,
+    html: shell(`
+      <p>Hi ${order.customerName || 'Guest'},</p>
+      <p>Thank you for your order at <strong>The Café at Aora House</strong>! Our kitchen and baristas have received your ticket and are currently preparing your items.</p>
+      
+      <div class="card">
+        <div class="card-row" style="border-bottom:1px solid #E3D3B8; padding-bottom:8px; margin-bottom:12px;">
+          <div><div class="card-label">Order Reference</div><div class="card-val" style="color:#A4451F; font-size:16px;">${orderRef}</div></div>
+          <div style="text-align:right;"><div class="card-label">Status</div><div class="card-val" style="color:#C89B4A;">PREPARING</div></div>
+        </div>
+
+        ${itemsList}
+
+        <div class="card-row" style="border-top:1px solid #E3D3B8; padding-top:10px; margin-top:12px; margin-bottom:0;">
+          <div style="font-size:14px; font-weight:700;">Total Paid</div>
+          <div style="font-size:16px; font-weight:700; color:#2A1D14;">₦${totalNaira.toLocaleString()}</div>
+        </div>
+      </div>
+
+      <p style="font-size:13px; color:#9C8770;">We will send you a follow-up notification the moment your order is packed and ready at the takeaway counter.</p>
+    `)
+  });
+}
+
+// Café Order Ready Notification
+async function sendCafeOrderReady({ order }) {
+  const orderRef = `#ORD-${(order?._id || '').toString().slice(-6).toUpperCase()}`;
+
+  return send({
+    to: order.customerEmail,
+    subject: `☕ Your Order is Ready for Pickup (${orderRef}) — Café at Aora House`,
+    html: shell(`
+      <p>Hi ${order.customerName || 'Guest'},</p>
+      <div style="background:#E8F5E9; border:1px solid #C8E6C9; border-radius:6px; padding:16px; margin:16px 0; color:#2E7D32; font-size:14px; font-weight:600; text-align:center;">
+        ☕ Your order is freshly prepared and ready at the Barista Takeaway Counter!
+      </div>
+
+      <div class="card">
+        <div class="card-row">
+          <div><div class="card-label">Pickup Reference</div><div class="card-val" style="color:#A4451F; font-size:18px;">${orderRef}</div></div>
+          <div style="text-align:right;"><div class="card-label">Location</div><div class="card-val">Main Café Bar, Ground Floor</div></div>
+        </div>
+      </div>
+
+      <p style="font-size:13px; color:#9C8770; text-align:center;">Please present your order reference <strong>${orderRef}</strong> or phone number to the barista upon collection.</p>
+    `)
+  });
+}
+
 module.exports = {
   send,
   sendBookingConfirmation,
@@ -347,4 +409,6 @@ module.exports = {
   sendPasswordReset,
   sendWaitlistPromotion,
   sendTwoFactorCode,
+  sendCafeOrderReceipt,
+  sendCafeOrderReady,
 };
