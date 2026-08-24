@@ -8,9 +8,10 @@ const ClassSession = require('../models/ClassSession');
 const User = require('../models/User');
 const CreditPack = require('../models/CreditPack');
 const Setting = require('../models/Setting');
+const CreditGrant = require('../models/CreditGrant');
 const { sendBookingConfirmation } = require('../services/mailer');
 
-// STUB: Purchase a credit pack (Phase 5 - simulates payment)
+// Purchase a credit pack
 router.post('/purchase-pack', requireAuth, async (req, res) => {
   try {
     const { packId } = req.body;
@@ -18,13 +19,33 @@ router.post('/purchase-pack', requireAuth, async (req, res) => {
     if (!pack) return res.status(404).json({ error: 'Pack not found' });
     if (!pack.isActive) return res.status(400).json({ error: 'Pack is no longer available' });
 
-    // In Phase 6, we will initialize Paystack here and wait for webhook.
-    // For now, we simulate success and give credits immediately.
     const user = await User.findById(req.user.id);
-    user.classCredits += pack.credits;
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const expiresInDays = pack.expiresInDays || 30;
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+
+    const grant = new CreditGrant({
+      user: user._id,
+      creditPack: pack._id,
+      packName: pack.name,
+      creditsGranted: pack.credits,
+      creditsRemaining: pack.credits,
+      pricePaidKobo: pack.priceKobo,
+      expiresAt,
+      status: 'active'
+    });
+    await grant.save();
+
+    user.classCredits = (user.classCredits || 0) + pack.credits;
     await user.save();
 
-    res.json({ message: 'Pack purchased successfully', newCredits: user.classCredits });
+    res.json({
+      success: true,
+      message: `${pack.name} purchased successfully!`,
+      newCredits: user.classCredits,
+      grant
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -62,11 +83,27 @@ router.post('/', requireAuth, async (req, res) => {
     const existing = await Booking.findOne({ user: req.user.id, classSession: classSessionId }).session(session);
     if (existing && existing.status !== 'cancelled') throw new Error('You are already booked or waitlisted for this class');
 
-    // 3. Deduct credit
+    // 3. Deduct credit from user
     const user = await User.findById(req.user.id).session(session);
-    if (user.classCredits < 1) throw new Error('Insufficient credits');
+    if ((user.classCredits || 0) < 1) throw new Error('Insufficient studio credits. Please purchase a credit pack.');
     user.classCredits -= 1;
     await user.save({ session });
+
+    // FIFO: Deduct from earliest expiring active CreditGrant
+    const activeGrant = await CreditGrant.findOne({
+      user: user._id,
+      status: 'active',
+      creditsRemaining: { $gt: 0 },
+      expiresAt: { $gte: new Date() }
+    }).sort({ expiresAt: 1 }).session(session);
+
+    if (activeGrant) {
+      activeGrant.creditsRemaining -= 1;
+      if (activeGrant.creditsRemaining <= 0) {
+        activeGrant.status = 'exhausted';
+      }
+      await activeGrant.save({ session });
+    }
 
     // 4. Booking logic
     const isWaitlist = classSession.bookedCount >= classSession.maxCapacity;

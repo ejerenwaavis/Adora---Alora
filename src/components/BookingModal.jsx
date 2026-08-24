@@ -22,7 +22,12 @@ export default function BookingModal({ session, onClose }) {
   async function loadPacks() {
     try {
       const res = await fetch('/api/cms/credit-packs');
-      if (res.ok) setPacks(await res.json());
+      if (res.ok) {
+        const data = await res.json();
+        // Sort packs: 1 credit first, then 5, then 10
+        const sorted = data.sort((a, b) => (a.credits || 0) - (b.credits || 0));
+        setPacks(sorted);
+      }
     } catch (err) { console.error(err); }
   }
 
@@ -126,7 +131,10 @@ export default function BookingModal({ session, onClose }) {
               {error && <div className={styles.error}>{error}</div>}
 
               <div className={styles.creditsBox}>
-                <p>Available Credits: <strong>{user.classCredits || 0}</strong></p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Available Studio Credits:</span>
+                  <strong style={{ fontSize: '1.1rem', color: 'var(--rust)' }}>{user.classCredits || 0} Pass{(user.classCredits || 0) === 1 ? '' : 'es'}</strong>
+                </div>
               </div>
 
               {!user.waiverSigned && !user.waiverDate && (
@@ -153,7 +161,9 @@ export default function BookingModal({ session, onClose }) {
                     {loading ? 'Processing...' : (session.bookedCount >= session.maxCapacity ? 'Join Waitlist (1 Credit)' : 'Book Class (1 Credit)')}
                   </button>
                 ) : (
-                  <button onClick={() => setStep(2)} className="btn btn-primary">Buy Credits</button>
+                  <button onClick={() => { setStep(2); loadPacks(); }} className="btn btn-primary">
+                    Get Studio Credits
+                  </button>
                 )}
                 <button onClick={onClose} className="btn btn-outline">Cancel</button>
               </div>
@@ -162,24 +172,52 @@ export default function BookingModal({ session, onClose }) {
 
           {step === 2 && (
             <>
-              <div className="eyebrow" style={{ marginBottom: '0.5rem' }}>Credit Packs</div>
-              <h2>Purchase Credits</h2>
+              <div className="eyebrow" style={{ marginBottom: '0.35rem' }}>Movement Studio Passes</div>
+              <h2>Select Credit Pack</h2>
+              <p className={styles.subtext} style={{ marginBottom: '1.25rem' }}>
+                Purchase credits to reserve classes across reformer pilates, yoga, and breathwork.
+              </p>
               {error && <div className={styles.error}>{error}</div>}
+              
               <div className={styles.packList}>
-                {packs.length === 0 ? <p>Loading packs...</p> : packs.map(pack => (
-                  <div key={pack._id} className={styles.packCard}>
-                    <div>
-                      <h4>{pack.name}</h4>
-                      <p>{pack.credits} Credits for ₦{(pack.priceKobo / 100).toLocaleString()}</p>
+                {packs.length === 0 ? (
+                  <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--taupe)' }}>Loading studio passes...</p>
+                ) : packs.map(pack => {
+                  const priceNaira = Math.round((pack.priceKobo || 0) / 100);
+                  const perClassNaira = Math.round(priceNaira / (pack.credits || 1));
+                  const isFeatured = pack.badge || pack.credits === 5;
+                  const badgeText = pack.badge || (pack.credits === 5 ? 'Most Popular' : pack.credits === 10 ? 'Best Value' : '');
+
+                  return (
+                    <div 
+                      key={pack._id} 
+                      className={`${styles.packCard} ${isFeatured ? styles.packCardFeatured : ''}`}
+                    >
+                      {badgeText && <span className={styles.badge}>{badgeText}</span>}
+                      <div>
+                        <h4 className={styles.packTitle}>{pack.name}</h4>
+                        <div className={styles.packPrice}>
+                          ₦{priceNaira.toLocaleString()}
+                        </div>
+                        <div className={styles.packSubtitle}>
+                          {pack.credits > 1 ? `₦${perClassNaira.toLocaleString()} / class · ` : ''}Valid {pack.expiresInDays || 30} days
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handlePurchasePack(pack._id)} 
+                        disabled={loading} 
+                        className="btn btn-primary"
+                        style={{ padding: '0.7rem 1.1rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+                      >
+                        {loading ? 'Processing...' : 'Select Tier'}
+                      </button>
                     </div>
-                    <button onClick={() => handlePurchasePack(pack._id)} disabled={loading} className="btn btn-primary">
-                      {loading ? 'Processing...' : 'Buy Pack'}
-                    </button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-              <div className={styles.actions} style={{ marginTop: '2rem' }}>
-                <button onClick={() => setStep(1)} className="btn btn-outline">Back</button>
+
+              <div className={styles.actions} style={{ marginTop: '1.5rem' }}>
+                <button onClick={() => setStep(1)} className="btn btn-outline">Back to Session</button>
               </div>
             </>
           )}

@@ -10,7 +10,7 @@ export default function CreditPacksCMS() {
   const { toast } = useToast();
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const defaultForm = { name: '', credits: 1, price: '', expiresInDays: 30, isActive: true, description: '' };
+  const defaultForm = { name: '', credits: 1, price: '', expiresInDays: 30, isActive: true, badge: '', description: '' };
   const [formData, setFormData] = useState(defaultForm);
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState('list'); // 'list' | 'form'
@@ -80,9 +80,10 @@ export default function CreditPacksCMS() {
     setFormData({ 
       name: pack.name, 
       credits: pack.credits, 
-      price: pack.priceKobo !== undefined ? (pack.priceKobo / 100) : '', 
+      price: pack.priceKobo !== undefined ? Math.round(pack.priceKobo / 100) : '', 
       expiresInDays: pack.expiresInDays, 
       isActive: pack.isActive,
+      badge: pack.badge || '',
       description: pack.description || ''
     });
     setView('form');
@@ -100,8 +101,8 @@ export default function CreditPacksCMS() {
 
   return (
     <div>
-      <div className="eyebrow">CMS</div>
-      <h1 className={styles.title}>Credit Packs</h1>
+      <div className="eyebrow">Commerce &amp; Studio Passes</div>
+      <h1 className={styles.title}>Credit Packs &amp; Pricing</h1>
 
       {view === 'list' && (
         <>
@@ -120,17 +121,31 @@ export default function CreditPacksCMS() {
           </div>
 
           <div className={styles.list}>
-            {filteredPacks.map(pack => (
-              <div key={pack._id} className={`${styles.listItem} ${!pack.isActive ? styles.inactive : ''}`}>
-                <div className={styles.itemContent}>
-                  <strong>{pack.name}</strong> <span className={styles.meta}>({pack.credits} credits, ₦{pack.priceKobo / 100}) - Expires in {pack.expiresInDays} days</span>
+            {filteredPacks.map(pack => {
+              const priceNaira = Math.round((pack.priceKobo || 0) / 100);
+              const perClassNaira = Math.round(priceNaira / (pack.credits || 1));
+              return (
+                <div key={pack._id} className={`${styles.listItem} ${!pack.isActive ? styles.inactive : ''}`}>
+                  <div className={styles.itemContent}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <strong>{pack.name}</strong>
+                      {pack.badge && (
+                        <span style={{ fontSize: '10px', background: 'rgba(200, 155, 74, 0.2)', color: 'var(--gold)', padding: '2px 7px', borderRadius: '10px', fontWeight: 600, textTransform: 'uppercase' }}>
+                          {pack.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className={styles.meta}>
+                      {pack.credits} Credit{pack.credits === 1 ? '' : 's'} · ₦{priceNaira.toLocaleString()} ({pack.credits > 1 ? `₦${perClassNaira.toLocaleString()}/class · ` : ''}valid {pack.expiresInDays} days)
+                    </span>
+                  </div>
+                  <div className={styles.itemActions}>
+                    <button onClick={() => handleEdit(pack)} className={styles.btnOutline}>Edit</button>
+                    <button onClick={() => handleDelete(pack._id)} className={styles.btnDanger}>Delete</button>
+                  </div>
                 </div>
-                <div className={styles.itemActions}>
-                  <button onClick={() => handleEdit(pack)} className={styles.btnOutline}>Edit</button>
-                  <button onClick={() => handleDelete(pack._id)} className={styles.btnDanger}>Delete</button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {filteredPacks.length === 0 && <p className={styles.empty}>No credit packs found matching your filters.</p>}
           </div>
         </>
@@ -146,46 +161,59 @@ export default function CreditPacksCMS() {
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label>Name *</label>
-                  <input type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                  <label>Pack Name *</label>
+                  <input type="text" placeholder="e.g. 5-Class Movement Pack" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                 </div>
                 <div className={styles.field}>
-                  <label>Credits *</label>
-                  <input type="number" min="1" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} required />
+                  <label>Number of Credits *</label>
+                  <input type="number" min="1" placeholder="e.g. 5" value={formData.credits} onChange={e => setFormData({...formData, credits: Number(e.target.value)})} required />
                 </div>
               </div>
               
               <div className={styles.row}>
                 <div className={styles.field}>
-                  <label>Price (₦) *</label>
+                  <label>Price (in Naira ₦) *</label>
                   <input 
                     type="number" 
-                    step="0.01" 
+                    step="100" 
                     min="0" 
-                    placeholder="e.g. 5000 or 5000.50" 
+                    placeholder="e.g. 50000" 
                     value={formData.price} 
                     onChange={e => setFormData({...formData, price: e.target.value})} 
                     required 
                   />
+                  <small style={{ color: 'var(--taupe)', marginTop: '4px', display: 'block', fontSize: '11px' }}>
+                    Enter in whole Naira (e.g. 12000 for ₦12,000 or 50000 for ₦50,000).
+                  </small>
                 </div>
                 <div className={styles.field}>
                   <label>Expires In (Days) *</label>
-                  <input type="number" min="1" value={formData.expiresInDays} onChange={e => setFormData({...formData, expiresInDays: Number(e.target.value)})} required />
+                  <input type="number" min="1" placeholder="e.g. 30, 45, 90" value={formData.expiresInDays} onChange={e => setFormData({...formData, expiresInDays: Number(e.target.value)})} required />
                 </div>
               </div>
 
               <div className={styles.field}>
-                <label>Description</label>
-                <textarea rows="2" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
+                <label>Marketing Badge / Decoy Tag (Optional)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Most Popular, Best Value, Introductory" 
+                  value={formData.badge} 
+                  onChange={e => setFormData({...formData, badge: e.target.value})} 
+                />
+              </div>
+
+              <div className={styles.field}>
+                <label>Description &amp; Studio Perks (Optional)</label>
+                <textarea rows="2" placeholder="e.g. Access to all Reformer, Mat, and Sound Bath sessions." value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
               </div>
 
               <div className={styles.checkboxField} style={{marginTop: '1rem'}}>
                 <input type="checkbox" id="isActive" checked={formData.isActive} onChange={e => setFormData({...formData, isActive: e.target.checked})} />
-                <label htmlFor="isActive">Active</label>
+                <label htmlFor="isActive">Active for Member Purchases</label>
               </div>
 
               <div className={styles.actions}>
-                <button type="submit" className={styles.btn}>{editingId ? 'Update' : 'Create'}</button>
+                <button type="submit" className={styles.btn}>{editingId ? 'Update Pack' : 'Create Pack'}</button>
                 <button type="button" onClick={() => { setEditingId(null); setFormData(defaultForm); setView('list'); }} className={styles.btnGhost}>Cancel</button>
               </div>
             </form>
