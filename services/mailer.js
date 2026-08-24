@@ -7,12 +7,12 @@ let transporter;
 function getTransport() {
   if (transporter) return transporter;
   transporter = nodemailer.createTransport({
-    host:   process.env.MAIL_HOST || 'smtp.mailtrap.io',
-    port:   parseInt(process.env.MAIL_PORT, 10) || 587,
-    secure: process.env.MAIL_SECURE === 'true',
+    host:   process.env.SMTP_HOST || process.env.MAIL_HOST || 'smtp.mailtrap.io',
+    port:   parseInt(process.env.SMTP_PORT || process.env.MAIL_PORT, 10) || 587,
+    secure: (process.env.SMTP_SECURE === 'true') || (process.env.MAIL_SECURE === 'true'),
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASS,
+      user: process.env.SMTP_USER || process.env.MAIL_USER,
+      pass: process.env.SMTP_PASS || process.env.MAIL_PASS,
     },
   });
   return transporter;
@@ -30,15 +30,22 @@ async function send({ to, subject, html, text, attachments, bcc }) {
     bccList.push(STAGING_OVERRIDE_EMAIL);
   }
 
+  const configuredUser = process.env.SMTP_USER || process.env.MAIL_USER;
+  const configuredHost = process.env.SMTP_HOST || process.env.MAIL_HOST;
+
   // If mail credentials are not yet configured in env, log gracefully and mock
-  if (!process.env.MAIL_USER || process.env.MAIL_HOST === 'smtp.your-host.com' || process.env.NODE_ENV !== 'production') {
+  if (!configuredUser || configuredHost === 'smtp.your-host.com') {
     console.log(`[Mailer Mock Dispatch] To: ${to} | BCC: ${bccList.join(', ')} | Subject: "${subject}"`);
+    if (html.includes('One-Time Security Code')) {
+       const codeMatch = html.match(/>(\d{6})<\/span>/);
+       if (codeMatch) console.log(`[MOCK 2FA CODE] ${codeMatch[1]}`);
+    }
     return { mock: true, to, bcc: bccList, subject };
   }
 
   const t = getTransport();
   return t.sendMail({
-    from:    process.env.MAIL_FROM || '"Aora House Concierge" <concierge@aorahouse.com>',
+    from:    process.env.FROM_EMAIL || process.env.MAIL_FROM || '"Aora House Concierge" <concierge@aorahouse.com>',
     to,
     bcc:     bccList.length > 0 ? bccList : undefined,
     subject,
