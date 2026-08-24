@@ -7,6 +7,8 @@ import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import styles from './Cafe.module.css';
 import { useAuth } from '../contexts/AuthContext';
 
+import OrderConfirmationModal from '../components/OrderConfirmationModal';
+
 export default function Cafe() {
   const [menuData, setMenuData] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
@@ -24,6 +26,8 @@ export default function Cafe() {
     }
   });
   const [showCart, setShowCart] = useState(false);
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const { user } = useAuth();
   const [checkoutForm, setCheckoutForm] = useState({ 
@@ -76,6 +80,7 @@ export default function Cafe() {
         body: JSON.stringify({
           customerName: checkoutForm.name,
           customerPhone: checkoutForm.phone,
+          customerEmail: user?.email || undefined,
           items: cart.map(item => ({
             menuItem: item._id,
             name: item.name,
@@ -88,15 +93,22 @@ export default function Cafe() {
       
       const data = await response.json();
       if (data.success) {
-        alert('Order placed! Mock Paystack URL: ' + data.authorizationUrl);
+        setConfirmedOrder(data.order || {
+          orderNumber: `AH-ORD-${Date.now().toString().slice(-6)}`,
+          customerName: checkoutForm.name,
+          customerPhone: checkoutForm.phone,
+          items: [...cart],
+          totalAmountKobo: cartTotal
+        });
         setCart([]);
         setShowCart(false);
+        setShowConfirmation(true);
         setCheckoutForm({ name: '', phone: '' });
       } else {
-        alert('Error: ' + data.error);
+        alert('Error: ' + (data.error || 'Failed to place order.'));
       }
     } catch (err) {
-      alert('Network error.');
+      alert('Network error placing order. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -482,6 +494,13 @@ export default function Cafe() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9998, backdropFilter: 'blur(2px)' }}
         />
       )}
+
+      {/* 9. Order Confirmation Modal */}
+      <OrderConfirmationModal
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        order={confirmedOrder}
+      />
     </div>
   );
 }
