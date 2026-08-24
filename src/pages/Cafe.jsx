@@ -8,6 +8,7 @@ import styles from './Cafe.module.css';
 import { useAuth } from '../contexts/AuthContext';
 import HoneypotField from '../components/common/HoneypotField';
 import OrderConfirmationModal from '../components/OrderConfirmationModal';
+import { useToast } from '../contexts/ToastContext';
 
 export default function Cafe() {
   const [menuData, setMenuData] = useState([]);
@@ -31,6 +32,7 @@ export default function Cafe() {
   const [honeypot, setHoneypot] = useState({});
   
   const { user } = useAuth();
+  const { toast } = useToast();
   const [checkoutForm, setCheckoutForm] = useState({ 
     name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
     phone: user?.phone || '',
@@ -115,10 +117,10 @@ export default function Cafe() {
           email: user?.email || '' 
         });
       } else {
-        alert('Error: ' + (data.error || 'Failed to place order.'));
+        toast.error(data.error || 'Failed to place order.');
       }
     } catch (err) {
-      alert('Network error placing order. Please check your connection.');
+      toast.error('Network error placing order. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }

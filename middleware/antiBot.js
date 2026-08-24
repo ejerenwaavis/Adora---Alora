@@ -34,10 +34,6 @@ function validateFormToken(token) {
     const now = Date.now();
     const elapsedMs = now - timestamp;
 
-    // Time-trap 1: Form submitted too quickly (< 1.5 seconds) → Bot behavior
-    if (elapsedMs < 1500) {
-      return { valid: false, reason: 'Form submitted unnaturally fast (bot detected).' };
-    }
 
     // Time-trap 2: Token expired (> 2 hours)
     if (elapsedMs > 2 * 60 * 60 * 1000) {
