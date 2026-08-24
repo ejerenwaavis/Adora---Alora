@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"node --watch app.js\" \"node node_modules/vite/bin/vite.js --port 5175 --host\"",
+    "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"node --watch-path=app.js --watch-path=routes --watch-path=models --watch-path=middleware app.js\" \"node node_modules/vite/bin/vite.js --port 5175 --host\"",
     "build": "node node_modules/vite/bin/vite.js build",
     "preview": "node node_modules/vite/bin/vite.js preview"
   },

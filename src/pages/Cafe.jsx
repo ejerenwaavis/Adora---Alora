@@ -299,28 +299,6 @@ export default function Cafe() {
                       <div className={styles.cmPanelAvail}>Available now</div>
                     </div>
 
-                    <button 
-                      style={{ 
-                        width: '100%', 
-                        marginTop: '1.5rem', 
-                        padding: '1rem', 
-                        fontSize: '1rem',
-                        backgroundColor: 'var(--cream)',
-                        color: 'var(--cocoa-deep)',
-                        border: 'none',
-                        borderRadius: '2px',
-                        cursor: 'pointer',
-                        fontWeight: '600',
-                        fontFamily: 'var(--f-body)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em'
-                      }}
-                      onClick={() => addToCart(activeItem)}
-                    >
-                      Add to Order
-                    </button>
-
-
                     {activeItem.dietaryTags && activeItem.dietaryTags.length > 0 && (
                       <div className={styles.cmPanelDietary}>
                         {activeItem.dietaryTags.map((tag, tIdx) => (
@@ -328,6 +306,13 @@ export default function Cafe() {
                         ))}
                       </div>
                     )}
+
+                    <button 
+                      className={styles.cmPanelOrderBtn}
+                      onClick={() => addToCart(activeItem)}
+                    >
+                      Add to Order
+                    </button>
                   </div>
                 </div>
               )}

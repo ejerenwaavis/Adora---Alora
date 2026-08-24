@@ -428,19 +428,49 @@
 }
 .cmPanelDietary {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 16px;
   margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .cmPanelDtag {
-  font-size: 9px;
-  letter-spacing: .1em;
+  font-size: 10px;
+  letter-spacing: .08em;
   text-transform: uppercase;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 20px;
-  background: rgba(200,155,74,.1);
+  background: rgba(200,155,74,.12);
   color: var(--gold);
-  border: 1px solid rgba(200,155,74,.2);
+  border: 1px solid rgba(200,155,74,.25);
+  font-weight: 500;
+}
+
+.cmPanelOrderBtn {
+  width: 100%;
+  margin-top: 12px;
+  margin-bottom: 8px;
+  padding: 14px 20px;
+  font-size: 12.5px;
+  background-color: var(--cream);
+  color: var(--cocoa-deep);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--f-body);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.cmPanelOrderBtn:hover {
+  background-color: #FFFDF9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
 }
 
 .cmPanelClose {

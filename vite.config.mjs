@@ -35,6 +35,17 @@ export default defineConfig({
 
   server: {
     port: 5175,
+    watch: {
+      ignored: [
+        '**/public_html/**',
+        '**/public/assets/**',
+        '**/*.mp4',
+        '**/*.mov',
+        '**/*.webm',
+        '**/tmp/**',
+        '**/.git/**'
+      ],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3005',
