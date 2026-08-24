@@ -135,18 +135,24 @@ async function sendBookingConfirmation({ user, classSession, booking }) {
       <p>Your reservation for <strong>${className}</strong> is confirmed. Your digital check-in pass has been added to your member account.</p>
       
       <div class="card">
-        <div class="card-row">
-          <div><div class="card-label">Class</div><div class="card-val">${className}</div></div>
-          <div style="text-align:right;"><div class="card-label">Pass Reference</div><div class="card-val" style="color:#A4451F;">${passRef}</div></div>
-        </div>
-        <div class="card-row" style="margin-top:12px;">
-          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor}</div></div>
-        </div>
-        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
-          <div><div class="card-label">Location</div><div class="card-val">${room}</div></div>
-          <div style="text-align:right;"><div class="card-label">Duration</div><div class="card-val">${duration} Mins</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Class</div><div class="card-val">${className}</div></td>
+            <td align="right"><div class="card-label">Pass Reference</div><div class="card-val" style="color:#A4451F;">${passRef}</div></td>
+          </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></td>
+            <td align="right"><div class="card-label">Instructor</div><div class="card-val">${instructor}</div></td>
+          </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="left"><div class="card-label">Location</div><div class="card-val">${room}</div></td>
+            <td align="right"><div class="card-label">Duration</div><div class="card-val">${duration} Mins</div></td>
+          </tr>
+        </table>
       </div>
 
       <p style="font-size:13px; color:#9C8770;">Please arrive 10 minutes prior to class time to prepare your mat and settle into the space. Present your digital QR pass at the front desk upon arrival.</p>
@@ -200,14 +206,18 @@ async function sendEventTicketConfirmation({ user, event, booking }) {
       <p>Your ticket for <strong>${eventTitle}</strong> at Aora House has been confirmed.</p>
       
       <div class="card">
-        <div class="card-row">
-          <div><div class="card-label">Event</div><div class="card-val">${eventTitle}</div></div>
-          <div style="text-align:right;"><div class="card-label">Ticket Reference</div><div class="card-val" style="color:#A4451F;">${ticketRef}</div></div>
-        </div>
-        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
-          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} · ${event?.time || startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-          <div style="text-align:right;"><div class="card-label">Venue</div><div class="card-val">${location}</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Event</div><div class="card-val">${eventTitle}</div></td>
+            <td align="right"><div class="card-label">Ticket Reference</div><div class="card-val" style="color:#A4451F;">${ticketRef}</div></td>
+          </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="left"><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} · ${event?.time || startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></td>
+            <td align="right"><div class="card-label">Venue</div><div class="card-val">${location}</div></td>
+          </tr>
+        </table>
       </div>
 
       <div style="margin-top:24px;">
@@ -235,14 +245,18 @@ async function sendVenueEnquiryAck({ enquiry }) {
       <p>Thank you for your enquiry regarding hosting your private event at Aora House.</p>
       
       <div class="card">
-        <div class="card-row">
-          <div><div class="card-label">Event Type</div><div class="card-val">${enquiry.eventType}</div></div>
-          <div style="text-align:right;"><div class="card-label">Expected Guests</div><div class="card-val">${enquiry.guestCount} People</div></div>
-        </div>
-        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
-          <div><div class="card-label">Target Date</div><div class="card-val">${new Date(enquiry.preferredDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div></div>
-          <div style="text-align:right;"><div class="card-label">Preferred Space</div><div class="card-val" style="text-transform:capitalize;">${enquiry.spacePreference}</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Event Type</div><div class="card-val">${enquiry.eventType}</div></td>
+            <td align="right"><div class="card-label">Expected Guests</div><div class="card-val">${enquiry.guestCount} People</div></td>
+          </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="left"><div class="card-label">Target Date</div><div class="card-val">${new Date(enquiry.preferredDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div></td>
+            <td align="right"><div class="card-label">Preferred Space</div><div class="card-val" style="text-transform:capitalize;">${enquiry.spacePreference}</div></td>
+          </tr>
+        </table>
       </div>
 
       <p>Our concierge and events director will review your schedule and requirements, and reach out within 24–48 business hours with space availability and a tailored proposal.</p>
@@ -309,14 +323,18 @@ async function sendWaitlistPromotion({ user, classSession, booking, expiresMinut
       </div>
 
       <div class="card">
-        <div class="card-row">
-          <div><div class="card-label">Class</div><div class="card-val">${className}</div></div>
-          <div style="text-align:right;"><div class="card-label">Required Credit</div><div class="card-val" style="color:#A4451F;">1 Studio Pass</div></div>
-        </div>
-        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
-          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
-          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor} · ${room}</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Class</div><div class="card-val">${className}</div></td>
+            <td align="right"><div class="card-label">Required Credit</div><div class="card-val" style="color:#A4451F;">1 Studio Pass</div></td>
+          </tr>
+        </table>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="left"><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></td>
+            <td align="right"><div class="card-label">Instructor</div><div class="card-val">${instructor} · ${room}</div></td>
+          </tr>
+        </table>
       </div>
 
       <div style="margin-top:24px; text-align:center;">
@@ -350,10 +368,12 @@ async function sendCafeOrderReceipt({ order }) {
   const orderRef = `#ORD-${(order?._id || '').toString().slice(-6).toUpperCase()}`;
   const totalNaira = Math.round((order?.totalAmountKobo || 0) / 100);
   const itemsList = (order?.items || []).map(item => `
-    <div class="card-row">
-      <div><strong>${item.quantity}x</strong> ${item.name}</div>
-      <div style="font-weight:600; color:#A4451F;">₦${Math.round((item.priceKobo * item.quantity) / 100).toLocaleString()}</div>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:8px; font-size:13px;">
+      <tr>
+        <td align="left"><strong>${item.quantity}x</strong> ${item.name}</td>
+        <td align="right" style="font-weight:600; color:#A4451F;">₦${Math.round((item.priceKobo * item.quantity) / 100).toLocaleString()}</td>
+      </tr>
+    </table>
   `).join('');
 
   return send({
@@ -364,17 +384,21 @@ async function sendCafeOrderReceipt({ order }) {
       <p>Thank you for your order at <strong>The Café at Aora House</strong>! Our kitchen and baristas have received your ticket and are currently preparing your items.</p>
       
       <div class="card">
-        <div class="card-row" style="border-bottom:1px solid #E3D3B8; padding-bottom:8px; margin-bottom:12px;">
-          <div><div class="card-label">Order Reference</div><div class="card-val" style="color:#A4451F; font-size:16px;">${orderRef}</div></div>
-          <div style="text-align:right;"><div class="card-label">Status</div><div class="card-val" style="color:#C89B4A;">PREPARING</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px solid #E3D3B8; padding-bottom:8px; margin-bottom:12px;">
+          <tr>
+            <td align="left"><div class="card-label">Order Reference</div><div class="card-val" style="color:#A4451F; font-size:16px;">${orderRef}</div></td>
+            <td align="right"><div class="card-label">Status</div><div class="card-val" style="color:#C89B4A;">PREPARING</div></td>
+          </tr>
+        </table>
 
         ${itemsList}
 
-        <div class="card-row" style="border-top:1px solid #E3D3B8; padding-top:10px; margin-top:12px; margin-bottom:0;">
-          <div style="font-size:14px; font-weight:700;">Total Paid</div>
-          <div style="font-size:16px; font-weight:700; color:#2A1D14;">₦${totalNaira.toLocaleString()}</div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #E3D3B8; padding-top:10px; margin-top:12px;">
+          <tr>
+            <td align="left" style="font-size:14px; font-weight:700;">Total Paid</td>
+            <td align="right" style="font-size:16px; font-weight:700; color:#2A1D14;">₦${totalNaira.toLocaleString()}</td>
+          </tr>
+        </table>
       </div>
 
       <p style="font-size:13px; color:#9C8770;">We will send you a follow-up notification the moment your order is packed and ready at the takeaway counter.</p>
@@ -396,10 +420,12 @@ async function sendCafeOrderReady({ order }) {
       </div>
 
       <div class="card">
-        <div class="card-row">
-          <div><div class="card-label">Pickup Reference</div><div class="card-val" style="color:#A4451F; font-size:18px;">${orderRef}</div></div>
-          <div style="text-align:right;"><div class="card-label">Location</div><div class="card-val">Main Café Bar, Ground Floor</div></div>
-        </div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="left"><div class="card-label">Pickup Reference</div><div class="card-val" style="color:#A4451F; font-size:18px;">${orderRef}</div></td>
+            <td align="right"><div class="card-label">Location</div><div class="card-val">Main Café Bar, Ground Floor</div></td>
+          </tr>
+        </table>
       </div>
 
       <p style="font-size:13px; color:#9C8770; text-align:center;">Please present your order reference <strong>${orderRef}</strong> or phone number to the barista upon collection.</p>
