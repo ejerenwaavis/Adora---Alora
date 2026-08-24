@@ -29,9 +29,12 @@ const userSchema = new mongoose.Schema({
   avatar:      { type: String },
   dateOfBirth: { type: Date },
 
-  // ── Waiver & Emergency Contact — required at first booking ──
+  // ── Waiver & Emergency Contact — required for movement bookings ──
+  waiverSigned:             { type: Boolean, default: false },
+  waiverDate:               { type: Date },
   waiverSignedAt:           { type: Date },
-  waiverVersion:            { type: String },
+  waiverSignature:          { type: String },
+  waiverVersion:            { type: String, default: 'v1.0' },
   emergencyContactName:     { type: String },
   emergencyContactPhone:    { type: String },
   emergencyContactRelation: { type: String },
