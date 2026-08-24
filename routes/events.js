@@ -3,6 +3,8 @@ const router  = express.Router();
 const { requireAuth, requireRole } = require('../middleware/auth');
 
 const EventRecord = require('../models/EventRecord');
+const EventBooking = require('../models/EventBooking');
+const { sendEventTicketConfirmation } = require('../services/mailer');
 
 // Public event listing
 router.get('/', async (req, res) => {
@@ -30,8 +32,6 @@ router.patch('/:id',      requireAuth, requireRole('admin', 'content_editor'), (
 router.patch('/:id/publish', requireAuth, requireRole('admin'), (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
 router.delete('/:id',     requireAuth, requireRole('admin'), (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
 
-const EventBooking = require('../models/EventBooking');
-
 // Internal event ticket purchase (Phase 10)
 router.post('/:id/book', async (req, res) => {
   try {
@@ -45,7 +45,7 @@ router.post('/:id/book', async (req, res) => {
     const { customerName, customerEmail, customerPhone, ticketQuantity } = req.body;
     if (!customerName || !customerEmail) return res.status(400).json({ error: 'Name and Email are required.' });
     
-    const qty = ticketQuantity ? parseInt(ticketQuantity) : 1;
+    const qty = ticketQuantity ? parseInt(ticketQuantity, 10) : 1;
     
     if (event.capacity && (event.ticketsSold + qty > event.capacity)) {
       return res.status(400).json({ error: 'Not enough tickets available.' });
@@ -57,7 +57,7 @@ router.post('/:id/book', async (req, res) => {
       customerEmail,
       customerPhone: customerPhone || '',
       ticketQuantity: qty,
-      amountPaidKobo: event.priceKobo * qty,
+      amountPaidKobo: (event.priceKobo || 0) * qty,
       status: 'confirmed'
     });
     
@@ -71,6 +71,17 @@ router.post('/:id/book', async (req, res) => {
       event.status = 'sold_out';
     }
     await event.save();
+
+    // Trigger ticket confirmation email with .ics attachment
+    try {
+      sendEventTicketConfirmation({
+        user: { email: customerEmail, firstName: customerName },
+        event,
+        booking
+      }).catch(e => console.warn('Event ticket email error:', e.message));
+    } catch (mailErr) {
+      console.warn('Event ticket email trigger error:', mailErr.message);
+    }
     
     res.json({ message: 'Booking successful!', booking });
   } catch (err) {

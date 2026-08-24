@@ -39,6 +39,7 @@ import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
 import UsersCMS        from './admin/UsersCMS.jsx';
+import VenueEnquiriesCMS from './admin/VenueEnquiriesCMS.jsx';
 
 // Clerk Dashboard
 import ClerkLayout     from './clerk/ClerkLayout.jsx';
@@ -159,6 +160,7 @@ const internalRouter = createBrowserRouter([
       { path: 'timetable', element: <ScheduleCMS /> },
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
+      { path: 'venue-enquiries', element: <VenueEnquiriesCMS /> },
       { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
       { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
       { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },

@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { generateICS, generateGoogleCalendarUrl } = require('../utils/calendar');
 
 // ── Transport ──────────────────────────────────────────────────────────────────
 let transporter;
@@ -6,7 +7,7 @@ let transporter;
 function getTransport() {
   if (transporter) return transporter;
   transporter = nodemailer.createTransport({
-    host:   process.env.MAIL_HOST,
+    host:   process.env.MAIL_HOST || 'smtp.mailtrap.io',
     port:   parseInt(process.env.MAIL_PORT, 10) || 587,
     secure: process.env.MAIL_SECURE === 'true',
     auth: {
@@ -18,19 +19,26 @@ function getTransport() {
 }
 
 // ── Core send helper ───────────────────────────────────────────────────────────
-async function send({ to, subject, html, text }) {
+async function send({ to, subject, html, text, attachments }) {
+  if (!to) return null;
+  // If mail credentials are not yet configured in env, log gracefully instead of crashing
+  if (!process.env.MAIL_USER && process.env.NODE_ENV !== 'test') {
+    console.log(`[Mailer Mock Dispatch] To: ${to} | Subject: "${subject}"`);
+    return { mock: true, to, subject };
+  }
+
   const t = getTransport();
   return t.sendMail({
-    from:    process.env.MAIL_FROM || '"Aora House" <noreply@Aora House.com>',
+    from:    process.env.MAIL_FROM || '"Aora House" <concierge@aorahouse.com>',
     to,
     subject,
     html,
     text: text || html.replace(/<[^>]+>/g, ''),
+    attachments: attachments || []
   });
 }
 
 // ── Email templates ────────────────────────────────────────────────────────────
-// Wrap any body HTML in the brand shell
 function shell(content) {
   return `
 <!DOCTYPE html>
@@ -39,24 +47,33 @@ function shell(content) {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>
-  body { margin:0; background:#F7EFE1; font-family:'Jost',Arial,sans-serif; font-weight:300; color:#2B2015; }
-  .wrap { max-width:600px; margin:0 auto; background:#FCF8F0; }
-  .header { background:#2A1D14; padding:32px; text-align:center; }
-  .header h1 { color:#F7EFE1; font-size:24px; font-weight:500; margin:0; letter-spacing:0.1em; }
-  .body { padding:40px 32px; }
-  .footer { background:#2A1D14; padding:24px 32px; text-align:center; color:#9C8770; font-size:13px; }
-  .btn { display:inline-block; padding:14px 28px; background:#A4451F; color:#F7EFE1; text-decoration:none; border-radius:999px; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; margin-top:24px; }
-  p { line-height:1.7; margin:0 0 16px; }
+  body { margin:0; background:#F7EFE1; font-family:'Jost',-apple-system,BlinkMacSystemFont,Arial,sans-serif; font-weight:300; color:#2B2015; }
+  .wrap { max-width:600px; margin:20px auto; background:#FCF8F0; border:1px solid #E3D3B8; border-radius:8px; overflow:hidden; }
+  .header { background:#2A1D14; padding:36px 32px; text-align:center; }
+  .eyebrow { color:#C89B4A; font-size:11px; text-transform:uppercase; letter-spacing:0.18em; font-weight:600; margin-bottom:6px; }
+  .header h1 { color:#F7EFE1; font-size:26px; font-weight:400; margin:0; letter-spacing:0.06em; }
+  .body { padding:36px 32px; }
+  .footer { background:#2A1D14; padding:24px 32px; text-align:center; color:#9C8770; font-size:12px; }
+  .btn { display:inline-block; padding:14px 28px; background:#2A1D14; color:#F7EFE1 !important; text-decoration:none; border-radius:4px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; margin-top:20px; }
+  .btn-outline { display:inline-block; padding:12px 24px; background:transparent; color:#2A1D14 !important; border:1px solid #E3D3B8; text-decoration:none; border-radius:4px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; margin-top:10px; margin-right:10px; }
+  .card { background:#FAF6EF; border:1px solid #E3D3B8; border-radius:6px; padding:20px; margin:20px 0; }
+  .card-row { display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px; }
+  .card-label { color:#9C8770; text-transform:uppercase; font-size:10px; letter-spacing:0.06em; }
+  .card-val { color:#2B2015; font-weight:600; }
+  p { line-height:1.7; margin:0 0 16px; font-size:14px; color:#2B2015; }
   .divider { height:1px; background:#E3D3B8; margin:24px 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="header"><h1>Aora House</h1></div>
+  <div class="header">
+    <div class="eyebrow">Sanctuary for Movement &amp; Mind</div>
+    <h1>Aora House</h1>
+  </div>
   <div class="body">${content}</div>
   <div class="footer">
-    <p>Aora House &bull; Lagos, Nigeria</p>
-    <p style="margin:4px 0 0;">You are receiving this because you have an account with us.</p>
+    <p style="color:#F7EFE1; margin:0 0 6px; font-weight:500;">Aora House &bull; Victoria Island, Lagos</p>
+    <p style="margin:0; opacity:0.8;">Movement Studio &bull; Coastal Café &bull; The Loft &bull; Concept Fashion</p>
   </div>
 </div>
 </body>
@@ -65,77 +82,199 @@ function shell(content) {
 
 // ── Specific email senders ─────────────────────────────────────────────────────
 
-// Phase 6: booking confirmation
-async function sendBookingConfirmation({ user, classSession, booking, calendarLinks }) {
-  // TODO Phase 6: implement with full class details + calendar buttons
+// Class booking confirmation with .ics attachment & Google calendar link
+async function sendBookingConfirmation({ user, classSession, booking }) {
+  const className = classSession?.classType?.name || 'Movement Studio Class';
+  const instructor = classSession?.instructor ? `${classSession.instructor.firstName} ${classSession.instructor.lastName}` : 'Resident Instructor';
+  const startTime = new Date(classSession?.startTime || Date.now());
+  const duration = classSession?.classType?.durationMinutes || 50;
+  const endTime = new Date(startTime.getTime() + duration * 60000);
+  const room = classSession?.classType?.room || 'Movement Studio · Level 2';
+  const passRef = booking?.ticketReference || `#MB-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
+
+  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const googleCalUrl = generateGoogleCalendarUrl({
+    title: `Aora House: ${className}`,
+    description: `Class: ${className}\nInstructor: ${instructor}\nRoom: ${room}\nPass Ref: ${passRef}`,
+    location: `Aora House, Victoria Island, Lagos`,
+    startTime,
+    endTime
+  });
+
+  const icsContent = generateICS({
+    title: `Aora House: ${className}`,
+    description: `Instructor: ${instructor} | Room: ${room} | Pass: ${passRef}`,
+    location: `Aora House, Victoria Island, Lagos`,
+    startTime,
+    endTime,
+    url: `${appUrl}/account`
+  });
+
   return send({
-    to:      user.email,
-    subject: 'Your Pilates class is confirmed — Aora House',
-    html:    shell(`
-      <p>Hi ${user.firstName},</p>
-      <p>Your booking is confirmed.</p>
-      ${calendarLinks ? `<p>Add to your calendar: <a href="${calendarLinks.google}">Google Calendar</a> | <a href="${calendarLinks.ics}">iCal</a></p>` : ''}
+    to: user.email,
+    subject: `Your Class Pass: ${className} — Aora House`,
+    html: shell(`
+      <p>Hi ${user.firstName || 'Member'},</p>
+      <p>Your reservation for <strong>${className}</strong> is confirmed. Your digital check-in pass has been added to your member account.</p>
+      
+      <div class="card">
+        <div class="card-row">
+          <div><div class="card-label">Class</div><div class="card-val">${className}</div></div>
+          <div style="text-align:right;"><div class="card-label">Pass Reference</div><div class="card-val" style="color:#A4451F;">${passRef}</div></div>
+        </div>
+        <div class="card-row" style="margin-top:12px;">
+          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
+          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor}</div></div>
+        </div>
+        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
+          <div><div class="card-label">Location</div><div class="card-val">${room}</div></div>
+          <div style="text-align:right;"><div class="card-label">Duration</div><div class="card-val">${duration} Mins</div></div>
+        </div>
+      </div>
+
+      <p style="font-size:13px; color:#9C8770;">Please arrive 10 minutes prior to class time to prepare your mat and settle into the space. Present your digital QR pass at the front desk upon arrival.</p>
+
+      <div style="margin-top:24px;">
+        <a href="${googleCalUrl}" target="_blank" class="btn-outline">Add to Google Calendar</a>
+        <a href="${appUrl}/account" class="btn">View Digital Pass &rarr;</a>
+      </div>
     `),
+    attachments: [
+      {
+        filename: 'aora-movement-pass.ics',
+        content: icsContent,
+        contentType: 'text/calendar'
+      }
+    ]
   });
 }
 
-// Phase 11: booking reminder
-async function sendBookingReminder({ user, classSession }) {
-  // TODO Phase 11
+// Loft Event ticket confirmation
+async function sendEventTicketConfirmation({ user, event, booking }) {
+  const eventTitle = event?.title || 'Loft Event';
+  const startTime = new Date(event?.startDate || Date.now());
+  const endTime = event?.endDate ? new Date(event.endDate) : new Date(startTime.getTime() + 120 * 60000);
+  const location = event?.space || 'The Loft & Events Room, Aora House';
+  const ticketRef = booking?.ticketReference || `#EV-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
+
+  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const googleCalUrl = generateGoogleCalendarUrl({
+    title: `Aora House: ${eventTitle}`,
+    description: `Event: ${eventTitle}\nLocation: ${location}\nTicket Ref: ${ticketRef}`,
+    location,
+    startTime,
+    endTime
+  });
+
+  const icsContent = generateICS({
+    title: `Aora House: ${eventTitle}`,
+    description: `Event: ${eventTitle} | Ticket: ${ticketRef}`,
+    location,
+    startTime,
+    endTime,
+    url: `${appUrl}/account`
+  });
+
+  return send({
+    to: user.email,
+    subject: `Event Ticket Confirmed: ${eventTitle} — Aora House`,
+    html: shell(`
+      <p>Hi ${user.firstName || 'Guest'},</p>
+      <p>Your ticket for <strong>${eventTitle}</strong> at Aora House has been confirmed.</p>
+      
+      <div class="card">
+        <div class="card-row">
+          <div><div class="card-label">Event</div><div class="card-val">${eventTitle}</div></div>
+          <div style="text-align:right;"><div class="card-label">Ticket Reference</div><div class="card-val" style="color:#A4451F;">${ticketRef}</div></div>
+        </div>
+        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
+          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })} · ${event?.time || startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
+          <div style="text-align:right;"><div class="card-label">Venue</div><div class="card-val">${location}</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;">
+        <a href="${googleCalUrl}" target="_blank" class="btn-outline">Add to Google Calendar</a>
+        <a href="${appUrl}/account" class="btn">View Digital Pass &rarr;</a>
+      </div>
+    `),
+    attachments: [
+      {
+        filename: 'aora-event-ticket.ics',
+        content: icsContent,
+        contentType: 'text/calendar'
+      }
+    ]
+  });
 }
 
-// Phase 11: waitlist promotion
-async function sendWaitlistPromotion({ user, classSession, expiresAt }) {
-  // TODO Phase 11
-}
-
-// Phase 9: venue enquiry acknowledgement
+// Venue Enquiry acknowledgement
 async function sendVenueEnquiryAck({ enquiry }) {
   return send({
-    to:      enquiry.email,
-    subject: 'We received your venue enquiry — Aora House',
-    html:    shell(`
+    to: enquiry.email,
+    subject: 'We received your venue hire enquiry — Aora House',
+    html: shell(`
       <p>Hi ${enquiry.firstName},</p>
-      <p>Thank you for your enquiry about hiring our venue. We'll be in touch within 2 business days.</p>
-    `),
+      <p>Thank you for your enquiry regarding hosting your private event at Aora House.</p>
+      
+      <div class="card">
+        <div class="card-row">
+          <div><div class="card-label">Event Type</div><div class="card-val">${enquiry.eventType}</div></div>
+          <div style="text-align:right;"><div class="card-label">Expected Guests</div><div class="card-val">${enquiry.guestCount} People</div></div>
+        </div>
+        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
+          <div><div class="card-label">Target Date</div><div class="card-val">${new Date(enquiry.preferredDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</div></div>
+          <div style="text-align:right;"><div class="card-label">Preferred Space</div><div class="card-val" style="text-transform:capitalize;">${enquiry.spacePreference}</div></div>
+        </div>
+      </div>
+
+      <p>Our concierge and events director will review your schedule and requirements, and reach out within 24–48 business hours with space availability and a tailored proposal.</p>
+      <p>If you have any immediate questions in the meantime, feel free to reply directly to this email.</p>
+    `)
   });
 }
 
-// Phase 4: email verification
+// Email verification
 async function sendEmailVerification({ user, token }) {
-  const url = `${process.env.APP_URL}/verify-email?token=${token}`;
+  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const url = `${appUrl}/verify-email?token=${token}`;
   return send({
-    to:      user.email,
-    subject: 'Verify your email — Aora House',
-    html:    shell(`
-      <p>Hi ${user.firstName},</p>
-      <p>Please verify your email address to complete your account setup.</p>
-      <a href="${url}" class="btn">Verify Email</a>
-    `),
+    to: user.email,
+    subject: 'Verify your email address — Aora House',
+    html: shell(`
+      <p>Hi ${user.firstName || 'there'},</p>
+      <p>Welcome to Aora House. Please verify your email address to complete your account registration and access your member studio passes.</p>
+      <div style="text-align:center; margin:32px 0;">
+        <a href="${url}" class="btn">Verify My Email Address</a>
+      </div>
+      <p style="font-size:12px; color:#9C8770;">If you did not create an account with Aora House, you can safely ignore this email.</p>
+    `)
   });
 }
 
 // Password reset
 async function sendPasswordReset({ user, token }) {
-  const url = `${process.env.APP_URL}/reset-password?token=${token}`;
+  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const url = `${appUrl}/reset-password?token=${token}`;
   return send({
-    to:      user.email,
+    to: user.email,
     subject: 'Reset your password — Aora House',
-    html:    shell(`
-      <p>Hi ${user.firstName},</p>
-      <p>We received a request to reset your password. This link expires in 1 hour.</p>
-      <a href="${url}" class="btn">Reset Password</a>
+    html: shell(`
+      <p>Hi ${user.firstName || 'there'},</p>
+      <p>We received a request to reset your Aora House password. This secure link expires in 1 hour.</p>
+      <div style="text-align:center; margin:32px 0;">
+        <a href="${url}" class="btn">Reset Password</a>
+      </div>
       <div class="divider"></div>
-      <p style="font-size:13px;color:#9C8770;">If you didn't request this, you can safely ignore this email.</p>
-    `),
+      <p style="font-size:12px; color:#9C8770;">If you didn't request a password reset, you can safely ignore this email.</p>
+    `)
   });
 }
 
 module.exports = {
   send,
   sendBookingConfirmation,
-  sendBookingReminder,
-  sendWaitlistPromotion,
+  sendEventTicketConfirmation,
   sendVenueEnquiryAck,
   sendEmailVerification,
   sendPasswordReset,

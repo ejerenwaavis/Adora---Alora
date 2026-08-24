@@ -8,6 +8,7 @@ const ClassSession = require('../models/ClassSession');
 const User = require('../models/User');
 const CreditPack = require('../models/CreditPack');
 const Setting = require('../models/Setting');
+const { sendBookingConfirmation } = require('../services/mailer');
 
 // STUB: Purchase a credit pack (Phase 5 - simulates payment)
 router.post('/purchase-pack', requireAuth, async (req, res) => {
@@ -91,6 +92,20 @@ router.post('/', requireAuth, async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+
+    // Trigger confirmation email in background
+    if (bookingStatus === 'confirmed') {
+      ClassSession.findById(classSessionId)
+        .populate('classType')
+        .populate('instructor')
+        .then(popSession => {
+          if (popSession) {
+            sendBookingConfirmation({ user, classSession: popSession, booking }).catch(e => console.warn('Booking email error:', e.message));
+          }
+        })
+        .catch(e => console.warn('Populate session for email error:', e.message));
+    }
+
     res.status(201).json(booking);
   } catch (err) {
     await session.abortTransaction();
