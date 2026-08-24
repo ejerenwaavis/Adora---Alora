@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 export default function KitchenKDS() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [now, setNow] = useState(new Date());
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -25,6 +26,8 @@ export default function KitchenKDS() {
 
   useEffect(() => {
     fetchOrders();
+
+    const timer = setInterval(() => setNow(new Date()), 30000); // Update time every 30s
 
     // Initialize Socket.io client (defaults to window.location host)
     import('socket.io-client').then(({ io }) => {
@@ -47,7 +50,10 @@ export default function KitchenKDS() {
         setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o));
       });
 
-      return () => socket.disconnect();
+      return () => {
+        socket.disconnect();
+        clearInterval(timer);
+      };
     });
   }, []);
 
@@ -77,30 +83,50 @@ export default function KitchenKDS() {
   const preparing = orders.filter(o => o.status === 'ACCEPTED' || o.status === 'PREPARING');
   const ready = orders.filter(o => o.status === 'READY');
 
-  const OrderCard = ({ order, actions }) => (
-    <div className={styles.ticket}>
-      <div className={styles.ticketHeader}>
-        <div className={styles.ticketId}>Order #{order._id.slice(-4).toUpperCase()}</div>
-        <div className={styles.ticketTime}>
-          {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+  const OrderCard = ({ order, actions }) => {
+    const elapsedMins = Math.floor((now.getTime() - new Date(order.createdAt).getTime()) / 60000);
+    
+    let urgencyClass = '';
+    let elapsedClass = styles.elapsedNormal;
+
+    if (order.status === 'PENDING' || order.status === 'ACCEPTED' || order.status === 'PREPARING') {
+      if (elapsedMins >= 10) {
+        urgencyClass = styles.urgentRed;
+        elapsedClass = styles.elapsedRed;
+      } else if (elapsedMins >= 5) {
+        urgencyClass = styles.urgentYellow;
+        elapsedClass = styles.elapsedYellow;
+      }
+    }
+
+    return (
+      <div className={`${styles.ticket} ${urgencyClass}`}>
+        <div className={styles.ticketHeader}>
+          <div className={styles.ticketId}>Order #{order._id.slice(-4).toUpperCase()}</div>
+          <div className={styles.ticketTime}>
+            {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            <span className={`${styles.elapsedTime} ${elapsedClass}`}>
+              ({elapsedMins}m)
+            </span>
+          </div>
+        </div>
+        <div className={styles.ticketCustomer}>
+          {order.customerName} • {order.orderType}
+        </div>
+        <div className={styles.ticketItems}>
+          {order.items.map((item, idx) => (
+            <div key={idx} className={styles.itemRow}>
+              <span className={styles.itemQty}>{item.quantity}x</span>
+              <span className={styles.itemName}>{item.name}</span>
+            </div>
+          ))}
+        </div>
+        <div className={styles.ticketActions}>
+          {actions}
         </div>
       </div>
-      <div className={styles.ticketCustomer}>
-        {order.customerName} • {order.orderType}
-      </div>
-      <div className={styles.ticketItems}>
-        {order.items.map((item, idx) => (
-          <div key={idx} className={styles.itemRow}>
-            <span className={styles.itemQty}>{item.quantity}x</span>
-            <span className={styles.itemName}>{item.name}</span>
-          </div>
-        ))}
-      </div>
-      <div className={styles.ticketActions}>
-        {actions}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={styles.kdsContainer}>
