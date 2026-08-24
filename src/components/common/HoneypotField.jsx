@@ -21,22 +21,22 @@ export default function HoneypotField({ values = {}, onChange }) {
       }}
       tabIndex="-1"
     >
-      <label htmlFor="_hp_website_trap">Do not fill this field if you are human</label>
+      <label htmlFor="_aora_uid">Do not fill this field if you are human</label>
       <input
-        id="_hp_website_trap"
+        id="_aora_uid"
         type="text"
-        name="_hp_website"
-        value={values._hp_website || ''}
+        name="_aora_uid"
+        value={values._aora_uid || ''}
         onChange={onChange}
-        autoComplete="off"
+        autoComplete="nope"
         tabIndex="-1"
       />
       <input
         type="text"
-        name="_hp_company"
-        value={values._hp_company || ''}
+        name="_aora_session"
+        value={values._aora_session || ''}
         onChange={onChange}
-        autoComplete="off"
+        autoComplete="nope"
         tabIndex="-1"
       />
     </div>

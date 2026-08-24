@@ -54,7 +54,7 @@ function antiBotShield(options = {}) {
 
   return (req, res, next) => {
     // 1. Honeypot check: common crawler decoy fields
-    const honeypotFields = ['_hp_website', '_hp_company', '_hp_fax', 'bot_trap_field'];
+    const honeypotFields = ['_aora_uid', '_aora_session', '_hp_website', '_hp_company', '_hp_fax', 'bot_trap_field'];
     for (const field of honeypotFields) {
       if (req.body && req.body[field]) {
         console.warn(`[Anti-Bot] Honeypot triggered on field "${field}" from IP: ${req.ip}`);

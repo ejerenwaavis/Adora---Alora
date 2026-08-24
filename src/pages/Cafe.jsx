@@ -86,8 +86,8 @@ export default function Cafe() {
           customerName: checkoutForm.name,
           customerPhone: checkoutForm.phone,
           customerEmail: (checkoutForm.email && checkoutForm.email.trim()) || user?.email || undefined,
-          _hp_website: honeypot._hp_website,
-          _hp_company: honeypot._hp_company,
+          _aora_uid: honeypot._aora_uid,
+          _aora_session: honeypot._aora_session,
           items: cart.map(item => ({
             menuItem: item._id,
             name: item.name,
