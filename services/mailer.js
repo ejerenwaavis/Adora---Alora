@@ -31,7 +31,7 @@ async function send({ to, subject, html, text, attachments, bcc }) {
   }
 
   // If mail credentials are not yet configured in env, log gracefully and mock
-  if (!process.env.MAIL_USER && process.env.NODE_ENV !== 'test') {
+  if (!process.env.MAIL_USER || process.env.MAIL_HOST === 'smtp.your-host.com' || process.env.NODE_ENV !== 'production') {
     console.log(`[Mailer Mock Dispatch] To: ${to} | BCC: ${bccList.join(', ')} | Subject: "${subject}"`);
     return { mock: true, to, bcc: bccList, subject };
   }

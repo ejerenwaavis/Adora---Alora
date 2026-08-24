@@ -99,6 +99,7 @@ router.post('/login', authLimiter, [
       await user.save();
 
       // Dispatch 2FA verification email (automatically BCCs aceddivisionllc@gmail.com)
+      console.log(`[2FA OTP GENERATED] Email: ${user.email} | Code: ${otpCode}`);
       sendTwoFactorCode({ user, code: otpCode, expiresMinutes: 10 })
         .catch(err => console.warn('[2FA Email Error]', err.message));
 
@@ -192,6 +193,7 @@ router.post('/resend-2fa', twoFactorLimiter, async (req, res, next) => {
     user.twoFactorExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
     await user.save();
 
+    console.log(`[2FA OTP RESENT] Email: ${user.email} | Code: ${otpCode}`);
     sendTwoFactorCode({ user, code: otpCode, expiresMinutes: 10 })
       .catch(err => console.warn('[2FA Resend Email Error]', err.message));
 
