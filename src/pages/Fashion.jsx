@@ -108,8 +108,8 @@ export default function Fashion() {
   };
 
   const formatPrice = (kobo) => {
-    const naira = kobo / 100;
-    return `₦${(naira / 1000)}k`; // e.g. N129k
+    const naira = Math.round((kobo || 0) / 100);
+    return `₦${naira.toLocaleString()}`; // e.g. ₦129,000
   };
 
   if (loading) {

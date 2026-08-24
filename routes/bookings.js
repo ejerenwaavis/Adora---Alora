@@ -9,7 +9,7 @@ const User = require('../models/User');
 const CreditPack = require('../models/CreditPack');
 const Setting = require('../models/Setting');
 const CreditGrant = require('../models/CreditGrant');
-const { sendBookingConfirmation } = require('../services/mailer');
+const { sendBookingConfirmation, sendWaitlistPromotion } = require('../services/mailer');
 
 // Purchase a credit pack
 router.post('/purchase-pack', requireAuth, async (req, res) => {
@@ -219,7 +219,10 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
           classSession.bookedCount += 1;
           classSession.waitlistCount -= 1;
           await nextInLine.save({ session });
-          // In reality we'd send an email here.
+          
+          // Capture promoted user for background notification
+          var promotedBookingId = nextInLine._id;
+          var promotedUserId = nextInLine.user;
         }
       }
     }
@@ -233,6 +236,20 @@ router.post('/:id/cancel', requireAuth, async (req, res) => {
 
     await session.commitTransaction();
     session.endSession();
+
+    // Trigger waitlist promotion notification in background
+    if (promotedBookingId && promotedUserId) {
+      Promise.all([
+        User.findById(promotedUserId),
+        ClassSession.findById(classSession._id).populate('classType').populate('instructor'),
+        Booking.findById(promotedBookingId)
+      ]).then(([pUser, pSession, pBooking]) => {
+        if (pUser && pSession && pBooking) {
+          sendWaitlistPromotion({ user: pUser, classSession: pSession, booking: pBooking }).catch(e => console.warn('Waitlist email error:', e.message));
+        }
+      }).catch(e => console.warn('Waitlist populate error:', e.message));
+    }
+
     res.json(booking);
   } catch (err) {
     await session.abortTransaction();

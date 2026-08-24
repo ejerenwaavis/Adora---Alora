@@ -271,6 +271,40 @@ async function sendPasswordReset({ user, token }) {
   });
 }
 
+// Waitlist promotion / auto-confirmation
+async function sendWaitlistPromotion({ user, classSession, booking }) {
+  const className = classSession?.classType?.name || 'Movement Studio Class';
+  const instructor = classSession?.instructor ? `${classSession.instructor.firstName} ${classSession.instructor.lastName}` : 'Resident Instructor';
+  const startTime = new Date(classSession?.startTime || Date.now());
+  const room = classSession?.classType?.room || 'Movement Studio · Level 2';
+  const passRef = booking?.ticketReference || `#MB-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
+  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+
+  return send({
+    to: user.email,
+    subject: `Spot Confirmed: You're In for ${className} — Aora House`,
+    html: shell(`
+      <p>Hi ${user.firstName || 'Member'},</p>
+      <p>Great news! A spot opened up and your reservation for <strong>${className}</strong> has been confirmed from the waitlist.</p>
+      
+      <div class="card">
+        <div class="card-row">
+          <div><div class="card-label">Class</div><div class="card-val">${className}</div></div>
+          <div style="text-align:right;"><div class="card-label">Pass Reference</div><div class="card-val" style="color:#A4451F;">${passRef}</div></div>
+        </div>
+        <div class="card-row" style="margin-top:12px; margin-bottom:0;">
+          <div><div class="card-label">Date &amp; Time</div><div class="card-val">${startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div></div>
+          <div style="text-align:right;"><div class="card-label">Instructor</div><div class="card-val">${instructor}</div></div>
+        </div>
+      </div>
+
+      <div style="margin-top:24px;">
+        <a href="${appUrl}/account" class="btn">View Digital Pass &rarr;</a>
+      </div>
+    `)
+  });
+}
+
 module.exports = {
   send,
   sendBookingConfirmation,
@@ -278,4 +312,5 @@ module.exports = {
   sendVenueEnquiryAck,
   sendEmailVerification,
   sendPasswordReset,
+  sendWaitlistPromotion,
 };
