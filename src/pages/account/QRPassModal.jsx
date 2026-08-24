@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
+import { IconX, IconPrint } from '../../components/ui/LineIcons';
 
 export default function QRPassModal({ isOpen, onClose, pass }) {
   const [qrUrl, setQrUrl] = useState('');
@@ -60,7 +61,7 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 2100,
-      padding: '20px'
+      padding: '16px'
     }} onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{
         background: '#FFFDF9',
@@ -75,7 +76,7 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
         {/* Ticket Header Banner */}
         <div style={{
           background: isEvent ? 'linear-gradient(135deg, #2B2015 0%, #4A3527 100%)' : 'linear-gradient(135deg, #2E6B3E 0%, #1A4024 100%)',
-          padding: '24px 20px 20px',
+          padding: '26px 20px 22px',
           textAlign: 'center',
           color: '#F7EFE1',
           position: 'relative'
@@ -83,14 +84,15 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
           <button 
             type="button" 
             onClick={onClose}
-            style={{ position: 'absolute', top: '12px', right: '14px', background: 'none', border: 'none', color: '#F7EFE1', fontSize: '18px', cursor: 'pointer' }}
+            style={{ position: 'absolute', top: '14px', right: '14px', background: 'none', border: 'none', color: '#F7EFE1', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+            aria-label="Close pass"
           >
-            ✕
+            <IconX size={18} color="#F7EFE1" />
           </button>
-          <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: isEvent ? 'var(--gold, #C89B4A)' : '#B8E0C0', fontWeight: 600, marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: isEvent ? 'var(--gold, #C89B4A)' : '#B8E0C0', fontWeight: 600, marginBottom: '5px' }}>
             Aora House · Digital Access Pass
           </div>
-          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '20px', margin: 0, fontWeight: 500, lineHeight: 1.2 }}>
+          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '21px', margin: 0, fontWeight: 400, lineHeight: 1.25 }}>
             {title}
           </h3>
           <div style={{ fontSize: '12px', marginTop: '6px', opacity: 0.9 }}>
@@ -99,15 +101,15 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
         </div>
 
         {/* Ticket Body / QR Section */}
-        <div style={{ padding: '24px 20px 20px', textAlign: 'center' }}>
+        <div style={{ padding: '24px 20px 22px', textAlign: 'center' }}>
           <div style={{
             display: 'inline-block',
             padding: '12px',
             background: '#FFFDF9',
-            border: '2px dashed rgba(200, 155, 74, 0.4)',
+            border: '2px dashed rgba(200, 155, 74, 0.45)',
             borderRadius: '8px',
             boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-            marginBottom: '16px'
+            marginBottom: '18px'
           }}>
             {generating ? (
               <div style={{ width: '220px', height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)' }}>
@@ -122,22 +124,22 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF6EF', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', fontSize: '12px', color: 'var(--cocoa-deep, #2B2015)', textAlign: 'left', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#FAF6EF', padding: '11px 15px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', fontSize: '12px', color: 'var(--cocoa-deep, #2B2015)', textAlign: 'left', marginBottom: '18px' }}>
             <div>
               <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--taupe, #9C8770)', letterSpacing: '0.08em' }}>Location</div>
-              <div style={{ fontWeight: 600 }}>{venue}</div>
+              <div style={{ fontWeight: 600, marginTop: '2px' }}>{venue}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--taupe, #9C8770)', letterSpacing: '0.08em' }}>Pass Ref</div>
-              <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--rust, #A4451F)' }}>{refCode}</div>
+              <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--rust, #A4451F)', marginTop: '2px' }}>{refCode}</div>
             </div>
           </div>
 
-          <p style={{ fontSize: '11.5px', color: 'var(--taupe, #9C8770)', margin: '0 0 16px', lineHeight: 1.4 }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--taupe, #9C8770)', margin: '0 0 18px', lineHeight: 1.45 }}>
             Present this QR code to the clerk at the front desk upon arrival for instant check-in.
           </p>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
               onClick={onClose}
@@ -145,7 +147,7 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
                 flex: 1,
                 background: 'none',
                 border: '1px solid rgba(227, 211, 184, 0.9)',
-                padding: '9px',
+                padding: '10px',
                 borderRadius: '4px',
                 fontSize: '11px',
                 textTransform: 'uppercase',
@@ -163,16 +165,21 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
                 background: 'var(--cocoa-deep, #2B2015)',
                 color: '#F7EFE1',
                 border: 'none',
-                padding: '9px',
+                padding: '10px',
                 borderRadius: '4px',
                 fontSize: '11px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 fontWeight: 600,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
               }}
             >
-              Print / Save ⎙
+              <IconPrint size={13} color="#F7EFE1" />
+              <span>Print / Save</span>
             </button>
           </div>
         </div>

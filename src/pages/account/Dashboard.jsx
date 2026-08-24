@@ -3,6 +3,19 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import WaiverModal from './WaiverModal';
 import QRPassModal from './QRPassModal';
+import {
+  IconCalendar,
+  IconClock,
+  IconPin,
+  IconQr,
+  IconTicket,
+  IconShieldCheck,
+  IconAlert,
+  IconPen,
+  IconCheck,
+  IconX,
+  IconArrowRight
+} from '../../components/ui/LineIcons';
 import styles from './AccountLayout.module.css';
 
 export default function Dashboard() {
@@ -10,7 +23,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'bookings' | 'passes' | 'waiver'
-  const [bookingFilter, setBookingFilter] = useState('all'); // 'all' | 'classes' | 'events' | 'orders'
+  const [bookingFilter, setBookingFilter] = useState('all'); // 'all' | 'classes' | 'events' | 'orders' | 'past'
   const [loading, setLoading] = useState(true);
   
   const [dashboardData, setDashboardData] = useState({
@@ -82,7 +95,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleWaiverSigned = async (updatedUser) => {
+  const handleWaiverSigned = async () => {
     setActionMessage({ text: 'Health & liability waiver signed successfully! Movement studio booking unlocked.', isError: false });
     setTimeout(() => setActionMessage(null), 4000);
     await loadUserBookings();
@@ -133,13 +146,13 @@ export default function Dashboard() {
           alignItems: 'center',
           gap: '8px'
         }}>
-          <span>{actionMessage.isError ? '✕' : '✓'}</span>
+          {actionMessage.isError ? <IconX size={16} color="#FFF" /> : <IconCheck size={16} color="#FFF" />}
           <span>{actionMessage.text}</span>
         </div>
       )}
 
       {/* Header Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.25rem', marginBottom: '2.25rem' }}>
         <div>
           <div className="eyebrow" style={{ color: 'var(--rust)', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: '0.75rem', marginBottom: '0.4rem' }}>
             Member Access Portal
@@ -147,12 +160,12 @@ export default function Dashboard() {
           <h1 className={styles.pageTitle} style={{ margin: 0 }}>
             {user?.firstName} {user?.lastName}
           </h1>
-          <p style={{ color: 'var(--taupe)', marginTop: '0.35rem', fontSize: '0.92rem' }}>
+          <p style={{ color: 'var(--taupe)', marginTop: '0.4rem', fontSize: '0.92rem', lineHeight: 1.5 }}>
             Welcome to your member portal. Manage studio credits, upcoming passes, digital check-in QR codes, and liability records.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div>
           <button 
             onClick={() => {
               if (!isWaiverSigned) {
@@ -164,7 +177,7 @@ export default function Dashboard() {
             className="btn btn-primary"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
-            Book Studio Class <span className="btn-arrow">→</span>
+            Book Studio Class <IconArrowRight size={14} />
           </button>
         </div>
       </div>
@@ -172,25 +185,29 @@ export default function Dashboard() {
       {/* Waiver Warning Alert Banner (If unsigned) */}
       {!isWaiverSigned && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(164, 69, 31, 0.08) 0%, rgba(200, 155, 74, 0.12) 100%)',
-          border: '1px solid rgba(164, 69, 31, 0.4)',
+          background: '#FFFDF9',
+          border: '1px solid rgba(164, 69, 31, 0.35)',
+          borderLeft: '4px solid var(--rust, #A4451F)',
           borderRadius: '8px',
-          padding: '16px 20px',
-          marginBottom: '2rem',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2.25rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '12px'
+          gap: '1rem',
+          boxShadow: '0 2px 12px rgba(164, 69, 31, 0.04)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '24px' }}>⚠️</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+            <div style={{ color: 'var(--rust, #A4451F)', marginTop: '2px' }}>
+              <IconAlert size={20} color="var(--rust, #A4451F)" />
+            </div>
             <div>
-              <strong style={{ color: 'var(--rust, #A4451F)', fontSize: '0.95rem', display: 'block' }}>
+              <strong style={{ color: 'var(--rust, #A4451F)', fontSize: '0.95rem', display: 'block', marginBottom: '2px' }}>
                 Liability &amp; Health Waiver Required
               </strong>
-              <span style={{ fontSize: '0.84rem', color: 'var(--cocoa-deep, #2B2015)' }}>
-                Please sign the Movement Studio health declaration before attending or booking your next session.
+              <span style={{ fontSize: '0.85rem', color: 'var(--cocoa-deep, #2B2015)', lineHeight: 1.4 }}>
+                Please complete the digital health declaration before attending your next Movement session.
               </span>
             </div>
           </div>
@@ -200,40 +217,43 @@ export default function Dashboard() {
               background: 'var(--rust, #A4451F)',
               color: '#FFFFFF',
               border: 'none',
-              padding: '8px 16px',
+              padding: '9px 18px',
               borderRadius: '4px',
-              fontSize: '11px',
+              fontSize: '0.78rem',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            Sign Waiver Now ✍
+            <IconPen size={13} color="#FFF" /> Sign Waiver
           </button>
         </div>
       )}
 
       {/* Top Performance & Credits Matrix */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
         {/* Studio Credits */}
         <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: '4px solid var(--gold)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)' }}>Studio Credits</div>
+            <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--taupe)', fontWeight: 600 }}>Studio Credits</div>
             <Link to="/movement" style={{ fontSize: '0.75rem', color: 'var(--gold)', fontWeight: 600, textDecoration: 'none' }}>+ Top Up</Link>
           </div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 500, margin: '0.35rem 0' }}>
+          <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 400, margin: '0.35rem 0' }}>
             {user?.classCredits || dashboardData.classCredits || 0}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--forest)' }}>
-            Available for all movement &amp; sound sessions
+            Available for all studio sessions
           </div>
         </div>
 
         {/* Membership Tier */}
         <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: '4px solid var(--forest)' }}>
-          <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)' }}>Membership Tier</div>
-          <div style={{ fontSize: '1.5rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 500, margin: '0.5rem 0', textTransform: 'capitalize' }}>
+          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--taupe)', fontWeight: 600 }}>Membership Tier</div>
+          <div style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 400, margin: '0.5rem 0', textTransform: 'capitalize' }}>
             {user?.membershipStatus && user.membershipStatus !== 'none' ? user.membershipStatus : 'House Member'}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
@@ -244,10 +264,10 @@ export default function Dashboard() {
         {/* Active Passes */}
         <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: '4px solid var(--rust)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)' }}>Upcoming Passes</div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--rust)', fontWeight: 600 }}>Active</span>
+            <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--taupe)', fontWeight: 600 }}>Upcoming Passes</div>
+            <span style={{ fontSize: '0.72rem', color: 'var(--rust)', fontWeight: 600, textTransform: 'uppercase' }}>Active</span>
           </div>
-          <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 500, margin: '0.35rem 0' }}>
+          <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)', fontWeight: 400, margin: '0.35rem 0' }}>
             {(dashboardData.upcomingClasses?.length || 0) + (dashboardData.upcomingEvents?.length || 0)}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
@@ -257,9 +277,10 @@ export default function Dashboard() {
 
         {/* Waiver Status */}
         <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: isWaiverSigned ? '4px solid #2E6B3E' : '4px solid #A4451F' }}>
-          <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)' }}>Studio Waiver</div>
-          <div style={{ fontSize: '1.2rem', fontFamily: 'var(--font-heading)', color: isWaiverSigned ? '#2E6B3E' : '#A4451F', fontWeight: 600, margin: '0.65rem 0 0.35rem' }}>
-            {isWaiverSigned ? '✓ Verified & Signed' : '✕ Unsigned'}
+          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--taupe)', fontWeight: 600 }}>Studio Waiver</div>
+          <div style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', color: isWaiverSigned ? '#2E6B3E' : '#A4451F', fontWeight: 500, margin: '0.65rem 0 0.35rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {isWaiverSigned ? <IconShieldCheck size={18} color="#2E6B3E" /> : <IconAlert size={18} color="#A4451F" />}
+            <span>{isWaiverSigned ? 'Verified & Signed' : 'Unsigned'}</span>
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
             {isWaiverSigned ? (
@@ -275,8 +296,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div style={{ display: 'flex', borderBottom: '1px solid rgba(0,0,0,0.08)', marginBottom: '2rem', gap: '1.5rem' }}>
+      {/* Tabs Navigation Bar */}
+      <div className={styles.tabBar}>
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'bookings', label: `My Bookings (${(dashboardData.upcomingClasses?.length || 0) + (dashboardData.upcomingEvents?.length || 0)})` },
@@ -286,18 +307,7 @@ export default function Dashboard() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: '0.75rem 0.25rem',
-              fontSize: '0.92rem',
-              fontFamily: 'inherit',
-              color: activeTab === tab.id ? 'var(--cocoa-deep)' : 'var(--taupe)',
-              fontWeight: activeTab === tab.id ? 600 : 400,
-              borderBottom: activeTab === tab.id ? '2px solid var(--rust)' : '2px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
+            className={`${styles.tabBtn} ${activeTab === tab.id ? styles.tabBtnActive : ''}`}
           >
             {tab.label}
           </button>
@@ -313,9 +323,9 @@ export default function Dashboard() {
               background: '#FFFDF9',
               border: '1px solid rgba(227, 211, 184, 0.9)',
               borderRadius: '8px',
-              padding: '1.75rem',
-              marginBottom: '2rem',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+              padding: '2rem',
+              marginBottom: '2.5rem',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -323,78 +333,90 @@ export default function Dashboard() {
               gap: '1.5rem'
             }}>
               <div>
-                <div style={{ display: 'inline-block', background: 'rgba(200, 155, 74, 0.15)', color: 'var(--rust)', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  Next Upcoming Pass · {nextPassType === 'event' ? 'Loft Event' : 'Movement Studio'}
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(200, 155, 74, 0.12)', color: 'var(--rust)', padding: '0.25rem 0.65rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, marginBottom: '0.65rem' }}>
+                  {nextPassType === 'event' ? <IconTicket size={12} color="var(--rust)" /> : <IconQr size={12} color="var(--rust)" />}
+                  <span>Next Upcoming Pass · {nextPassType === 'event' ? 'Loft Event' : 'Movement Studio'}</span>
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.6rem', color: 'var(--cocoa-deep)', margin: '0 0 0.4rem' }}>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
                   {nextPassType === 'event' ? nextPass.event?.title : nextPass.classSession?.classType?.name}
                 </h3>
-                <div style={{ fontSize: '0.9rem', color: 'var(--taupe)', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  <span>
-                    📅 {new Date(nextPassType === 'event' ? nextPass.event?.startDate : nextPass.classSession?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                <div style={{ fontSize: '0.9rem', color: 'var(--taupe)', display: 'flex', gap: '1.25rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <IconCalendar size={14} color="var(--taupe)" />
+                    {new Date(nextPassType === 'event' ? nextPass.event?.startDate : nextPass.classSession?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
                   </span>
-                  <span>
-                    ⏰ {new Date(nextPassType === 'event' ? nextPass.event?.startDate : nextPass.classSession?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <IconClock size={14} color="var(--taupe)" />
+                    {new Date(nextPassType === 'event' ? nextPass.event?.startDate : nextPass.classSession?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <span>
-                    📍 {nextPassType === 'event' ? (nextPass.event?.space || 'The Loft') : (nextPass.classSession?.classType?.room || 'Movement Studio')}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <IconPin size={14} color="var(--taupe)" />
+                    {nextPassType === 'event' ? (nextPass.event?.space || 'The Loft') : (nextPass.classSession?.classType?.room || 'Movement Studio')}
                   </span>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <div>
                 <button
                   onClick={() => handleOpenQR(nextPass, nextPassType)}
                   style={{
                     background: 'var(--cocoa-deep, #2B2015)',
                     color: '#F7EFE1',
                     border: 'none',
-                    padding: '10px 18px',
+                    padding: '11px 22px',
                     borderRadius: '4px',
-                    fontSize: '0.85rem',
+                    fontSize: '0.82rem',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.08em',
+                    letterSpacing: '0.1em',
                     fontWeight: 600,
                     cursor: 'pointer',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '6px'
+                    gap: '8px'
                   }}
                 >
-                  <span>📱</span> View Digital Pass
+                  <IconQr size={15} color="#F7EFE1" /> View Digital Pass
                 </button>
               </div>
             </div>
           ) : (
-            <div className={styles.emptyState} style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem' }}>No Active Passes</h3>
-              <p style={{ color: 'var(--taupe)', marginBottom: '1.25rem', fontSize: '0.9rem' }}>You have no upcoming studio classes or loft events scheduled.</p>
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                <button onClick={() => navigate('/movement')} className="btn btn-primary">Browse Movement Classes</button>
-                <button onClick={() => navigate('/events')} className="btn btn-outline">Explore Loft Events</button>
+            <div className={styles.emptyState} style={{ marginBottom: '2.5rem' }}>
+              <h3>No Active Passes</h3>
+              <p>You have no upcoming studio classes or loft events scheduled.</p>
+              <div className={styles.actionGroup}>
+                <button onClick={() => navigate('/movement')} className="btn btn-primary">
+                  Browse Movement Classes
+                </button>
+                <button onClick={() => navigate('/events')} className="btn btn-outline">
+                  Explore Loft Events
+                </button>
               </div>
             </div>
           )}
 
-          {/* Quick Shortcuts */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-            <div className={styles.card} style={{ margin: 0, padding: '1.5rem' }}>
-              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem' }}>Movement Studio</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1rem', lineHeight: 1.5 }}>
+          {/* Quick Service Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            <div className={styles.card} style={{ margin: 0 }}>
+              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
+                Movement Studio
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
                 Reserve reformers, breathwork, and sound therapy sessions with resident instructors.
               </p>
-              <button onClick={() => navigate('/movement')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}>
-                Explore Timetable →
+              <button onClick={() => navigate('/movement')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                Explore Timetable <IconArrowRight size={14} />
               </button>
             </div>
 
-            <div className={styles.card} style={{ margin: 0, padding: '1.5rem' }}>
-              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem' }}>Café &amp; Boutique</h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1rem', lineHeight: 1.5 }}>
+            <div className={styles.card} style={{ margin: 0 }}>
+              <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
+                Café &amp; Boutique
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
                 Browse daily seasonal kitchen menus, organic matcha, and curated fashion collection.
               </p>
-              <button onClick={() => navigate('/cafe')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}>
-                View Café Menu →
+              <button onClick={() => navigate('/cafe')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                View Café Menu <IconArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -405,7 +427,7 @@ export default function Dashboard() {
       {activeTab === 'bookings' && (
         <div>
           {/* Subfilter Bar */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
             {[
               { id: 'all', label: 'All Items' },
               { id: 'classes', label: `Classes (${dashboardData.upcomingClasses?.length || 0})` },
@@ -420,7 +442,7 @@ export default function Dashboard() {
                   background: bookingFilter === f.id ? 'var(--cocoa-deep)' : '#FFFDF9',
                   color: bookingFilter === f.id ? '#F7EFE1' : 'var(--cocoa-deep)',
                   border: '1px solid rgba(227, 211, 184, 0.9)',
-                  padding: '6px 14px',
+                  padding: '7px 16px',
                   borderRadius: '20px',
                   fontSize: '0.82rem',
                   fontWeight: 500,
@@ -435,12 +457,12 @@ export default function Dashboard() {
 
           {/* Classes Section */}
           {(bookingFilter === 'all' || bookingFilter === 'classes') && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
                 Upcoming Movement Classes
               </h3>
               {dashboardData.upcomingClasses?.length === 0 ? (
-                <div style={{ padding: '1.5rem', background: '#FAF6EF', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.88rem' }}>
+                <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
                   No upcoming movement classes booked.
                 </div>
               ) : (
@@ -452,16 +474,16 @@ export default function Dashboard() {
                         background: '#FFFDF9',
                         border: '1px solid rgba(227, 211, 184, 0.8)',
                         borderRadius: '8px',
-                        padding: '1.25rem 1.5rem',
+                        padding: '1.5rem',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
-                        gap: '1rem'
+                        gap: '1.25rem'
                       }}>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <strong style={{ fontSize: '1.1rem', color: 'var(--cocoa-deep)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '1.15rem', color: 'var(--cocoa-deep)', fontWeight: 500 }}>
                               {session?.classType?.name || 'Movement Session'}
                             </strong>
                             <span style={{
@@ -471,35 +493,45 @@ export default function Dashboard() {
                               background: booking.status === 'confirmed' ? 'rgba(46, 107, 62, 0.1)' : 'rgba(200, 155, 74, 0.15)',
                               color: booking.status === 'confirmed' ? '#2E6B3E' : 'var(--rust)',
                               fontWeight: 600,
-                              textTransform: 'uppercase'
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.06em'
                             }}>
                               {booking.status}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginTop: '4px' }}>
-                            📅 {new Date(session?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(session?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            {session?.instructor && ` · Instructor: ${session.instructor.firstName} ${session.instructor.lastName}`}
+                          <div style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <IconCalendar size={13} color="var(--taupe)" />
+                              {new Date(session?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(session?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {session?.instructor && <span>· Instructor: {session.instructor.firstName} {session.instructor.lastName}</span>}
                           </div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--forest)', marginTop: '2px' }}>
-                            📍 {session?.classType?.room || 'Movement Studio Level 2'} · Duration: {session?.classType?.durationMinutes || 50} mins
+                          <div style={{ fontSize: '0.8rem', color: 'var(--forest)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <IconPin size={13} color="var(--forest)" />
+                            <span>{session?.classType?.room || 'Movement Studio Level 2'} · Duration: {session?.classType?.durationMinutes || 50} mins</span>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                           <button
                             onClick={() => handleOpenQR(booking, 'class')}
                             style={{
                               background: 'var(--cocoa-deep)',
                               color: '#F7EFE1',
                               border: 'none',
-                              padding: '8px 14px',
+                              padding: '9px 16px',
                               borderRadius: '4px',
-                              fontSize: '0.8rem',
+                              fontSize: '0.78rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
                               fontWeight: 600,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
                             }}
                           >
-                            Digital Pass 📱
+                            <IconQr size={14} color="#F7EFE1" /> Digital Pass
                           </button>
                           <button
                             disabled={cancellingId === booking._id}
@@ -508,9 +540,11 @@ export default function Dashboard() {
                               background: 'none',
                               border: '1px solid rgba(164, 69, 31, 0.5)',
                               color: 'var(--rust)',
-                              padding: '8px 12px',
+                              padding: '9px 14px',
                               borderRadius: '4px',
-                              fontSize: '0.8rem',
+                              fontSize: '0.78rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
                               cursor: cancellingId === booking._id ? 'not-allowed' : 'pointer'
                             }}
                           >
@@ -527,12 +561,12 @@ export default function Dashboard() {
 
           {/* Events Section */}
           {(bookingFilter === 'all' || bookingFilter === 'events') && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
                 Loft &amp; House Event Passes
               </h3>
               {dashboardData.upcomingEvents?.length === 0 ? (
-                <div style={{ padding: '1.5rem', background: '#FAF6EF', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.88rem' }}>
+                <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
                   No upcoming event tickets purchased.
                 </div>
               ) : (
@@ -544,16 +578,16 @@ export default function Dashboard() {
                         background: '#FFFDF9',
                         border: '1px solid rgba(227, 211, 184, 0.8)',
                         borderRadius: '8px',
-                        padding: '1.25rem 1.5rem',
+                        padding: '1.5rem',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         flexWrap: 'wrap',
-                        gap: '1rem'
+                        gap: '1.25rem'
                       }}>
                         <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <strong style={{ fontSize: '1.1rem', color: 'var(--cocoa-deep)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <strong style={{ fontSize: '1.15rem', color: 'var(--cocoa-deep)', fontWeight: 500 }}>
                               {evt?.title || 'Loft House Event'}
                             </strong>
                             <span style={{
@@ -563,16 +597,19 @@ export default function Dashboard() {
                               background: 'rgba(200, 155, 74, 0.15)',
                               color: 'var(--rust)',
                               fontWeight: 600,
-                              textTransform: 'uppercase'
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.06em'
                             }}>
-                              Ticket Ref: {eventBooking.ticketReference || `#TBN-${eventBooking._id.slice(-6).toUpperCase()}`}
+                              Ref: {eventBooking.ticketReference || `#TBN-${eventBooking._id.slice(-6).toUpperCase()}`}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginTop: '4px' }}>
-                            📅 {evt?.startDate ? new Date(evt.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'} {evt?.time ? `· ${evt.time}` : ''}
+                          <div style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <IconCalendar size={13} color="var(--taupe)" />
+                            <span>{evt?.startDate ? new Date(evt.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'} {evt?.time ? `· ${evt.time}` : ''}</span>
                           </div>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--rust)', marginTop: '2px' }}>
-                            📍 {evt?.space || 'The Loft'} · Tickets: {eventBooking.quantity || 1}
+                          <div style={{ fontSize: '0.8rem', color: 'var(--rust)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <IconPin size={13} color="var(--rust)" />
+                            <span>{evt?.space || 'The Loft'} · Tickets: {eventBooking.quantity || 1}</span>
                           </div>
                         </div>
 
@@ -583,14 +620,19 @@ export default function Dashboard() {
                               background: 'var(--cocoa-deep)',
                               color: '#F7EFE1',
                               border: 'none',
-                              padding: '8px 14px',
+                              padding: '9px 16px',
                               borderRadius: '4px',
-                              fontSize: '0.8rem',
+                              fontSize: '0.78rem',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.08em',
                               fontWeight: 600,
-                              cursor: 'pointer'
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px'
                             }}
                           >
-                            Digital Ticket 🎟
+                            <IconTicket size={14} color="#F7EFE1" /> Digital Ticket
                           </button>
                         </div>
                       </div>
@@ -603,41 +645,41 @@ export default function Dashboard() {
 
           {/* Orders Section */}
           {(bookingFilter === 'all' || bookingFilter === 'orders') && (
-            <div style={{ marginBottom: '2rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>
+            <div style={{ marginBottom: '2.5rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
                 Café &amp; Fashion Receipts
               </h3>
               {(dashboardData.cafeOrders?.length === 0 && dashboardData.fashionOrders?.length === 0) ? (
-                <div style={{ padding: '1.5rem', background: '#FAF6EF', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.88rem' }}>
+                <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
                   No order history recorded yet.
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {dashboardData.cafeOrders?.map(order => (
-                    <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <div>
-                        <strong>Café Order #{order.orderNumber}</strong>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--taupe)' }}>
+                        <strong style={{ color: 'var(--cocoa-deep)' }}>Café Order #{order.orderNumber}</strong>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '2px' }}>
                           {order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600 }}>₦{((order.totalAmountKobo || 0) / 100).toLocaleString()}</div>
-                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--forest)' }}>{order.status}</span>
+                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((order.totalAmountKobo || 0) / 100).toLocaleString()}</div>
+                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--forest)', fontWeight: 600 }}>{order.status}</span>
                       </div>
                     </div>
                   ))}
                   {dashboardData.fashionOrders?.map(order => (
-                    <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <div>
-                        <strong>Boutique Item: {order.itemName}</strong>
-                        <div style={{ fontSize: '0.82rem', color: 'var(--taupe)' }}>
+                        <strong style={{ color: 'var(--cocoa-deep)' }}>Boutique Item: {order.itemName}</strong>
+                        <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '2px' }}>
                           Size: {order.selectedSize || 'One Size'} · {order.orderNumber}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600 }}>₦{((order.priceKobo || 0) / 100).toLocaleString()}</div>
-                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--rust)' }}>{order.status}</span>
+                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((order.priceKobo || 0) / 100).toLocaleString()}</div>
+                        <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--rust)', fontWeight: 600 }}>{order.status}</span>
                       </div>
                     </div>
                   ))}
@@ -649,24 +691,24 @@ export default function Dashboard() {
           {/* Past History */}
           {(bookingFilter === 'all' || bookingFilter === 'past') && (
             <div style={{ marginTop: '2rem' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
                 Past Attendance &amp; Expired Bookings
               </h3>
               {(dashboardData.pastClasses?.length === 0 && dashboardData.pastEvents?.length === 0) ? (
-                <div style={{ padding: '1.5rem', background: '#FAF6EF', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.88rem' }}>
-                  No past bookings.
+                <div style={{ padding: '2rem', background: '#FAF6EF', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
+                  No past bookings recorded.
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', opacity: 0.75 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', opacity: 0.8 }}>
                   {dashboardData.pastClasses?.slice(0, 10).map(b => (
-                    <div key={b._id} style={{ background: '#FAF6EF', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '6px', padding: '0.85rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div key={b._id} style={{ background: '#FAF6EF', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '6px', padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong>{b.classSession?.classType?.name || 'Class Session'}</strong>
                         <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
                           {new Date(b.classSession?.startTime || b.createdAt).toLocaleDateString()}
                         </div>
                       </div>
-                      <span style={{ fontSize: '0.75rem', textTransform: 'capitalize' }}>{b.status}</span>
+                      <span style={{ fontSize: '0.75rem', textTransform: 'capitalize', color: 'var(--taupe)' }}>{b.status}</span>
                     </div>
                   ))}
                 </div>
@@ -679,20 +721,22 @@ export default function Dashboard() {
       {/* ─── TAB 3: DIGITAL QR PASSES GALLERY ─── */}
       {activeTab === 'passes' && (
         <div>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '0.4rem', fontWeight: 400 }}>
             Active Door &amp; Check-in Passes
           </h3>
-          <p style={{ color: 'var(--taupe)', fontSize: '0.88rem', marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--taupe)', fontSize: '0.9rem', marginBottom: '2rem' }}>
             Select any active pass below to enlarge the QR code for instant front-desk clerk scanning upon arrival.
           </p>
 
           {((dashboardData.upcomingClasses?.length || 0) + (dashboardData.upcomingEvents?.length || 0)) === 0 ? (
             <div className={styles.emptyState}>
               <p>You have no active passes to scan.</p>
-              <button onClick={() => navigate('/movement')} className="btn btn-primary">Book Movement Session</button>
+              <button onClick={() => navigate('/movement')} className="btn btn-primary">
+                Book Movement Session
+              </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {/* Classes */}
               {dashboardData.upcomingClasses?.map(c => (
                 <div
@@ -703,26 +747,29 @@ export default function Dashboard() {
                     border: '1px solid rgba(227, 211, 184, 0.9)',
                     borderTop: '4px solid var(--forest)',
                     borderRadius: '8px',
-                    padding: '1.5rem',
+                    padding: '1.75rem',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.02)',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'none'}
                 >
-                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--forest)', fontWeight: 600, letterSpacing: '0.08em' }}>
+                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--forest)', fontWeight: 600, letterSpacing: '0.1em' }}>
                     Movement Studio Pass
                   </div>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0.4rem 0' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', margin: '0.5rem 0', fontWeight: 400 }}>
                     {c.classSession?.classType?.name}
                   </h4>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1rem' }}>
-                    📅 {new Date(c.classSession?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(c.classSession?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <IconCalendar size={13} color="var(--taupe)" />
+                    <span>{new Date(c.classSession?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(c.classSession?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>Ref: #{c._id.slice(-6).toUpperCase()}</span>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--forest)', fontWeight: 600 }}>Open QR ↗</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--taupe)', letterSpacing: '0.06em' }}>Ref: #{c._id.slice(-6).toUpperCase()}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--forest)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <IconQr size={13} color="var(--forest)" /> Open Pass
+                    </span>
                   </div>
                 </div>
               ))}
@@ -737,26 +784,29 @@ export default function Dashboard() {
                     border: '1px solid rgba(227, 211, 184, 0.9)',
                     borderTop: '4px solid var(--rust)',
                     borderRadius: '8px',
-                    padding: '1.5rem',
+                    padding: '1.75rem',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.02)',
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'none'}
                 >
-                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--rust)', fontWeight: 600, letterSpacing: '0.08em' }}>
+                  <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--rust)', fontWeight: 600, letterSpacing: '0.1em' }}>
                     Loft Event Pass
                   </div>
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0.4rem 0' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', margin: '0.5rem 0', fontWeight: 400 }}>
                     {e.event?.title}
                   </h4>
-                  <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1rem' }}>
-                    📅 {e.event?.startDate ? new Date(e.event.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'}
+                  <div style={{ fontSize: '0.85rem', color: 'var(--taupe)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <IconCalendar size={13} color="var(--taupe)" />
+                    <span>{e.event?.startDate ? new Date(e.event.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                    <span style={{ fontSize: '0.78rem', color: 'var(--taupe)' }}>Ref: {e.ticketReference || `#TBN-${e._id.slice(-6).toUpperCase()}`}</span>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--rust)', fontWeight: 600 }}>Open QR ↗</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '1rem', borderTop: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--taupe)', letterSpacing: '0.06em' }}>Ref: {e.ticketReference || `#TBN-${e._id.slice(-6).toUpperCase()}`}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--rust)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <IconTicket size={13} color="var(--rust)" /> Open Ticket
+                    </span>
                   </div>
                 </div>
               ))}
@@ -767,66 +817,71 @@ export default function Dashboard() {
 
       {/* ─── TAB 4: WAIVER & HEALTH ─── */}
       {activeTab === 'waiver' && (
-        <div style={{ maxWidth: '720px' }}>
+        <div style={{ maxWidth: '760px' }}>
           <div className={styles.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
               <div>
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', color: 'var(--cocoa-deep)', margin: 0 }}>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.45rem', color: 'var(--cocoa-deep)', margin: 0, fontWeight: 400 }}>
                   Studio Health &amp; Liability Waiver
                 </h3>
-                <p style={{ color: 'var(--taupe)', fontSize: '0.88rem', marginTop: '0.25rem' }}>
+                <p style={{ color: 'var(--taupe)', fontSize: '0.88rem', marginTop: '0.35rem' }}>
                   Aora House Movement Studio Participation &amp; Liability Release Agreement
                 </p>
               </div>
               <span style={{
                 background: isWaiverSigned ? 'rgba(46, 107, 62, 0.1)' : 'rgba(164, 69, 31, 0.1)',
                 color: isWaiverSigned ? '#2E6B3E' : '#A4451F',
-                padding: '4px 12px',
+                padding: '5px 14px',
                 borderRadius: '20px',
-                fontSize: '0.8rem',
+                fontSize: '0.78rem',
                 fontWeight: 600,
-                textTransform: 'uppercase'
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px'
               }}>
-                {isWaiverSigned ? 'Status: Active & Signed' : 'Status: Pending Signature'}
+                {isWaiverSigned ? <IconShieldCheck size={14} color="#2E6B3E" /> : <IconAlert size={14} color="#A4451F" />}
+                <span>{isWaiverSigned ? 'Active & Signed' : 'Pending Signature'}</span>
               </span>
             </div>
 
             {isWaiverSigned ? (
               <div>
-                <div style={{ background: '#FAF6EF', padding: '16px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', marginBottom: '1.5rem', fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--cocoa-deep)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <div style={{ background: '#FAF6EF', padding: '1.25rem', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', marginBottom: '1.75rem', fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--cocoa-deep)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--taupe)' }}>Signature on Record:</span>
                     <strong style={{ fontStyle: 'italic', fontFamily: "'Fraunces', serif" }}>{user?.waiverSignature || `${user?.firstName} ${user?.lastName}`}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--taupe)' }}>Signed Date:</span>
                     <span>{dashboardData.waiverDate ? new Date(dashboardData.waiverDate).toLocaleString() : 'On file'}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--taupe)' }}>Agreement Version:</span>
                     <span>{user?.waiverVersion || 'v1.0 (Movement Studio Policy)'}</span>
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ fontSize: '0.95rem', color: 'var(--cocoa-deep)', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <div style={{ marginBottom: '1.75rem' }}>
+                  <h4 style={{ fontSize: '0.85rem', color: 'var(--cocoa-deep)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>
                     Emergency Contact Details
                   </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.88rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', fontSize: '0.9rem' }}>
                     <div>
-                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.78rem' }}>Contact Name</span>
+                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Contact Name</span>
                       <strong>{user?.emergencyContactName || 'Not specified'}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.78rem' }}>Phone Number</span>
+                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Phone Number</span>
                       <strong>{user?.emergencyContactPhone || 'Not specified'}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.78rem' }}>Relationship</span>
+                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Relationship</span>
                       <strong>{user?.emergencyContactRelation || 'Not specified'}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.78rem' }}>Medical Considerations</span>
+                      <span style={{ color: 'var(--taupe)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '3px' }}>Medical Considerations</span>
                       <span>{user?.medicalNotes || 'None noted'}</span>
                     </div>
                   </div>
@@ -837,29 +892,32 @@ export default function Dashboard() {
                   style={{
                     background: 'none',
                     border: '1px solid rgba(227, 211, 184, 0.9)',
-                    padding: '8px 16px',
+                    padding: '9px 18px',
                     borderRadius: '4px',
-                    fontSize: '0.82rem',
+                    fontSize: '0.8rem',
                     textTransform: 'uppercase',
                     letterSpacing: '0.08em',
                     fontWeight: 600,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
                   }}
                 >
-                  Update Waiver &amp; Contact Info ✎
+                  <IconPen size={13} /> Update Waiver &amp; Contact Info
                 </button>
               </div>
             ) : (
               <div>
-                <p style={{ color: 'var(--cocoa-deep)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                <p style={{ color: 'var(--cocoa-deep)', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
                   You have not yet completed the Aora House Movement Studio liability waiver. Signing this agreement takes less than a minute and will immediately enable you to reserve spots in all movement sessions.
                 </p>
                 <button
                   onClick={() => setIsWaiverModalOpen(true)}
                   className="btn btn-primary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
                 >
-                  Complete &amp; Sign Waiver ✍
+                  <IconPen size={14} color="#FFF" /> Complete &amp; Sign Waiver
                 </button>
               </div>
             )}

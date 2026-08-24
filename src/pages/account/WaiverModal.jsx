@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { IconX, IconShieldCheck, IconPen, IconCheck } from '../../components/ui/LineIcons';
 
 export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
   const { authFetch, refreshUser } = useAuth();
@@ -63,22 +64,22 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
       position: 'fixed',
       inset: 0,
       background: 'rgba(20, 10, 4, 0.75)',
-      backdropFilter: 'blur(4px)',
+      backdropFilter: 'blur(5px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 2000,
-      padding: '20px'
+      padding: '16px'
     }} onClick={(e) => { if (e.target === e.currentTarget && !submitting) onClose(); }}>
       <div style={{
         background: '#FFFDF9',
         border: '1px solid rgba(227, 211, 184, 0.9)',
         borderRadius: '8px',
-        maxWidth: '640px',
+        maxWidth: '620px',
         width: '100%',
         maxHeight: '90vh',
         overflowY: 'auto',
-        boxShadow: '0 16px 40px rgba(0,0,0,0.3)',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
         display: 'flex',
         flexDirection: 'column'
       }}>
@@ -95,16 +96,17 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
             <div style={{ color: 'var(--gold, #C89B4A)', fontSize: '10.5px', textTransform: 'uppercase', letterSpacing: '0.14em', fontWeight: 600 }}>
               Movement Studio Policy
             </div>
-            <h3 style={{ color: '#F7EFE1', fontFamily: "'Fraunces', serif", fontSize: '20px', margin: '3px 0 0', fontWeight: 500 }}>
+            <h3 style={{ color: '#F7EFE1', fontFamily: "'Fraunces', serif", fontSize: '20px', margin: '4px 0 0', fontWeight: 400 }}>
               Health &amp; Liability Waiver
             </h3>
           </div>
           <button 
             type="button" 
             onClick={onClose}
-            style={{ background: 'none', border: 'none', color: '#F7EFE1', fontSize: '20px', cursor: 'pointer', padding: '4px' }}
+            style={{ background: 'none', border: 'none', color: '#F7EFE1', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
+            aria-label="Close modal"
           >
-            ✕
+            <IconX size={18} color="#F7EFE1" />
           </button>
         </div>
 
@@ -119,10 +121,10 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
           {/* Waiver Terms Box */}
           <div style={{
             background: '#FAF6EF',
-            border: '1px solid rgba(227, 211, 184, 0.7)',
+            border: '1px solid rgba(227, 211, 184, 0.75)',
             borderRadius: '6px',
             padding: '16px',
-            maxHeight: '160px',
+            maxHeight: '150px',
             overflowY: 'auto',
             fontSize: '12px',
             lineHeight: '1.6',
@@ -147,7 +149,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
             <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe, #9C8770)', fontWeight: 600, marginBottom: '10px' }}>
               Emergency Contact &amp; Medical Notes
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--cocoa-deep, #2B2015)', marginBottom: '4px' }}>Contact Name</label>
                 <input
@@ -155,7 +157,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                   placeholder="e.g. Jane Doe"
                   value={emergencyName}
                   onChange={(e) => setEmergencyName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
                 />
               </div>
               <div>
@@ -165,7 +167,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                   placeholder="e.g. +234 800 000 0000"
                   value={emergencyPhone}
                   onChange={(e) => setEmergencyPhone(e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
                 />
               </div>
             </div>
@@ -177,7 +179,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 placeholder="e.g. Spouse, Sibling, Friend"
                 value={emergencyRelation}
                 onChange={(e) => setEmergencyRelation(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
               />
             </div>
 
@@ -188,7 +190,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 placeholder="Please note any joint issues, pregnancy, or recent surgeries for instructors..."
                 value={medicalNotes}
                 onChange={(e) => setMedicalNotes(e.target.value)}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', resize: 'vertical' }}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', resize: 'vertical' }}
               />
             </div>
           </div>
@@ -245,7 +247,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 borderRadius: '4px',
                 fontSize: '11px',
                 textTransform: 'uppercase',
-                letterSpacing: '0.06em',
+                letterSpacing: '0.08em',
                 cursor: 'pointer'
               }}
             >
@@ -258,17 +260,21 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 background: submitting || !agreed || !signature.trim() ? 'rgba(46, 107, 62, 0.5)' : 'var(--forest, #2E6B3E)',
                 color: '#FFFFFF',
                 border: 'none',
-                padding: '9px 22px',
+                padding: '10px 22px',
                 borderRadius: '4px',
                 fontSize: '11px',
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 fontWeight: 600,
                 cursor: submitting || !agreed || !signature.trim() ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
               }}
             >
-              {submitting ? 'Submitting Waiver...' : 'Sign & Complete Waiver ✓'}
+              <IconCheck size={13} color="#FFF" />
+              <span>{submitting ? 'Submitting Waiver...' : 'Sign & Complete Waiver'}</span>
             </button>
           </div>
         </form>
