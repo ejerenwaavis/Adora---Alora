@@ -69,7 +69,7 @@ export default function OrderConfirmationModal({ isOpen, onClose, order }) {
           <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--gold, #C89B4A)', fontWeight: 600, marginBottom: '4px' }}>
             Aora House Café · Order Confirmed
           </div>
-          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', margin: 0, fontWeight: 400 }}>
+          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '22px', margin: 0, fontWeight: 400, color: '#F7EFE1' }}>
             Order Received
           </h3>
           <div style={{ fontSize: '12px', marginTop: '6px', color: 'rgba(247, 239, 225, 0.85)' }}>
