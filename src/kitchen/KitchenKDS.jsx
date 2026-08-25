@@ -27,7 +27,12 @@ export default function KitchenKDS() {
   useEffect(() => {
     fetchOrders();
 
-    const timer = setInterval(() => setNow(new Date()), 30000); // Update time every 30s
+    const timeTimer = setInterval(() => setNow(new Date()), 30000); // Update time every 30s
+    
+    // Robust Polling Fallback: Fetch orders every 10 seconds to guarantee no missed orders
+    const pollTimer = setInterval(() => {
+      fetchOrders();
+    }, 10000);
 
     // Initialize Socket.io client (defaults to window.location host)
     import('socket.io-client').then(({ io }) => {
@@ -52,9 +57,15 @@ export default function KitchenKDS() {
 
       return () => {
         socket.disconnect();
-        clearInterval(timer);
+        clearInterval(timeTimer);
+        clearInterval(pollTimer);
       };
     });
+    
+    return () => {
+      clearInterval(timeTimer);
+      clearInterval(pollTimer);
+    };
   }, []);
 
   const updateStatus = async (orderId, newStatus) => {
