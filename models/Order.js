@@ -47,4 +47,7 @@ const orderSchema = new mongoose.Schema({
   glovoOrderId: { type: String, unique: true, sparse: true }
 }, { timestamps: true });
 
+// Index for efficient KDS polling and sorting
+orderSchema.index({ status: 1, createdAt: 1 });
+
 module.exports = mongoose.model('Order', orderSchema);
