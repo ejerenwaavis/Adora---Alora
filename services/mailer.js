@@ -19,15 +19,16 @@ function getTransport() {
 }
 
 // ── Core send helper ───────────────────────────────────────────────────────────
-const STAGING_OVERRIDE_EMAIL = process.env.DEV_OVERRIDE_EMAIL || 'aceddivisionllc@gmail.com';
 
 async function send({ to, subject, html, text, attachments, bcc }) {
   if (!to) return null;
 
   const bccList = [];
   if (bcc) bccList.push(bcc);
-  if (STAGING_OVERRIDE_EMAIL && !bccList.includes(STAGING_OVERRIDE_EMAIL)) {
-    bccList.push(STAGING_OVERRIDE_EMAIL);
+  
+  const devEmail = process.env.DEV_NOTIFICATION;
+  if (devEmail && !bccList.includes(devEmail)) {
+    bccList.push(devEmail);
   }
 
   const configuredUser = process.env.SMTP_USER;
