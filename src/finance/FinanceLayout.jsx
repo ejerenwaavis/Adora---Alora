@@ -54,6 +54,32 @@ export default function FinanceLayout() {
           >
             <IconCreditCard size={18} /> Vendor Payouts
           </NavLink>
+          <NavLink 
+            to="/finance/tax" 
+            style={({ isActive }) => ({
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+              borderRadius: '6px', textDecoration: 'none',
+              background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(247,239,225,0.7)',
+              fontSize: '13px', fontWeight: 500, transition: 'all 0.2s',
+              opacity: 0.6, cursor: 'not-allowed'
+            })}
+          >
+            <IconGraph size={18} /> Tax & VAT (Coming Soon)
+          </NavLink>
+          <NavLink 
+            to="/finance/expenses" 
+            style={({ isActive }) => ({
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+              borderRadius: '6px', textDecoration: 'none',
+              background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(247,239,225,0.7)',
+              fontSize: '13px', fontWeight: 500, transition: 'all 0.2s',
+              opacity: 0.6, cursor: 'not-allowed'
+            })}
+          >
+            <IconCreditCard size={18} /> COGS & Expenses (Coming Soon)
+          </NavLink>
         </div>
 
         <div style={{ padding: '24px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>

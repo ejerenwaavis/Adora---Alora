@@ -66,11 +66,10 @@ function RequireRole({ roles, children }) {
   if (!user) return <Navigate to="/login" replace />;
   if (!roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
-}
-
 // Finance Dashboard
 import FinanceLayout   from './finance/FinanceLayout.jsx';
 import FinanceDashboard from './finance/FinanceDashboard.jsx';
+import FinancePayouts   from './finance/FinancePayouts.jsx';
 
 // ── Role-Based Home Redirect ──────────────────────────────────────────────────
 function StaffHomeRedirect() {
@@ -150,7 +149,8 @@ const internalRouter = createBrowserRouter([
     path: '/finance',
     element: <RequireRole roles={['admin','finance']}><FinanceLayout /></RequireRole>,
     children: [
-      { index: true, element: <FinanceDashboard /> }
+      { index: true, element: <FinanceDashboard /> },
+      { path: 'payouts', element: <FinancePayouts /> }
     ]
   },
   {
