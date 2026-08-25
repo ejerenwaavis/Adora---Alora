@@ -68,13 +68,18 @@ function RequireRole({ roles, children }) {
   return children;
 }
 
+// Finance Dashboard
+import FinanceLayout   from './finance/FinanceLayout.jsx';
+import FinanceDashboard from './finance/FinanceDashboard.jsx';
+
 // ── Role-Based Home Redirect ──────────────────────────────────────────────────
 function StaffHomeRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   
-  if (['admin', 'content_editor', 'finance'].includes(user.role)) return <Navigate to="/admin" replace />;
+  if (['admin', 'content_editor'].includes(user.role)) return <Navigate to="/admin" replace />;
+  if (user.role === 'finance') return <Navigate to="/finance" replace />;
   if (user.role === 'clerk') return <Navigate to="/clerk" replace />;
   if (user.role === 'kitchen' || user.role === 'chef') return <Navigate to="/kitchen" replace />;
   if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
@@ -140,6 +145,13 @@ const internalRouter = createBrowserRouter([
   {
     path: '/login',
     element: <Login /> // You might want a custom StaffLogin later
+  },
+  {
+    path: '/finance',
+    element: <RequireRole roles={['admin','finance']}><FinanceLayout /></RequireRole>,
+    children: [
+      { index: true, element: <FinanceDashboard /> }
+    ]
   },
   {
     path: '/instructor',
