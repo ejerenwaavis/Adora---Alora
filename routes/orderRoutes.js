@@ -25,34 +25,44 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
     let authorizationUrl = '';
     let paystackRef = '';
 
-    // If Paystack is configured, initialize a real transaction
-    if (process.env.PAYSTACK_SECRET_KEY) {
-      const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: newOrder.customerEmail,
-          amount: totalAmountKobo,
-          reference: `aora_order_${newOrder._id}_${Date.now()}`,
-          callback_url: `${req.protocol}://${req.get('host')}/cafe/verify`,
-          metadata: { orderId: newOrder._id }
-        })
-      });
-      
-      const pData = await paystackRes.json();
-      if (pData.status) {
-        authorizationUrl = pData.data.authorization_url;
-        paystackRef = pData.data.reference;
-      } else {
-        throw new Error('Paystack initialization failed: ' + pData.message);
+    const paystackKey = process.env.PAYSTACK_SECRET_KEY;
+
+    // If Paystack is configured with a seemingly real key, attempt to initialize a real transaction
+    if (paystackKey && !paystackKey.includes('replace') && paystackKey.length > 20) {
+      try {
+        const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${paystackKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: newOrder.customerEmail,
+            amount: totalAmountKobo,
+            reference: `aora_order_${newOrder._id}_${Date.now()}`,
+            callback_url: `${req.protocol}://${req.get('host')}/cafe/verify`,
+            metadata: { orderId: newOrder._id }
+          })
+        });
+        
+        const pData = await paystackRes.json();
+        if (pData.status) {
+          authorizationUrl = pData.data.authorization_url;
+          paystackRef = pData.data.reference;
+        } else {
+          console.warn('Paystack initialization failed:', pData.message, '- Falling back to mock checkout.');
+          paystackRef = `mock_ref_${Date.now()}`;
+          authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
+        }
+      } catch (err) {
+        console.warn('Paystack fetch error:', err.message, '- Falling back to mock checkout.');
+        paystackRef = `mock_ref_${Date.now()}`;
+        authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
       }
     } else {
-      // Fallback for local development without keys
+      // Fallback for local development/staging without keys
       paystackRef = `mock_ref_${Date.now()}`;
-      authorizationUrl = `https://mock-paystack.com/checkout/${paystackRef}`;
+      authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
     }
 
     newOrder.paymentReference = paystackRef;
