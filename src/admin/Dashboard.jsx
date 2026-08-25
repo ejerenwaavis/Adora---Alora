@@ -165,9 +165,14 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {isAdmin && (
-            <Link to="/clerk" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-              <Icon name="site-content" size={14} /> Clerk Front Desk
-            </Link>
+            <>
+              <Link to="/finance" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                <Icon name="credit-packs" size={14} /> Finance Desktop
+              </Link>
+              <Link to="/clerk" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                <Icon name="site-content" size={14} /> Clerk Front Desk
+              </Link>
+            </>
           )}
           <Link to="/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
             View Public Site <span className="btn-arrow">↗</span>
