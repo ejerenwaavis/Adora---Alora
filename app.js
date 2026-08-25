@@ -124,6 +124,7 @@ app.use('/api/clerk',    require('./routes/clerk'));
 app.use('/api/orders',   require('./routes/orderRoutes'));
 app.use('/api/user',     require('./routes/user'));
 app.use('/api/webhooks', require('./routes/webhooks'));
+app.use('/api/whatsapp', require('./routes/whatsappRoutes'));
 app.use('/api',          require('./routes/public'));
 
 // ─────────────────────────────────────────────────────────────────────────────
