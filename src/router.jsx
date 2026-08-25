@@ -73,6 +73,11 @@ import FinanceLayout   from './finance/FinanceLayout.jsx';
 import FinanceDashboard from './finance/FinanceDashboard.jsx';
 import FinancePayouts   from './finance/FinancePayouts.jsx';
 
+// Concierge Dashboard
+import ConciergeLayout from './concierge/ConciergeLayout.jsx';
+import ConciergeDashboard from './concierge/ConciergeDashboard.jsx';
+import WhatsAppInbox from './concierge/WhatsAppInbox.jsx';
+
 // ── Role-Based Home Redirect ──────────────────────────────────────────────────
 function StaffHomeRedirect() {
   const { user, loading } = useAuth();
@@ -81,6 +86,7 @@ function StaffHomeRedirect() {
   
   if (['admin', 'content_editor'].includes(user.role)) return <Navigate to="/admin" replace />;
   if (user.role === 'finance') return <Navigate to="/finance" replace />;
+  if (user.role === 'concierge') return <Navigate to="/concierge" replace />;
   if (user.role === 'clerk') return <Navigate to="/clerk" replace />;
   if (user.role === 'kitchen' || user.role === 'chef') return <Navigate to="/kitchen" replace />;
   if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
@@ -153,6 +159,14 @@ const internalRouter = createBrowserRouter([
     children: [
       { index: true, element: <FinanceDashboard /> },
       { path: 'payouts', element: <FinancePayouts /> }
+    ]
+  },
+  {
+    path: '/concierge',
+    element: <RequireRole roles={['admin','concierge']}><ConciergeLayout /></RequireRole>,
+    children: [
+      { index: true, element: <ConciergeDashboard /> },
+      { path: 'whatsapp', element: <WhatsAppInbox /> }
     ]
   },
   {
