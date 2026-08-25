@@ -59,6 +59,29 @@ export default function EventManagement() {
   const selectedEvent = events.find(e => e._id === selectedEventId);
   const checkedInCount = roster.filter(r => r.checkedInAt).length;
 
+  const getFormatTime = (dateString) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    let h = d.getHours();
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${m} ${ampm}`;
+  };
+
+  const getFormatTimeRange = (item) => {
+    if (!item || !item.startDate) return '';
+    const startTimeStr = getFormatTime(item.startDate);
+    let endTimeStr = '';
+    if (item.endDate) {
+      endTimeStr = getFormatTime(item.endDate);
+    } else {
+      const d = new Date(new Date(item.startDate).getTime() + 120 * 60000);
+      endTimeStr = getFormatTime(d);
+    }
+    return `${startTimeStr} – ${endTimeStr}`;
+  };
+
   return (
     <>
       <div className="topbar">
@@ -89,7 +112,7 @@ export default function EventManagement() {
             ) : events.map(e => {
               const isSelected = e._id === selectedEventId;
               const date = new Date(e.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-              const time = new Date(e.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const timeRange = getFormatTimeRange(e);
               
               return (
                 <div 
@@ -99,30 +122,74 @@ export default function EventManagement() {
                     background: isSelected ? 'var(--cocoa-deep)' : 'var(--paper)',
                     border: '1px solid',
                     borderColor: isSelected ? 'var(--cocoa-deep)' : 'var(--line)',
-                    borderRadius: '4px',
-                    padding: '14px 18px',
+                    borderRadius: '6px',
+                    padding: '14px 16px',
                     cursor: 'pointer',
-                    transition: 'all 0.2s'
+                    transition: 'all 0.2s ease',
+                    boxShadow: isSelected ? '0 4px 12px rgba(42,29,20,0.12)' : '0 1px 3px rgba(42,29,20,0.02)'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ 
                         fontFamily: 'var(--f-display)', 
-                        fontSize: '16px', 
+                        fontSize: '15px', 
                         color: isSelected ? '#F7EFE1' : 'var(--ink)', 
-                        fontWeight: 500 
+                        fontWeight: 600,
+                        lineHeight: 1.3
                       }}>
                         {e.title}
                       </div>
-                      <div style={{ 
-                        fontSize: '11px', 
-                        color: isSelected ? 'rgba(220,203,178,.8)' : 'var(--taupe)', 
-                        marginTop: '4px' 
+                      
+                      {/* Discreet Time Range & Location */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginTop: '4px',
+                        flexWrap: 'wrap'
                       }}>
-                        {date} · {time}
+                        <span style={{ 
+                          fontSize: '11.5px', 
+                          fontWeight: 600,
+                          color: isSelected ? 'var(--gold-light, #E3D3B8)' : 'var(--cocoa-deep)',
+                          letterSpacing: '0.01em'
+                        }}>
+                          {date} · {timeRange}
+                        </span>
+                        {e.space && (
+                          <span style={{
+                            fontSize: '10px',
+                            padding: '1px 5px',
+                            borderRadius: '3px',
+                            background: isSelected ? 'rgba(255,255,255,0.12)' : 'rgba(200,155,74,0.12)',
+                            color: isSelected ? '#F7EFE1' : '#8C5815',
+                            fontWeight: 600
+                          }}>
+                            {e.space}
+                          </span>
+                        )}
                       </div>
                     </div>
+                  </div>
+                  
+                  <div style={{ 
+                    marginTop: '10px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontSize: '11px',
+                    color: isSelected ? 'rgba(220,203,178,.85)' : 'var(--ink)',
+                    borderTop: isSelected ? '1px solid rgba(255,255,255,0.08)' : '1px solid var(--line)',
+                    paddingTop: '6px'
+                  }}>
+                    <span>{e.bookedCount || 0} / {e.capacity || 50} Booked</span>
+                    <span style={{ 
+                      color: isSelected ? 'rgba(220,203,178,.6)' : 'var(--taupe)', 
+                      fontSize: '10.5px' 
+                    }}>
+                      {Math.max(0, (e.capacity || 50) - (e.bookedCount || 0))} open
+                    </span>
                   </div>
                 </div>
               );
