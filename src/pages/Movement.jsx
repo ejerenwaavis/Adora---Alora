@@ -175,16 +175,16 @@ export default function Movement() {
             {/* Toggle UI */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(227, 211, 184, 0.6)', paddingBottom: '1rem', marginBottom: '2rem' }}>
               <h3 style={{ margin: 0, color: 'var(--cocoa-deep)', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>Available Dates</h3>
-              <div style={{ display: 'flex', background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.9)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => setViewMode('list')}
-                  style={{ background: viewMode === 'list' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'list' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+                  style={{ background: viewMode === 'list' ? 'var(--black)' : 'transparent', color: viewMode === 'list' ? 'var(--white)' : 'var(--cocoa-deep)', border: viewMode === 'list' ? '1px solid var(--black)' : '1px solid var(--line)', padding: '14px 26px', borderRadius: 'var(--radius-sm)', fontSize: '13px', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease', textTransform: 'uppercase', letterSpacing: '0.09em', lineHeight: 1.2 }}
                 >
                   List View
                 </button>
                 <button 
                   onClick={() => setViewMode('calendar')}
-                  style={{ background: viewMode === 'calendar' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'calendar' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+                  style={{ background: viewMode === 'calendar' ? 'var(--black)' : 'transparent', color: viewMode === 'calendar' ? 'var(--white)' : 'var(--cocoa-deep)', border: viewMode === 'calendar' ? '1px solid var(--black)' : '1px solid var(--line)', padding: '14px 26px', borderRadius: 'var(--radius-sm)', fontSize: '13px', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease', textTransform: 'uppercase', letterSpacing: '0.09em', lineHeight: 1.2 }}
                 >
                   Calendar View
                 </button>
