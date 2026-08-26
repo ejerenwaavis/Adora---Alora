@@ -182,6 +182,8 @@ export default function WhatsAppInbox() {
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Type a message to reply on WhatsApp..."
                 style={{ 
+                  display: 'block',
+                  boxSizing: 'border-box',
                   width: '100%', 
                   padding: '16px', 
                   paddingRight: '48px',
@@ -191,7 +193,8 @@ export default function WhatsAppInbox() {
                   fontFamily: 'inherit',
                   background: '#FAF6EF',
                   resize: 'none',
-                  minHeight: '60px',
+                  minHeight: '56px',
+                  height: '56px',
                   maxHeight: '150px'
                 }}
                 onKeyDown={(e) => {
@@ -217,13 +220,14 @@ export default function WhatsAppInbox() {
                 color: '#fff', 
                 border: 'none', 
                 borderRadius: '8px', 
-                width: '60px',
-                height: '60px',
+                width: '56px',
+                height: '56px',
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 cursor: inputText.trim() ? 'pointer' : 'default',
-                transition: 'background 0.2s'
+                transition: 'background 0.2s',
+                flexShrink: 0
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
