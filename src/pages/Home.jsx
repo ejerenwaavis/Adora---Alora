@@ -1,6 +1,6 @@
 import Hero from '../components/home/Hero.jsx';
 // VERSION 2 (Full-bleed Panoramic Hero): import HeroPanoramic from '../components/home/HeroPanoramic.jsx';
-import HouseSection from '../components/home/HouseSection.jsx';
+import ExploreDoors from '../components/home/ExploreDoors.jsx';
 import Spotlight from '../components/home/Spotlight.jsx';
 import FashionLayers from '../components/home/FashionLayers.jsx';
 import VenueGrid from '../components/home/VenueGrid.jsx';
@@ -12,7 +12,7 @@ export default function Home() {
     <>
       {/* Active: Version 1 (Classic Framed Hero). To toggle to Version 2, use <HeroPanoramic /> */}
       <Hero />
-      <HouseSection />
+      <ExploreDoors />
       
       <Spotlight
         id="movement"
