@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import BookingModal from '../components/BookingModal';
 import PageHeader from '../components/ui/PageHeader';
 import styles from './Movement.module.css';
@@ -135,33 +135,42 @@ export default function Movement() {
                           <div className={styles.vcGroupHeader}>
                             {group.name}
                           </div>
-                          {group.sessions.map(session => (
-                            <div 
-                              key={session._id} 
-                              className={`${styles.vcRow} ${activeSession?._id === session._id ? styles.vcRowActive : ''}`}
-                              onClick={() => setActiveSession(session)}
-                            >
-                              <div className={styles.vcTimeCol}>
-                                <div className={styles.vcHour}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</div>
-                                <div className={styles.vcAmPm}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</div>
-                                <div className={styles.vcDate}>
-                                  {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short' })}<br/>
-                                  {new Date(session.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          {group.sessions.map((session, i) => {
+                            const dStr = new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+                            const prevStr = i > 0 ? new Date(group.sessions[i - 1].startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : null;
+                            const isNewDay = dStr !== prevStr;
+                            return (
+                              <Fragment key={session._id}>
+                                {isNewDay && (
+                                  <div className={styles.vcDaySubheader}>{dStr}</div>
+                                )}
+                                <div 
+                                  className={`${styles.vcRow} ${activeSession?._id === session._id ? styles.vcRowActive : ''}`}
+                                  onClick={() => setActiveSession(session)}
+                                >
+                                  <div className={styles.vcTimeCol}>
+                                    <div className={styles.vcHour}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</div>
+                                    <div className={styles.vcAmPm}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</div>
+                                    <div className={styles.vcDate}>
+                                      {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short' })}<br/>
+                                      {new Date(session.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    </div>
+                                  </div>
+                                  <div className={styles.vcMid}>
+                                    <div className={styles.vcRowType}>{session.classType?.name} · {session.classType?.durationMinutes} min</div>
+                                    <div className={styles.vcRowName}>{session.classType?.name}</div>
+                                    <div className={styles.vcRowInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
+                                  </div>
+                                  <div className={styles.vcRightCol}>
+                                    <div className={`${styles.vcSpotsBadge} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
+                                      {session.maxCapacity - session.bookedCount} left
+                                    </div>
+                                    <div className={styles.vcLvl}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
+                                  </div>
                                 </div>
-                              </div>
-                              <div className={styles.vcMid}>
-                                <div className={styles.vcRowType}>{session.classType?.name} · {session.classType?.durationMinutes} min</div>
-                                <div className={styles.vcRowName}>{session.classType?.name}</div>
-                                <div className={styles.vcRowInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
-                              </div>
-                              <div className={styles.vcRightCol}>
-                                <div className={`${styles.vcSpotsBadge} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
-                                  {session.maxCapacity - session.bookedCount} left
-                                </div>
-                                <div className={styles.vcLvl}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
-                              </div>
-                            </div>
-                          ))}
+                              </Fragment>
+                            );
+                          })}
                         </div>
                       ))}
                     </div>
@@ -208,50 +217,65 @@ export default function Movement() {
 
                 {/* Mobile Variant A */}
                 <div className={styles.vaRailWrapper}>
-                  {groupedSessions.map(group => (
-                    <div key={group.name} className={styles.vaRailGroup}>
-                      <div className={styles.vaGroupHeader}>
-                        {group.name}
-                      </div>
-                      <div className={styles.vaRail}>
-                        {group.sessions.map(session => (
-                          <div 
-                            key={session._id} 
-                            className={styles.vaCard}
-                            onClick={() => setSelectedSession(session)}
-                          >
-                            <div className={styles.vaCardImg}>
-                              <img 
-                                src={session.classType?.coverImage || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=600"} 
-                                alt={session.classType?.name} 
-                              />
-                              <div className={`${styles.vaSpots} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
-                                {session.maxCapacity - session.bookedCount} spots left
-                              </div>
-                            </div>
-                            <div className={styles.vaCardBody}>
-                              <div className={styles.vaCardHeader}>
-                                <div className={styles.vaCardDate}>
-                                  {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
+                  {groupedSessions.map(group => {
+                    const daysMap = {};
+                    group.sessions.forEach(s => {
+                      const d = new Date(s.startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+                      if (!daysMap[d]) daysMap[d] = [];
+                      daysMap[d].push(s);
+                    });
+                    const daysArr = Object.entries(daysMap);
+
+                    return (
+                      <div key={group.name} className={styles.vaRailGroup}>
+                        <div className={styles.vaGroupHeader}>
+                          {group.name}
+                        </div>
+                        {daysArr.map(([dayStr, daySessions]) => (
+                          <div key={dayStr} className={styles.vaDayGroup}>
+                            <div className={styles.vaDaySubheader}>{dayStr}</div>
+                            <div className={styles.vaRail}>
+                              {daySessions.map(session => (
+                                <div 
+                                  key={session._id} 
+                                  className={styles.vaCard}
+                                  onClick={() => setSelectedSession(session)}
+                                >
+                                  <div className={styles.vaCardImg}>
+                                    <img 
+                                      src={session.classType?.coverImage || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=600"} 
+                                      alt={session.classType?.name} 
+                                    />
+                                    <div className={`${styles.vaSpots} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
+                                      {session.maxCapacity - session.bookedCount} spots left
+                                    </div>
+                                  </div>
+                                  <div className={styles.vaCardBody}>
+                                    <div className={styles.vaCardHeader}>
+                                      <div className={styles.vaCardDate}>
+                                        {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
+                                      </div>
+                                      <div className={styles.vaCardTime}>
+                                        {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                      </div>
+                                    </div>
+                                    <div className={styles.vaCardType}>{session.classType?.name}</div>
+                                    <div className={styles.vaCardName}>{session.classType?.name}</div>
+                                    <div className={styles.vaCardInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
+                                    
+                                    <div className={styles.vaCardFoot}>
+                                      <div className={styles.vaLevel}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
+                                      <button className={styles.vaBook} onClick={() => setSelectedSession(session)}>Book</button>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className={styles.vaCardTime}>
-                                  {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                              </div>
-                              <div className={styles.vaCardType}>{session.classType?.name}</div>
-                              <div className={styles.vaCardName}>{session.classType?.name}</div>
-                              <div className={styles.vaCardInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
-                              
-                              <div className={styles.vaCardFoot}>
-                                <div className={styles.vaLevel}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
-                                <button className={styles.vaBook} onClick={() => setSelectedSession(session)}>Book</button>
-                              </div>
+                              ))}
                             </div>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </>
             )}
