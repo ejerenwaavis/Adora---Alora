@@ -364,6 +364,14 @@ router.post('/kiosk-check-in', async (req, res) => {
       return res.status(400).json({ error: 'Already checked in' });
     }
 
+    if (booking.classSession?.startTime) {
+      const timeDiffMs = new Date(booking.classSession.startTime) - new Date();
+      const minutesBefore = timeDiffMs / (1000 * 60);
+      if (minutesBefore > 30) {
+        return res.status(400).json({ error: 'Check-in opens 30 minutes before class.' });
+      }
+    }
+
     booking.checkedInAt = new Date();
     // We do not set checkedInBy since it's self-service kiosk
     await booking.save();

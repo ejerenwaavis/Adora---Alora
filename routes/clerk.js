@@ -29,10 +29,18 @@ router.post('/qr-checkin', async (req, res) => {
     }
     const [type, id] = qrToken.split(':');
     
-    if (type === 'CLASS') {
+    if (type === 'CLASS' || type === 'qr_checkin_class') {
       const booking = await Booking.findById(id).populate('user').populate({ path: 'classSession', populate: { path: 'classType' } });
       if (!booking) return res.status(404).json({ error: 'Class booking not found' });
       if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
+      
+      if (booking.classSession?.startTime) {
+        const timeDiffMs = new Date(booking.classSession.startTime) - new Date();
+        const minutesBefore = timeDiffMs / (1000 * 60);
+        if (minutesBefore > 30) {
+          return res.status(400).json({ error: 'Check-in opens 30 minutes before class.' });
+        }
+      }
       
       booking.checkedInAt = new Date();
       booking.checkedInBy = req.user.id;
@@ -52,7 +60,7 @@ router.post('/qr-checkin', async (req, res) => {
       );
       
       return res.json({ message: `Successfully checked in ${booking.user.firstName} ${booking.user.lastName}` });
-    } else if (type === 'EVENT') {
+    } else if (type === 'EVENT' || type === 'qr_checkin_event') {
       const booking = await EventBooking.findById(id).populate('user').populate('event');
       if (!booking) return res.status(404).json({ error: 'Event booking not found' });
       if (booking.checkedInAt) return res.status(400).json({ error: 'Guest already checked in' });
@@ -166,6 +174,14 @@ router.post('/classes/checkin', async (req, res) => {
     const booking = await Booking.findById(bookingId).populate('user').populate({ path: 'classSession', populate: { path: 'classType' } });
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     if (booking.checkedInAt) return res.status(400).json({ error: 'Already checked in' });
+
+    if (booking.classSession?.startTime) {
+      const timeDiffMs = new Date(booking.classSession.startTime) - new Date();
+      const minutesBefore = timeDiffMs / (1000 * 60);
+      if (minutesBefore > 30) {
+        return res.status(400).json({ error: 'Check-in opens 30 minutes before class.' });
+      }
+    }
 
     booking.checkedInAt = new Date();
     booking.checkedInBy = req.user.id;
