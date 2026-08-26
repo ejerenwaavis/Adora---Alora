@@ -14,10 +14,11 @@ const userSchema = new mongoose.Schema({
   // content_editor: CMS-only (menu, classes, events, FAQs, announcements)
   // instructor    : read-only attendance/class view
   // finance       : read-only payments & reports
+  // concierge     : guest communications & whatsapp live chat
   // member        : standard customer account
   role: {
     type: String,
-    enum: ['admin', 'clerk', 'content_editor', 'instructor', 'finance', 'member'],
+    enum: ['admin', 'clerk', 'content_editor', 'instructor', 'finance', 'concierge', 'member'],
     default: 'member',
   },
 

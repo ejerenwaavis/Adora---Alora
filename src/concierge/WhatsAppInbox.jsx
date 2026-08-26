@@ -129,7 +129,16 @@ export default function WhatsAppInbox() {
         </div>
 
         {/* Message Thread */}
-        <div style={{ flex: 1, padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px', backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%23e3d3b8\' fill-opacity=\'0.2\' fill-rule=\'evenodd\'%3E%3Ccircle cx=\'3\' cy=\'3\' r=\'3\'/%3E%3Ccircle cx=\'13\' cy=\'13\' r=\'3\'/%3E%3C/g%3E%3C/svg%3E")' }}>
+        <div style={{ 
+          flex: 1, 
+          padding: '32px', 
+          overflowY: 'auto', 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '20px', 
+          backgroundColor: '#FAF6EF',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23e3d3b8' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M15 20c-1.5 0-2.5 1-2.5 2.5S13.5 25 15 25s2.5-1 2.5-2.5S16.5 20 15 20zm0 1c.83 0 1.5.67 1.5 1.5S15.83 24 15 24s-1.5-.67-1.5-1.5S14.17 21 15 21z'/%3E%3Cpath d='M40 80c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 1c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z'/%3E%3Cpath d='M100 30l-3 3-1-1-1 1 3 3 5-5z'/%3E%3Cpath d='M80 90a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0-8a3 3 0 1 1 0 6 3 3 0 0 1 0-6z'/%3E%3Cpath d='M10 100c-2 0-4 1-4 3 0 3 4 5 4 5s4-2 4-5c0-2-2-3-4-3zm0 2c1 0 2 1 2 2 0 1-1.5 2.5-2 3-.5-.5-2-2-2-3 0-1 1-2 2-2z'/%3E%3Cpath d='M50 15l2-2 4 4-2 2z'/%3E%3Cpath d='M105 70l2-2 4 4-2 2z'/%3E%3Cpath d='M30 40a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm0-14a6 6 0 1 1 0 12 6 6 0 0 1 0-12z'/%3E%3Cpath d='M90 15a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0-6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z'/%3E%3Cpath d='M60 55l-2-2h-3v-3l-2-2 2-2v-3h3l2-2 2 2h3v3l2 2-2 2v3h-3z'/%3E%3Cpath d='M15 65l-2-2v-2l-2-2 2-2v-2l2-2 2 2v2l2 2-2 2v2z'/%3E%3Cpath d='M75 35l-1-1v-2l-1-1 1-1v-2l1-1 1 1v2l1 1-1 1v2z'/%3E%3Cpath d='M40 105l-1-1h-2l-1-1 1-1h2l1-1 1 1h2l1 1-1 1h-2z'/%3E%3C/g%3E%3C/svg%3E")`
+        }}>
           <div style={{ textAlign: 'center', margin: '10px 0' }}>
             <span style={{ background: 'rgba(227, 211, 184, 0.4)', color: 'var(--cocoa-deep)', fontSize: '11px', padding: '4px 12px', borderRadius: '12px', fontWeight: 500 }}>
               Today

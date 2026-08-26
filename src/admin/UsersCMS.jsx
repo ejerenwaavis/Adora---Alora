@@ -36,6 +36,12 @@ const ROLE_INFO = {
     color: '#4A3527',
     desc: 'Revenue dashboards, transaction summaries, and credit pack management.'
   },
+  concierge: {
+    label: 'Guest Concierge',
+    badgeClass: 'b-concierge',
+    color: '#8B3318',
+    desc: 'Guest communications, WhatsApp inbox, and direct inquiries.'
+  },
   member: {
     label: 'House Member',
     badgeClass: 'b-member',
@@ -866,6 +872,7 @@ export default function UsersCMS() {
           {[
             { key: 'admin', label: 'Super Admins', icon: 'settings', color: '#2A1D14' },
             { key: 'clerk', label: 'Front Desk Clerks', icon: 'site-content', color: '#414F36' },
+            { key: 'concierge', label: 'Guest Concierges', icon: 'chat', color: '#8B3318' },
             { key: 'content_editor', label: 'Content Editors', icon: 'layers', color: '#C89B4A' },
             { key: 'instructor', label: 'Studio Instructors', icon: 'movement', color: '#A4451F' },
             { key: 'finance', label: 'Finance Managers', icon: 'credit-packs', color: '#4A3527' }
@@ -1146,6 +1153,7 @@ export default function UsersCMS() {
                     <option value="content_editor">Content Editor</option>
                     <option value="instructor">Studio Instructor</option>
                     <option value="finance">Finance Manager</option>
+                    <option value="concierge">Guest Concierge</option>
                   </select>
                 </div>
               </div>
@@ -1221,6 +1229,7 @@ export default function UsersCMS() {
                     <option value="content_editor">Content Editor</option>
                     <option value="instructor">Studio Instructor</option>
                     <option value="finance">Finance Manager</option>
+                    <option value="concierge">Guest Concierge</option>
                     <option value="admin">Super Admin</option>
                   </select>
                 </div>
