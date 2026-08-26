@@ -44,6 +44,14 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
     ? (pass.event?.time || (pass.event?.startDate ? new Date(pass.event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Doors Open'))
     : (pass.classSession?.startTime ? new Date(pass.classSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
 
+  let isExpired = false;
+  if (isEvent && pass.event?.startDate) {
+    isExpired = new Date(pass.event.startDate) < new Date();
+  } else if (!isEvent && pass.classSession?.startTime) {
+    isExpired = new Date(pass.classSession.startTime) < new Date();
+  }
+  if (pass.status === 'cancelled' || pass.status === 'expired') isExpired = true;
+
   const venue = isEvent ? (pass.event?.space || 'The Loft & Private Rooms') : (pass.classSession?.classType?.room || 'Movement Studio · Level 2');
   const refCode = pass.ticketReference || pass.reference || `#TBN-${(pass._id || '').slice(-6).toUpperCase()}`;
 
@@ -75,7 +83,7 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
       }}>
         {/* Ticket Header Banner */}
         <div style={{
-          background: isEvent ? 'linear-gradient(135deg, #2B2015 0%, #4A3527 100%)' : 'linear-gradient(135deg, #2E6B3E 0%, #1A4024 100%)',
+          background: 'linear-gradient(135deg, #2B2015 0%, #4A3527 100%)',
           padding: '26px 20px 22px',
           textAlign: 'center',
           color: '#F7EFE1',
@@ -89,14 +97,36 @@ export default function QRPassModal({ isOpen, onClose, pass }) {
           >
             <IconX size={18} color="#F7EFE1" />
           </button>
-          <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: isEvent ? 'var(--gold, #C89B4A)' : '#B8E0C0', fontWeight: 600, marginBottom: '5px' }}>
+          <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.18em', color: 'var(--gold, #C89B4A)', fontWeight: 600, marginBottom: '5px' }}>
             Aora House · Digital Access Pass
           </div>
-          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '21px', margin: 0, fontWeight: 400, lineHeight: 1.25 }}>
+          <h3 style={{ fontFamily: "'Fraunces', serif", fontSize: '21px', margin: 0, fontWeight: 400, lineHeight: 1.25, color: '#F7EFE1' }}>
             {title}
           </h3>
-          <div style={{ fontSize: '12px', marginTop: '6px', opacity: 0.9 }}>
+          <div style={{ fontSize: '12px', marginTop: '6px', opacity: 0.9, marginBottom: '12px' }}>
             {dateStr} {timeStr ? `· ${timeStr}` : ''}
+          </div>
+          
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: isExpired ? 'rgba(211, 47, 47, 0.15)' : 'rgba(46, 107, 62, 0.15)',
+            padding: '4px 10px',
+            borderRadius: '20px',
+            fontSize: '11px',
+            fontWeight: 500,
+            letterSpacing: '0.04em',
+            color: isExpired ? '#FF8A80' : '#B8E0C0'
+          }}>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: isExpired ? '#FF5252' : '#4CAF50',
+              display: 'inline-block'
+            }}></span>
+            {isExpired ? 'EXPIRED' : 'ACTIVE PASS'}
           </div>
         </div>
 
