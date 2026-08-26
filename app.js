@@ -36,6 +36,7 @@ app.use(helmet({
       fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:         ["'self'", 'data:', 'blob:', 'https:'],
       connectSrc:     ["'self'", 'https://api.paystack.co'],
+      frameSrc:       ["'self'", 'https://maps.google.com', 'https://www.google.com'],
     },
   },
   crossOriginEmbedderPolicy: false,
