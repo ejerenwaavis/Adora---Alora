@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+﻿import React, { useState, useEffect, Fragment } from 'react';
 import BookingModal from '../components/BookingModal';
 import PageHeader from '../components/ui/PageHeader';
 import styles from './Movement.module.css';
@@ -10,6 +10,10 @@ export default function Movement() {
   
   const [selectedClassType, setSelectedClassType] = useState(null);
   const [selectedSessionToBook, setSelectedSessionToBook] = useState(null);
+
+  // Calendar State
+  const [currentMonth, setCurrentMonth] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -27,8 +31,15 @@ export default function Movement() {
     });
   }, []);
 
-  // Group sessions by date for the selected class type
-  const getGroupedSessions = () => {
+  // Set the selected date to today when opening a class type
+  useEffect(() => {
+    if (selectedClassType) {
+      const today = new Date();
+      setSelectedCalendarDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
+    }
+  }, [selectedClassType]);
+
+  const getGroupedSessionsByISO = () => {
     if (!selectedClassType) return {};
     
     const filtered = sessions.filter(s => s.classType?._id === selectedClassType._id);
@@ -36,8 +47,7 @@ export default function Movement() {
     
     filtered.forEach(s => {
       const dateObj = new Date(s.startTime);
-      // Group by "Mon, Sep 15" format
-      const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+      const dateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
       
       if (!groups[dateStr]) groups[dateStr] = [];
       groups[dateStr].push(s);
@@ -46,7 +56,44 @@ export default function Movement() {
     return groups;
   };
 
-  const groupedSessions = getGroupedSessions();
+  const groupedSessions = getGroupedSessionsByISO();
+
+  // Calendar Logic
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfMonth(year, month);
+
+  const calendarDays = [];
+  for (let i = 0; i < firstDay; i++) {
+    calendarDays.push(null);
+  }
+  for (let i = 1; i <= daysInMonth; i++) {
+    calendarDays.push(new Date(year, month, i));
+  }
+  // padding end to make it a full grid (multiple of 7)
+  while (calendarDays.length % 7 !== 0) {
+    calendarDays.push(null);
+  }
+
+  const prevMonth = () => {
+    setCurrentMonth(new Date(year, month - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(year, month + 1, 1));
+  };
+
+  const getIsoDate = (d) => {
+    if (!d) return null;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const selectedDateStr = getIsoDate(selectedCalendarDate);
+  const selectedDaySessions = selectedDateStr ? (groupedSessions[selectedDateStr] || []) : [];
 
   return (
     <div className={styles.pageContainer}>
@@ -101,7 +148,7 @@ export default function Movement() {
             </div>
           </div>
         ) : (
-          // View 2: Class Timetable
+          // View 2: Class Timetable (Calendar)
           <div className={styles.timetableSection}>
             <button 
               onClick={() => setSelectedClassType(null)}
@@ -124,53 +171,119 @@ export default function Movement() {
               </div>
             </div>
 
-            <h3 style={{ borderBottom: '1px solid rgba(227, 211, 184, 0.6)', paddingBottom: '1rem', marginBottom: '2rem', color: 'var(--cocoa-deep)', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>Available Dates</h3>
-            
-            {Object.keys(groupedSessions).length === 0 ? (
-              <div style={{ padding: '3rem', background: '#FFFDF9', textAlign: 'center', borderRadius: '8px', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.8)' }}>
-                No upcoming sessions scheduled for {selectedClassType.name}. Please check back later.
+            {/* Calendar UI */}
+            <h3 style={{ borderBottom: '1px solid rgba(227, 211, 184, 0.6)', paddingBottom: '1rem', color: 'var(--cocoa-deep)', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>Available Dates</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginTop: '2rem' }}>
+              
+              {/* Left Column: Calendar Grid */}
+              <div style={{ flex: '1 1 350px', background: '#FFFDF9', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--cocoa-deep)' }}>&larr;</button>
+                  <h3 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.3rem', color: 'var(--cocoa-deep)' }}>
+                    {currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                  </h3>
+                  <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--cocoa-deep)' }}>&rarr;</button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center', marginBottom: '8px' }}>
+                  {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
+                    <div key={day} style={{ fontSize: '0.8rem', color: 'var(--taupe)', fontWeight: 600 }}>{day}</div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+                  {calendarDays.map((dateObj, idx) => {
+                    if (!dateObj) return <div key={idx} style={{ padding: '10px 0' }}></div>;
+                    
+                    const iso = getIsoDate(dateObj);
+                    const hasSessions = groupedSessions[iso] && groupedSessions[iso].length > 0;
+                    const isSelected = selectedDateStr === iso;
+                    const isToday = getIsoDate(new Date()) === iso;
+
+                    return (
+                      <button 
+                        key={idx}
+                        onClick={() => setSelectedCalendarDate(dateObj)}
+                        style={{
+                          background: isSelected ? 'var(--cocoa-deep)' : (hasSessions ? '#FAF6EF' : 'transparent'),
+                          color: isSelected ? '#FFF' : (hasSessions ? 'var(--cocoa-deep)' : 'var(--taupe)'),
+                          border: isToday && !isSelected ? '1px solid var(--cocoa-deep)' : '1px solid transparent',
+                          borderRadius: '8px',
+                          padding: '12px 0',
+                          cursor: 'pointer',
+                          fontSize: '0.95rem',
+                          fontWeight: hasSessions || isSelected ? 600 : 400,
+                          position: 'relative',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        {dateObj.getDate()}
+                        {hasSessions && !isSelected && (
+                          <div style={{ position: 'absolute', bottom: '4px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '4px', borderRadius: '50%', background: 'var(--rust)' }}></div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {Object.entries(groupedSessions).map(([dateStr, daySessions]) => (
-                  <div key={dateStr} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '12px', padding: '1.5rem' }}>
-                    <h4 style={{ color: 'var(--cocoa-deep)', fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid #FAF6EF', paddingBottom: '0.5rem' }}>{dateStr}</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {daySessions.map(session => (
-                        <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: '#FAF6EF', borderRadius: '8px' }}>
-                          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                            <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--cocoa-deep)', width: '90px' }}>
-                              {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+
+              {/* Right Column: Selected Date Sessions */}
+              <div style={{ flex: '1 1 400px' }}>
+                {selectedCalendarDate ? (
+                  <div style={{ background: '#FFFDF9', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                    <h4 style={{ color: 'var(--cocoa-deep)', fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid #FAF6EF', paddingBottom: '0.5rem' }}>
+                      {selectedCalendarDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
+                    </h4>
+                    
+                    {selectedDaySessions.length === 0 ? (
+                      <div style={{ color: 'var(--taupe)', padding: '2rem 0', textAlign: 'center', fontStyle: 'italic', fontSize: '0.95rem' }}>
+                        No sessions scheduled for this date.
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {selectedDaySessions.map(session => (
+                          <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1.25rem', background: '#FAF6EF', borderRadius: '8px', borderLeft: '3px solid var(--rust)' }}>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                              <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
+                                {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '1rem', color: 'var(--cocoa-deep)', fontWeight: 500 }}>{session.instructor?.firstName} {session.instructor?.lastName}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>{session.venueSpace?.name || 'Main Studio'}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div style={{ fontSize: '1rem', color: 'var(--cocoa-deep)', fontWeight: 500 }}>{session.instructor?.firstName} {session.instructor?.lastName}</div>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>{session.venueSpace?.name || 'Main Studio'}</div>
-                            </div>
+                            <button 
+                              onClick={() => setSelectedSessionToBook(session)}
+                              disabled={session.bookedCount >= session.capacity}
+                              style={{ 
+                                background: session.bookedCount >= session.capacity ? 'transparent' : 'var(--cocoa-deep)', 
+                                color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
+                                border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
+                                padding: '8px 16px', 
+                                borderRadius: '20px', 
+                                fontSize: '0.8rem', 
+                                cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.05em',
+                                width: '100%',
+                                maxWidth: '140px'
+                              }}
+                            >
+                              {session.bookedCount >= session.capacity ? 'Waitlist' : 'Book Session'}
+                            </button>
                           </div>
-                          <button 
-                            onClick={() => setSelectedSessionToBook(session)}
-                            disabled={session.bookedCount >= session.capacity}
-                            style={{ 
-                              background: session.bookedCount >= session.capacity ? 'transparent' : 'var(--cocoa-deep)', 
-                              color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
-                              border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
-                              padding: '10px 20px', 
-                              borderRadius: '20px', 
-                              fontSize: '0.85rem', 
-                              cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em'
-                            }}
-                          >
-                            {session.bookedCount >= session.capacity ? 'Waitlist' : 'Book Session'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ))}
+                ) : (
+                  <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.6)', borderRadius: '12px', minHeight: '300px' }}>
+                    Select a date on the calendar to view sessions.
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
           </div>
         )}
       </div>
