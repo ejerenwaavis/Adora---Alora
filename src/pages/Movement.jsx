@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import BookingModal from '../components/BookingModal';
 import PageHeader from '../components/ui/PageHeader';
 import styles from './Movement.module.css';
@@ -79,7 +79,7 @@ export default function Movement() {
                 >
                   <div style={{ height: '200px', width: '100%', background: '#eaeaea', overflow: 'hidden' }}>
                     <img 
-                      src={type.image || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} 
+                      src={type.coverImage || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} 
                       alt={type.name}
                       style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                     />
@@ -116,11 +116,11 @@ export default function Movement() {
                 <p style={{ color: 'var(--taupe)', fontSize: '1.1rem', lineHeight: 1.6 }}>{selectedClassType.description}</p>
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
                   <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>{selectedClassType.durationMinutes} Minutes</span>
-                  <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>Intensity: {selectedClassType.intensityLevel}/5</span>
+                  <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>Intensity: {selectedClassType.intensityLevel || 'All Levels'}/5</span>
                 </div>
               </div>
               <div style={{ flex: '1 1 300px', height: '300px', borderRadius: '12px', overflow: 'hidden' }}>
-                 <img src={selectedClassType.image || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} alt={selectedClassType.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                 <img src={selectedClassType.coverImage || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} alt={selectedClassType.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             </div>
 
