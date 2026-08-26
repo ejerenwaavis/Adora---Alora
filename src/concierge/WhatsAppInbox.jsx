@@ -54,7 +54,7 @@ export default function WhatsAppInbox() {
         {/* Header & Search */}
         <div style={{ padding: '24px 20px', borderBottom: '1px solid rgba(227, 211, 184, 0.4)' }}>
           <h1 style={{ fontFamily: 'var(--f-display)', fontSize: '22px', color: 'var(--cocoa-deep)', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2E6B3E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8B3318" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
             Live Inbox
@@ -82,7 +82,7 @@ export default function WhatsAppInbox() {
                 background: activeChat === chat.id ? 'rgba(227, 211, 184, 0.15)' : 'transparent',
                 cursor: 'pointer',
                 transition: 'background 0.2s',
-                borderLeft: activeChat === chat.id ? '3px solid #2E6B3E' : '3px solid transparent'
+                borderLeft: activeChat === chat.id ? '3px solid #8B3318' : '3px solid transparent'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -94,7 +94,7 @@ export default function WhatsAppInbox() {
                   {chat.lastMessage}
                 </span>
                 {chat.unread > 0 && (
-                  <span style={{ background: '#2E6B3E', color: '#fff', fontSize: '10px', fontWeight: 'bold', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ background: '#8B3318', color: '#fff', fontSize: '10px', fontWeight: 'bold', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {chat.unread}
                   </span>
                 )}
@@ -155,7 +155,7 @@ export default function WhatsAppInbox() {
                   borderRadius: '12px',
                   borderTopLeftRadius: !isAgent ? '2px' : '12px',
                   borderTopRightRadius: isAgent ? '2px' : '12px',
-                  background: isAgent ? '#2E6B3E' : '#FFFFFF',
+                  background: isAgent ? '#8B3318' : '#FFFFFF',
                   color: isAgent ? '#FFFFFF' : 'var(--cocoa-deep)',
                   border: isAgent ? 'none' : '1px solid rgba(227, 211, 184, 0.6)',
                   boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
@@ -165,7 +165,7 @@ export default function WhatsAppInbox() {
                   {msg.text}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--taupe)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {msg.time} {isAgent && <Icon name="check" size={12} color="#2E6B3E" />}
+                  {msg.time} {isAgent && <Icon name="check" size={12} color="#8B3318" />}
                 </div>
               </div>
             );
@@ -216,7 +216,7 @@ export default function WhatsAppInbox() {
               type="submit"
               disabled={!inputText.trim()}
               style={{ 
-                background: inputText.trim() ? '#2E6B3E' : 'rgba(46, 107, 62, 0.5)', 
+                background: inputText.trim() ? '#8B3318' : 'rgba(139, 51, 24, 0.5)', 
                 color: '#fff', 
                 border: 'none', 
                 borderRadius: '8px', 

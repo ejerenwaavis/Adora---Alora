@@ -52,8 +52,8 @@ export default function ConciergeLayout() {
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
               borderRadius: '6px', textDecoration: 'none',
-              background: isActive ? 'rgba(46, 107, 62, 0.1)' : 'transparent',
-              color: isActive ? '#2E6B3E' : 'var(--taupe)',
+              background: isActive ? 'rgba(139, 51, 24, 0.1)' : 'transparent',
+              color: isActive ? '#8B3318' : 'var(--taupe)',
               fontSize: '13px', fontWeight: 600, transition: 'all 0.2s'
             })}
           >
@@ -61,7 +61,7 @@ export default function ConciergeLayout() {
               <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
             </svg>
             WhatsApp Inbox
-            <span style={{ marginLeft: 'auto', background: '#2E6B3E', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>3</span>
+            <span style={{ marginLeft: 'auto', background: '#8B3318', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>3</span>
           </NavLink>
         </nav>
 
