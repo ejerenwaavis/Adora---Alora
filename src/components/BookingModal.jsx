@@ -21,7 +21,7 @@ export default function BookingModal({ session, onClose }) {
 
   async function loadPacks() {
     try {
-      const res = await fetch('/api/cms/credit-packs');
+      const res = await fetch('/api/classes/credit-packs');
       if (res.ok) {
         const data = await res.json();
         // Sort packs: 1 credit first, then 5, then 10

@@ -4,6 +4,17 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const ClassSession = require('../models/ClassSession');
 const ClassType = require('../models/ClassType');
 const Instructor = require('../models/Instructor');
+const CreditPack = require('../models/CreditPack');
+
+// PUBLIC: Get active credit packs
+router.get('/credit-packs', async (req, res) => {
+  try {
+    const packs = await CreditPack.find({ isActive: true }).sort({ sortOrder: 1, priceKobo: 1 });
+    res.json(packs);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // PUBLIC: Get timetable for a date range
 router.get('/timetable', async (req, res) => {
