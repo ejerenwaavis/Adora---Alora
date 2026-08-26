@@ -16,9 +16,12 @@ const MOCK_MESSAGES = [
 ];
 
 export default function WhatsAppInbox() {
+  const [chats, setChats] = useState(MOCK_CONVERSATIONS);
+  const [activeTab, setActiveTab] = useState('active');
   const [activeChat, setActiveChat] = useState(MOCK_CONVERSATIONS[0].id);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [showProfile, setShowProfile] = useState(false);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -44,7 +47,16 @@ export default function WhatsAppInbox() {
     setInputText('');
   };
 
-  const currentChatDetails = MOCK_CONVERSATIONS.find(c => c.id === activeChat);
+  const handleResolve = () => {
+    const updated = chats.map(c => c.id === activeChat ? { ...c, status: 'resolved' } : c);
+    setChats(updated);
+    // Find next active to switch to
+    const nextActive = updated.find(c => c.status === 'active');
+    if (nextActive) setActiveChat(nextActive.id);
+  };
+
+  const filteredChats = chats.filter(c => c.status === activeTab);
+  const currentChatDetails = chats.find(c => c.id === activeChat);
 
   return (
     <div style={{ display: 'flex', height: '100%', width: '100%' }}>
@@ -60,19 +72,19 @@ export default function WhatsAppInbox() {
             Live Inbox
           </h1>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            <button style={{ flex: 1, padding: '6px 0', fontSize: '12px', fontWeight: 600, background: 'var(--cocoa-deep)', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Active</button>
-            <button style={{ flex: 1, padding: '6px 0', fontSize: '12px', fontWeight: 600, background: 'transparent', color: 'var(--taupe)', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '4px', cursor: 'pointer' }}>Resolved</button>
+            <button onClick={() => setActiveTab('active')} style={{ flex: 1, padding: '6px 0', fontSize: '12px', fontWeight: 600, background: activeTab === 'active' ? 'var(--cocoa-deep)' : 'transparent', color: activeTab === 'active' ? '#fff' : 'var(--taupe)', border: activeTab === 'active' ? 'none' : '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '4px', cursor: 'pointer' }}>Active</button>
+            <button onClick={() => setActiveTab('resolved')} style={{ flex: 1, padding: '6px 0', fontSize: '12px', fontWeight: 600, background: activeTab === 'resolved' ? 'var(--cocoa-deep)' : 'transparent', color: activeTab === 'resolved' ? '#fff' : 'var(--taupe)', border: activeTab === 'resolved' ? 'none' : '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '4px', cursor: 'pointer' }}>Resolved</button>
           </div>
           <input 
             type="text" 
             placeholder="Search conversations..." 
-            style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.6)', fontSize: '13px', background: '#FAF6EF' }}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.6)', fontSize: '13px', background: '#FAF6EF', boxSizing: 'border-box' }}
           />
         </div>
 
         {/* Chat List */}
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {MOCK_CONVERSATIONS.map(chat => (
+          {filteredChats.map(chat => (
             <div 
               key={chat.id}
               onClick={() => setActiveChat(chat.id)}
@@ -101,13 +113,20 @@ export default function WhatsAppInbox() {
               </div>
             </div>
           ))}
+          {filteredChats.length === 0 && (
+            <div style={{ padding: '32px 20px', textAlign: 'center', color: 'var(--taupe)', fontSize: '13px' }}>
+              No {activeTab} conversations.
+            </div>
+          )}
         </div>
       </div>
 
       {/* ── RIGHT PANE: CHAT WINDOW ── */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FAF6EF' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#FAF6EF', position: 'relative' }}>
         
         {/* Chat Header */}
+        {currentChatDetails ? (
+        <>
         <div style={{ padding: '20px 32px', background: '#FFFDF9', borderBottom: '1px solid rgba(227, 211, 184, 0.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 600 }}>
@@ -119,12 +138,14 @@ export default function WhatsAppInbox() {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button style={{ padding: '8px 16px', background: 'transparent', border: '1px solid var(--gold)', color: 'var(--gold)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={() => setShowProfile(!showProfile)} style={{ padding: '8px 16px', background: showProfile ? 'var(--gold)' : 'transparent', border: '1px solid var(--gold)', color: showProfile ? '#fff' : 'var(--gold)', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}>
               View Profile
             </button>
-            <button style={{ padding: '8px 16px', background: 'var(--rust)', border: 'none', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
-              Mark Resolved
-            </button>
+            {currentChatDetails?.status === 'active' && (
+              <button onClick={handleResolve} style={{ padding: '8px 16px', background: 'var(--rust)', border: 'none', color: '#fff', borderRadius: '6px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                Mark Resolved
+              </button>
+            )}
           </div>
         </div>
 
@@ -240,8 +261,51 @@ export default function WhatsAppInbox() {
             Replies will be sent directly to the customer's WhatsApp app via Aora House Official. Press Enter to send.
           </div>
         </div>
-
+        </>
+        ) : (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" style={{ marginBottom: '16px', opacity: 0.5 }}>
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            <h2 style={{ fontSize: '18px', margin: '0 0 8px 0', color: 'var(--cocoa-deep)' }}>No Conversation Selected</h2>
+            <p style={{ margin: 0, fontSize: '14px' }}>Select a chat from the left menu to view messages.</p>
+          </div>
+        )}
       </div>
+
+      {/* ── RIGHT PROFILE SIDEBAR ── */}
+      {showProfile && currentChatDetails && (
+        <div style={{ width: '300px', background: '#FFFDF9', borderLeft: '1px solid rgba(227, 211, 184, 0.4)', padding: '32px 24px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', fontWeight: 600, margin: '0 auto 16px' }}>
+              {currentChatDetails.name.charAt(0)}
+            </div>
+            <h2 style={{ margin: '0 0 4px 0', color: 'var(--cocoa-deep)', fontSize: '20px', fontFamily: 'var(--f-display)' }}>{currentChatDetails.name}</h2>
+            <div style={{ color: 'var(--taupe)', fontSize: '14px' }}>{currentChatDetails.phone}</div>
+          </div>
+          
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)', marginBottom: '8px', fontWeight: 600 }}>House Status</div>
+            <div style={{ padding: '12px', background: 'rgba(227, 211, 184, 0.2)', borderRadius: '8px', color: 'var(--cocoa-deep)', fontSize: '14px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="star" size={14} color="var(--rust)" />
+              Verified Guest
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe)', marginBottom: '8px', fontWeight: 600 }}>Recent Activity</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '13px', color: 'var(--cocoa-deep)' }}>
+              <li style={{ padding: '8px 0', borderBottom: '1px solid rgba(227, 211, 184, 0.3)' }}>Attended "Vinyasa Flow" on Aug 12</li>
+              <li style={{ padding: '8px 0', borderBottom: '1px solid rgba(227, 211, 184, 0.3)' }}>Café Reservation on Aug 10</li>
+            </ul>
+          </div>
+          
+          <div style={{ flex: 1 }} />
+          <button onClick={() => setShowProfile(false)} style={{ background: 'transparent', border: '1px solid rgba(227, 211, 184, 0.6)', padding: '10px', borderRadius: '6px', color: 'var(--taupe)', cursor: 'pointer', fontWeight: 500 }}>
+            Close Profile
+          </button>
+        </div>
+      )}
     </div>
   );
 }
