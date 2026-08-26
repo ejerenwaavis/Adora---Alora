@@ -126,22 +126,30 @@ router.get('/bookings', async (req, res) => {
     const upcomingClasses = classBookings.filter(b => {
       const startTime = b.classSession?.startTime ? new Date(b.classSession.startTime) : null;
       return startTime && startTime >= now && b.status !== 'cancelled';
-    });
+    }).sort((a, b) => new Date(a.classSession.startTime) - new Date(b.classSession.startTime));
 
     const pastClasses = classBookings.filter(b => {
       const startTime = b.classSession?.startTime ? new Date(b.classSession.startTime) : null;
       return !startTime || startTime < now || b.status === 'cancelled';
+    }).sort((a, b) => {
+      const aTime = a.classSession?.startTime ? new Date(a.classSession.startTime).getTime() : 0;
+      const bTime = b.classSession?.startTime ? new Date(b.classSession.startTime).getTime() : 0;
+      return bTime - aTime;
     });
 
     // Partition events
     const upcomingEvents = eventBookings.filter(e => {
       const startDate = e.event?.startDate ? new Date(e.event.startDate) : null;
       return startDate && startDate >= now && e.status !== 'cancelled';
-    });
+    }).sort((a, b) => new Date(a.event.startDate) - new Date(b.event.startDate));
 
     const pastEvents = eventBookings.filter(e => {
       const startDate = e.event?.startDate ? new Date(e.event.startDate) : null;
       return !startDate || startDate < now || e.status === 'cancelled';
+    }).sort((a, b) => {
+      const aTime = a.event?.startDate ? new Date(a.event.startDate).getTime() : 0;
+      const bTime = b.event?.startDate ? new Date(b.event.startDate).getTime() : 0;
+      return bTime - aTime;
     });
 
     res.json({
