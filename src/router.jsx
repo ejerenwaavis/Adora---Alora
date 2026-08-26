@@ -40,6 +40,7 @@ import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
 import UsersCMS        from './admin/UsersCMS.jsx';
 import VenueEnquiriesCMS from './admin/VenueEnquiriesCMS.jsx';
+import AdminActivityLogs from './admin/ActivityLogs.jsx';
 
 // Clerk Dashboard
 import ClerkLayout     from './clerk/ClerkLayout.jsx';
@@ -192,6 +193,7 @@ const internalRouter = createBrowserRouter([
       { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
       { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
       { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },
+      { path: 'activity-logs', element: <RequireRole roles={['admin']}><AdminActivityLogs /></RequireRole> },
       { path: '*', element: <AdminDashboard /> }
     ]
   },

@@ -17,6 +17,7 @@ const Instructor      = require('../models/Instructor');
 const ClassSession    = require('../models/ClassSession');
 const Setting         = require('../models/Setting');
 const CreditPack      = require('../models/CreditPack');
+const logActivity     = require('../utils/activityLogger');
 
 // CMS routes — content_editor or admin
 router.use(requireAuth);
@@ -36,6 +37,7 @@ router.post('/announcements', async (req, res) => {
   try {
     const item = new AnnouncementBar(req.body);
     await item.save();
+    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Announcement Bar: ${item.message}`);
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -44,6 +46,7 @@ router.patch('/announcements/:id', async (req, res) => {
   try {
     const item = await AnnouncementBar.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Announcement Bar: ${item.message}`);
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -52,6 +55,7 @@ router.delete('/announcements/:id', async (req, res) => {
   try {
     const item = await AnnouncementBar.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity(req.user._id, 'DELETE', 'SETTINGS', `Announcement Bar: ${item.message}`);
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -70,6 +74,7 @@ router.post('/settings', async (req, res) => {
   try {
     const item = new Setting(req.body);
     await item.save();
+    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Global Setting: ${item.key}`);
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -78,6 +83,7 @@ router.patch('/settings/:id', async (req, res) => {
   try {
     const item = await Setting.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Global Setting: ${item.key}`, { value: item.value });
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });

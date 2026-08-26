@@ -58,6 +58,24 @@ router.get('/metrics', async (req, res) => {
 
 router.get('/dashboard', (req, res) => res.json({ status: 'active' }));
 
+// Activity Logs endpoint (Restricted to 'admin' by default on this router)
+router.get('/logs', async (req, res) => {
+  try {
+    const { category, limit = 50 } = req.query;
+    const filter = {};
+    if (category) filter.category = category;
+
+    const logs = await ActivityLog.find(filter)
+      .populate('user', 'firstName lastName email role')
+      .sort({ createdAt: -1 })
+      .limit(Number(limit));
+    
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
+  }
+});
+
 // 1. Members Detail List
 router.get('/members-details', async (req, res) => {
   try {

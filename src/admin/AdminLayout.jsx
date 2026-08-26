@@ -187,9 +187,14 @@ export default function AdminLayout() {
                 <Icon name="credit-packs" size={16} className={styles.navIcon} /> Credit Packs
               </NavLink>
               {isAdmin && (
-                <NavLink to="/admin/settings" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-                  <Icon name="settings" size={16} className={styles.navIcon} /> Global Settings
-                </NavLink>
+                <>
+                  <NavLink to="/admin/settings" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+                    <Icon name="settings" size={16} className={styles.navIcon} /> Global Settings
+                  </NavLink>
+                  <NavLink to="/admin/activity-logs" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+                    <Icon name="timetable" size={16} className={styles.navIcon} /> Activity Logs
+                  </NavLink>
+                </>
               )}
             </div>
           )}
