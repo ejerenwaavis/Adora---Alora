@@ -21,6 +21,13 @@ export default function VisitPanel() {
   const mapsUrl = settings?.location_map_url || "https://maps.google.com/?q=14+Adetokunbo+Ademola+Street,+Victoria+Island,+Lagos,+Nigeria";
   const mapQuery = settings?.location_map_query ? encodeURIComponent(settings.location_map_query) : '14%20Adetokunbo%20Ademola%20Street,%20Victoria%20Island,%20Lagos,%20Nigeria';
 
+  let whatsappHref = 'https://wa.me/17372324091';
+  if (settings?.whatsapp_number) {
+    whatsappHref = `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`;
+  } else if (import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER) {
+    whatsappHref = `https://wa.me/${import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER.replace(/\D/g, '')}`;
+  }
+
   return (
     <section className={styles.visit} id="visit">
       <div className="wrap">
@@ -102,12 +109,18 @@ export default function VisitPanel() {
             </div>
 
             {/* Quick Action Buttons */}
-            <div className={styles.actionRow}>
+            <div className={styles.actionRow} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
                 Open in Maps &rarr;
               </a>
               <a href={`tel:${settings?.contact_phone ? settings.contact_phone.replace(/\s/g, '') : '+2348000000000'}`} className={styles.secondaryBtn}>
-                Call Desk
+                Call
+              </a>
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={styles.secondaryBtn} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
+                WhatsApp
               </a>
             </div>
           </div>
