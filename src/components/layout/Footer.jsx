@@ -16,7 +16,7 @@ const HOUSE = [
 ];
 const CONNECT = [
   { href: 'https://instagram.com', label: 'Instagram' },
-  { href: 'https://wa.me/',        label: 'WhatsApp'  },
+  { href: import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER ? `https://wa.me/${import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER.replace(/\D/g, '')}` : 'https://wa.me/17372324091', label: 'WhatsApp'  },
   { href: 'https://raire.app',     label: 'Raire App' },
 ];
 
