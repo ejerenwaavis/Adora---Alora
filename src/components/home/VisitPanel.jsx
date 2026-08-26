@@ -50,7 +50,7 @@ export default function VisitPanel() {
                 {settings?.location_address ? settings.location_address.split('\n')[1] || 'Victoria Island, Lagos' : 'Victoria Island, Lagos'}
               </div>
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.badgeLink}>
-                Get Directions &nearr;
+                Get Directions ↗
               </a>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function VisitPanel() {
             {/* Quick Action Buttons */}
             <div className={styles.actionRow} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryBtn}>
-                Open in Maps &rarr;
+                Open in Maps →
               </a>
               <a href={`tel:${settings?.contact_phone ? settings.contact_phone.replace(/\s/g, '') : '+2348000000000'}`} className={styles.secondaryBtn}>
                 Call
