@@ -404,7 +404,7 @@ export default function DashboardHome() {
             ) : (
               <div className="empty-station-card">
                 <i className="ti ti-calendar-off" style={{ fontSize: '24px', opacity: 0.5 }}></i>
-                <div>No upcoming Loft events scheduled today.</div>
+                <div>No upcoming events scheduled today.</div>
               </div>
             )}
           </div>

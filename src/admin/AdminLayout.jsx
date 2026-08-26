@@ -146,7 +146,7 @@ export default function AdminLayout() {
                 Venues & Events
               </span>
               <Link to="/admin/events" className={isLinkActive('/admin/events') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
-                <Icon name="spaces-events" size={16} className={styles.navIcon} /> Loft Events
+                <Icon name="spaces-events" size={16} className={styles.navIcon} /> Events
               </Link>
               <Link to="/admin/events?tab=venues" className={isLinkActive('/admin/events', 'venues') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
                 <Icon name="site-content" size={16} className={styles.navIcon} /> Spaces & Facilities

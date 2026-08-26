@@ -521,13 +521,13 @@ export default function Dashboard() {
           ) : (
             <div className={styles.emptyState} style={{ marginBottom: '2.5rem' }}>
               <h3>No Active Passes</h3>
-              <p>You have no upcoming studio classes or loft events scheduled.</p>
+              <p>You have no upcoming studio classes or events scheduled.</p>
               <div className={styles.actionGroup}>
                 <button onClick={() => navigate('/movement')} className="btn btn-primary">
                   Browse Movement Classes
                 </button>
                 <button onClick={() => navigate('/events')} className="btn btn-outline">
-                  Explore Loft Events
+                  Explore Events
                 </button>
               </div>
             </div>

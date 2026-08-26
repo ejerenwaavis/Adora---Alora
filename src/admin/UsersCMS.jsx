@@ -1075,7 +1075,7 @@ export default function UsersCMS() {
                 { name: 'Café menu & categories management', access: ['yes', 'no', 'yes', 'no', 'no', 'no'] },
                 { name: 'Class types & timetable scheduling', access: ['yes', 'no', 'yes', 'partial', 'no', 'no'] },
                 { name: 'Attendee rosters & timetable rosters', access: ['yes', 'yes', 'no', 'yes', 'no', 'no'] },
-                { name: 'Loft events & venue spaces CMS', access: ['yes', 'no', 'yes', 'no', 'no', 'no'] },
+                { name: 'Events & venue spaces CMS', access: ['yes', 'no', 'yes', 'no', 'no', 'no'] },
                 { name: 'Fashion collection & layers CMS', access: ['yes', 'no', 'yes', 'no', 'no', 'no'] },
                 { name: 'User & Staff Provisioning & Roles', access: ['yes', 'no', 'no', 'no', 'no', 'no'] },
                 { name: 'Revenue overview & credit pack pricing', access: ['yes', 'no', 'no', 'no', 'yes', 'no'] },

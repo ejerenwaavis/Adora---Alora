@@ -160,7 +160,7 @@ export default function AdminDashboard() {
             {isContentEditor ? 'Content Editor Dashboard' : isFinance ? 'Finance Dashboard' : 'Executive Dashboard'}
           </h1>
           <p style={{ color: 'var(--taupe)', marginTop: '0.35rem', fontSize: '0.95rem' }}>
-            Welcome back, <strong>{user?.firstName || 'Admin'} {user?.lastName || ''}</strong>. {isContentEditor ? 'Manage café menus, movement classes, loft events, fashion catalogue, and house announcements.' : 'Real-time overview of house community, operations, and spaces.'}
+            Welcome back, <strong>{user?.firstName || 'Admin'} {user?.lastName || ''}</strong>. {isContentEditor ? 'Manage café menus, movement classes, events, fashion catalogue, and house announcements.' : 'Real-time overview of house community, operations, and spaces.'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
               <span style={{ fontSize: '0.75rem', color: '#4A3527', fontWeight: 600 }}>View ↗</span>
             </div>
             <div style={{ fontFamily: 'var(--f-display)', fontSize: '1.85rem', color: 'var(--cocoa-deep)', fontWeight: 500, marginTop: '0.35rem' }}>{loading ? '—' : metrics.eventBookings}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--taupe)', marginTop: '0.2rem' }}>Ticket holders · Loft events</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--taupe)', marginTop: '0.2rem' }}>Ticket holders · Events</div>
           </div>
 
           {/* Card 5: Venue Inquiries */}

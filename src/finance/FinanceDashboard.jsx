@@ -114,7 +114,7 @@ export default function FinanceDashboard() {
               <td style={{ padding: '16px 24px', color: 'var(--taupe)' }}>{Math.round((data.fashionRevenue / data.totalRevenue) * 100)}%</td>
             </tr>
             <tr>
-              <td style={{ padding: '16px 24px', fontWeight: 500, color: 'var(--cocoa-deep)' }}>Loft Events</td>
+              <td style={{ padding: '16px 24px', fontWeight: 500, color: 'var(--cocoa-deep)' }}>Events</td>
               <td style={{ padding: '16px 24px', color: 'var(--taupe)' }}>{formatNaira(data.eventsRevenue)}</td>
               <td style={{ padding: '16px 24px', color: 'var(--taupe)' }}>{Math.round((data.eventsRevenue / data.totalRevenue) * 100)}%</td>
             </tr>

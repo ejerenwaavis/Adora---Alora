@@ -97,7 +97,7 @@ export default function ClerkLayout() {
             <i className="ti ti-coffee" aria-hidden="true"></i> Café bookings
           </NavLink>
           <NavLink to="/clerk/events" className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
-            <i className="ti ti-building" aria-hidden="true"></i> Loft events
+            <i className="ti ti-building" aria-hidden="true"></i> Events
           </NavLink>
           
           <div className="sb-section">Tools</div>

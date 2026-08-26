@@ -76,7 +76,7 @@ export default function AccountLayout() {
               Movement Studio ↗
             </Link>
             <Link to="/events" onClick={() => setIsMobileOpen(false)} style={{ display: 'block', textDecoration: 'none', color: 'var(--cocoa-deep)', fontSize: '0.88rem', marginBottom: '0.6rem' }}>
-              The Loft Events ↗
+              Events ↗
             </Link>
             <Link to="/cafe" onClick={() => setIsMobileOpen(false)} style={{ display: 'block', textDecoration: 'none', color: 'var(--cocoa-deep)', fontSize: '0.88rem' }}>
               Café Menu ↗
