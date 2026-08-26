@@ -520,7 +520,21 @@ export default function ScheduleCMS() {
         <div className={styles.timetableActionBar}>
           <div className={styles.timetableFiltersGroup}>
             {/* Date Range Picker / Week Indicator */}
-            <div className={styles.dateRangePickerBtn} onClick={handleToday} title="Click to jump to Current Week">
+            <div className={styles.dateRangePickerBtn} onClick={() => document.getElementById('hidden-date-input').showPicker()} title="Click to select a date">
+              <input 
+                type="date"
+                id="hidden-date-input"
+                style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}
+                onChange={(e) => {
+                  if (!e.target.value) return;
+                  const d = new Date(e.target.value);
+                  const day = d.getDay();
+                  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust when day is sunday
+                  const monday = new Date(d.setDate(diff));
+                  monday.setHours(0,0,0,0);
+                  setCurrentMonday(monday);
+                }}
+              />
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
                 <line x1="16" x2="16" y1="2" x2="6" />
