@@ -121,7 +121,7 @@ export default function Movement() {
                   key={type._id} 
                   className={styles.typeCard}
                   onClick={() => setSelectedClassType(type)}
-                  style={{ cursor: 'pointer', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '12px', overflow: 'hidden', background: '#FFFDF9', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                  style={{ cursor: 'pointer', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: 'var(--radius-md)', overflow: 'hidden', background: '#FFFDF9', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(200, 155, 74, 0.15)'; }}
                   onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
@@ -135,7 +135,7 @@ export default function Movement() {
                   <div style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                       <h3 style={{ margin: 0, fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)' }}>{type.name}</h3>
-                      <span style={{ fontSize: '0.75rem', background: '#FAF6EF', padding: '4px 10px', borderRadius: '12px', color: 'var(--taupe)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type.durationMinutes} MIN</span>
+                      <span style={{ fontSize: '0.75rem', background: '#FAF6EF', padding: '4px 10px', borderRadius: 'var(--radius-md)', color: 'var(--taupe)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type.durationMinutes} MIN</span>
                     </div>
                     <p style={{ fontSize: '0.9rem', color: 'var(--taupe)', lineHeight: 1.5, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {type.description}
@@ -167,7 +167,7 @@ export default function Movement() {
                   <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>Intensity: {selectedClassType.intensityLevel || 'All Levels'}/5</span>
                 </div>
               </div>
-              <div style={{ flex: '1 1 300px', height: '300px', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ flex: '1 1 300px', height: '300px', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                  <img src={selectedClassType.coverImage || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} alt={selectedClassType.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             </div>
@@ -175,16 +175,16 @@ export default function Movement() {
             {/* Toggle UI */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(227, 211, 184, 0.6)', paddingBottom: '1rem', marginBottom: '2rem' }}>
               <h3 style={{ margin: 0, color: 'var(--cocoa-deep)', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>Available Dates</h3>
-              <div style={{ display: 'flex', background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.9)', borderRadius: '24px', padding: '4px' }}>
+              <div style={{ display: 'flex', background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.9)', borderRadius: 'var(--radius-md)', padding: '4px' }}>
                 <button 
                   onClick={() => setViewMode('list')}
-                  style={{ background: viewMode === 'list' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'list' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+                  style={{ background: viewMode === 'list' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'list' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
                 >
                   List View
                 </button>
                 <button 
                   onClick={() => setViewMode('calendar')}
-                  style={{ background: viewMode === 'calendar' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'calendar' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
+                  style={{ background: viewMode === 'calendar' ? 'var(--cocoa-deep)' : 'transparent', color: viewMode === 'calendar' ? '#FFF' : 'var(--cocoa-deep)', border: 'none', padding: '6px 16px', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 500, transition: 'all 0.2s ease' }}
                 >
                   Calendar View
                 </button>
@@ -194,7 +194,7 @@ export default function Movement() {
             {viewMode === 'calendar' ? (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginTop: '1rem' }}>
                 {/* Left Column: Calendar Grid */}
-                <div style={{ flex: '1 1 350px', background: '#FFFDF9', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                <div style={{ flex: '1 1 350px', background: '#FFFDF9', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--cocoa-deep)' }}>&larr;</button>
                     <h3 style={{ margin: 0, fontFamily: 'var(--font-heading)', fontSize: '1.3rem', color: 'var(--cocoa-deep)' }}>
@@ -226,7 +226,7 @@ export default function Movement() {
                             background: isSelected ? 'var(--cocoa-deep)' : (hasSessions ? '#FAF6EF' : 'transparent'),
                             color: isSelected ? '#FFF' : (hasSessions ? 'var(--cocoa-deep)' : 'var(--taupe)'),
                             border: isToday && !isSelected ? '1px solid var(--cocoa-deep)' : '1px solid transparent',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-md)',
                             padding: '12px 0',
                             cursor: 'pointer',
                             fontSize: '0.95rem',
@@ -248,7 +248,7 @@ export default function Movement() {
                 {/* Right Column: Selected Date Sessions */}
                 <div style={{ flex: '1 1 400px' }}>
                   {selectedCalendarDate ? (
-                    <div style={{ background: '#FFFDF9', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
+                    <div style={{ background: '#FFFDF9', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
                       <h4 style={{ color: 'var(--cocoa-deep)', fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid #FAF6EF', paddingBottom: '0.5rem' }}>
                         {selectedCalendarDate.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
                       </h4>
@@ -260,7 +260,7 @@ export default function Movement() {
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                           {selectedDaySessions.map(session => (
-                            <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1.25rem', background: '#FAF6EF', borderRadius: '8px', borderLeft: '3px solid var(--rust)' }}>
+                            <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1.25rem', background: '#FAF6EF', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--rust)' }}>
                               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                 <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
                                   {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -278,7 +278,7 @@ export default function Movement() {
                                   color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
                                   border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
                                   padding: '8px 16px', 
-                                  borderRadius: '20px', 
+                                  borderRadius: 'var(--radius-sm)', 
                                   fontSize: '0.8rem', 
                                   cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
                                   textTransform: 'uppercase',
@@ -295,7 +295,7 @@ export default function Movement() {
                       )}
                     </div>
                   ) : (
-                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.6)', borderRadius: '12px', minHeight: '300px' }}>
+                    <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.6)', borderRadius: 'var(--radius-md)', minHeight: '300px' }}>
                       Select a date on the calendar to view sessions.
                     </div>
                   )}
@@ -304,7 +304,7 @@ export default function Movement() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginTop: '1rem' }}>
                 {Object.keys(groupedSessions).length === 0 ? (
-                  <div style={{ padding: '3rem', background: '#FFFDF9', textAlign: 'center', borderRadius: '8px', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.8)' }}>
+                  <div style={{ padding: '3rem', background: '#FFFDF9', textAlign: 'center', borderRadius: 'var(--radius-md)', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.8)' }}>
                     No upcoming sessions scheduled for {selectedClassType.name}. Please check back later.
                   </div>
                 ) : (
@@ -315,11 +315,11 @@ export default function Movement() {
                     const localDate = new Date(y, m - 1, d);
                     const formattedDate = localDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
                     return (
-                      <div key={dateStr} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '12px', padding: '1.5rem' }}>
+                      <div key={dateStr} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
                         <h4 style={{ color: 'var(--cocoa-deep)', fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid #FAF6EF', paddingBottom: '0.5rem' }}>{formattedDate}</h4>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                           {daySessions.map(session => (
-                            <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: '#FAF6EF', borderRadius: '8px' }}>
+                            <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: '#FAF6EF', borderRadius: 'var(--radius-md)' }}>
                               <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                                 <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--cocoa-deep)', width: '90px' }}>
                                   {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -337,7 +337,7 @@ export default function Movement() {
                                   color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
                                   border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
                                   padding: '10px 20px', 
-                                  borderRadius: '20px', 
+                                  borderRadius: 'var(--radius-sm)', 
                                   fontSize: '0.85rem', 
                                   cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
                                   textTransform: 'uppercase',
