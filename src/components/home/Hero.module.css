@@ -4,16 +4,18 @@
   grid-template-columns: 1.1fr 0.9fr;
   align-items: center;
   gap: 32px;
-  padding: 80px var(--gutter, 48px) 90px;
+  padding: 140px var(--gutter, 48px) 160px;
   max-width: var(--max-width, 1380px);
   margin: 0 auto;
+  min-height: calc(100vh - 80px);
 }
 
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
-    padding: 50px 24px 60px;
+    padding: 80px 24px 100px;
     gap: 36px;
+    min-height: auto;
   }
 }
 
