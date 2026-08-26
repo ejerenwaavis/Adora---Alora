@@ -14,6 +14,7 @@ export default function VenueEnquiriesCMS() {
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [editingNotes, setEditingNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+  const [messageText, setMessageText] = useState('');
 
   const fetchEnquiries = async () => {
     setLoading(true);
@@ -92,6 +93,32 @@ export default function VenueEnquiriesCMS() {
       setUpdating(false);
     }
   };
+  const handleSendMessage = async () => {
+    if (!selectedEnquiry || !messageText.trim()) return;
+    setUpdating(true);
+    try {
+      const res = await authFetch(`/api/venue/enquiries/${selectedEnquiry._id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: messageText })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success('Message sent to guest');
+        setSelectedEnquiry(data.enquiry);
+        setEnquiries(prev => prev.map(eq => eq._id === data.enquiry._id ? data.enquiry : eq));
+        setMessageText('');
+      } else {
+        toast.error(data.error || 'Failed to send message');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Network error while sending message');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
 
   const openEnquiry = (enquiry) => {
     setSelectedEnquiry(enquiry);
@@ -131,7 +158,7 @@ export default function VenueEnquiriesCMS() {
             Venue Hire Enquiries
           </h2>
           <p style={{ fontSize: '12.5px', color: 'var(--taupe)', margin: '4px 0 0' }}>
-            Review, track, and manage private event requests for The Loft, Café, and spaces.
+            Review, track, and manage private event requests for The Loft, CafÃ©, and spaces.
           </p>
         </div>
 
@@ -212,7 +239,7 @@ export default function VenueEnquiriesCMS() {
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>{enquiry.firstName} {enquiry.lastName}</div>
-                    <div style={{ fontSize: '11.5px', color: 'var(--taupe)' }}>{enquiry.email} {enquiry.organisation ? `· ${enquiry.organisation}` : ''}</div>
+                    <div style={{ fontSize: '11.5px', color: 'var(--taupe)' }}>{enquiry.email} {enquiry.organisation ? `Â· ${enquiry.organisation}` : ''}</div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     <div style={{ color: 'var(--cocoa-deep)', fontWeight: 500 }}>{enquiry.eventType}</div>
@@ -243,7 +270,7 @@ export default function VenueEnquiriesCMS() {
                       onClick={(e) => { e.stopPropagation(); openEnquiry(enquiry); }}
                       style={{ background: 'none', border: '1px solid rgba(227, 211, 184, 0.9)', padding: '5px 10px', borderRadius: '4px', fontSize: '11px', cursor: 'pointer' }}
                     >
-                      Review →
+                      Review â†’
                     </button>
                   </td>
                 </tr>
@@ -372,17 +399,17 @@ export default function VenueEnquiriesCMS() {
                 </div>
                 <div>
                   <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--taupe)' }}>Event Hours</div>
-                  <div style={{ fontSize: '13px', color: 'var(--cocoa-deep)' }}>{selectedEnquiry.preferredStartTime || 'TBD'} – {selectedEnquiry.preferredEndTime || 'TBD'}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--cocoa-deep)' }}>{selectedEnquiry.preferredStartTime || 'TBD'} â€“ {selectedEnquiry.preferredEndTime || 'TBD'}</div>
                 </div>
               </div>
 
               {/* Requirements Badges */}
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <span style={{ padding: '6px 12px', borderRadius: '4px', background: selectedEnquiry.cateringRequired ? 'rgba(46, 107, 62, 0.1)' : '#F1F3F4', color: selectedEnquiry.cateringRequired ? '#1A4024' : '#777', fontSize: '11.5px', border: '1px solid rgba(0,0,0,0.08)' }}>
-                  {selectedEnquiry.cateringRequired ? '✓ In-House Catering Requested' : '✕ No Catering'}
+                  {selectedEnquiry.cateringRequired ? 'âœ“ In-House Catering Requested' : 'âœ• No Catering'}
                 </span>
                 <span style={{ padding: '6px 12px', borderRadius: '4px', background: selectedEnquiry.avRequired ? 'rgba(46, 107, 62, 0.1)' : '#F1F3F4', color: selectedEnquiry.avRequired ? '#1A4024' : '#777', fontSize: '11.5px', border: '1px solid rgba(0,0,0,0.08)' }}>
-                  {selectedEnquiry.avRequired ? '✓ AV & Sound System Requested' : '✕ No AV'}
+                  {selectedEnquiry.avRequired ? 'âœ“ AV & Sound System Requested' : 'âœ• No AV'}
                 </span>
                 {selectedEnquiry.seatingStyle && (
                   <span style={{ padding: '6px 12px', borderRadius: '4px', background: '#FAF6EF', color: 'var(--cocoa-deep)', fontSize: '11.5px', border: '1px solid rgba(227, 211, 184, 0.8)' }}>
@@ -420,6 +447,34 @@ export default function VenueEnquiriesCMS() {
                   Save Internal Notes
                 </button>
               </div>
+
+                {/* Messaging with Guest */}
+                <div style={{ borderTop: '1px solid rgba(227, 211, 184, 0.6)', paddingTop: '16px', marginTop: '16px' }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--taupe)', letterSpacing: '0.06em', marginBottom: '10px' }}>Messages with Guest</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px', maxHeight: '200px', overflowY: 'auto' }}>
+                    {selectedEnquiry.messages && selectedEnquiry.messages.length > 0 ? selectedEnquiry.messages.map((msg, i) => (
+                      <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', background: msg.senderRole === 'user' ? '#fff' : '#FAF6EF', border: '1px solid rgba(227, 211, 184, 0.5)', alignSelf: msg.senderRole === 'user' ? 'flex-start' : 'flex-end', maxWidth: '85%' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--taupe)', marginBottom: '4px' }}>{msg.senderName} ({msg.senderRole}) ?· {new Date(msg.createdAt).toLocaleString()}</div>
+                        <div style={{ fontSize: '12.5px', color: 'var(--cocoa-deep)' }}>{msg.text}</div>
+                      </div>
+                    )) : <div style={{ fontSize: '12px', color: 'var(--taupe)' }}>No messages yet.</div>}
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Reply to guest..."
+                    value={messageText}
+                    onChange={e => setMessageText(e.target.value)}
+                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }}
+                  />
+                  <button
+                    type="button"
+                    disabled={updating || !messageText.trim()}
+                    onClick={handleSendMessage}
+                    style={{ marginTop: '8px', background: 'var(--rust)', color: '#FFF', border: 'none', padding: '8px 16px', borderRadius: '4px', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}
+                  >
+                    Send Message
+                  </button>
+                </div>
             </div>
           </div>
         </div>

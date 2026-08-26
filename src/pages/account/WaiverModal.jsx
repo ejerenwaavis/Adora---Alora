@@ -9,7 +9,6 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
   const [emergencyRelation, setEmergencyRelation] = useState('');
-  const [medicalNotes, setMedicalNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,8 +37,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
           agreedToTerms: true,
           emergencyContactName: emergencyName.trim(),
           emergencyContactPhone: emergencyPhone.trim(),
-          emergencyContactRelation: emergencyRelation.trim(),
-          medicalNotes: medicalNotes.trim()
+          emergencyContactRelation: emergencyRelation.trim()
         })
       });
 
@@ -131,23 +129,20 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
             color: 'var(--cocoa-deep, #2B2015)'
           }}>
             <p style={{ margin: '0 0 10px' }}>
-              <strong>1. Voluntary Participation &amp; Physical Fitness:</strong> By enrolling in classes and movement sessions at Aora House, I certify that I am physically fit and have no medical conditions that would prevent full, safe participation, except as disclosed below.
+              <strong>1. Voluntary Participation:</strong> By enrolling in classes and movement sessions at Aora House, I certify that I am voluntarily participating.
             </p>
             <p style={{ margin: '0 0 10px' }}>
-              <strong>2. Assumption of Risk:</strong> I understand that physical exercise, pilates, yoga, and breathwork involve inherent risks of physical injury. I knowingly assume all such risks and release Aora House, its instructors, staff, and facilities from any claims or liabilities.
+              <strong>2. Assumption of Risk &amp; Liability Release:</strong> I understand that physical exercise, pilates, yoga, and breathwork involve inherent risks of physical injury. I knowingly assume all such risks and release Aora House, its instructors, staff, and facilities from any and all claims, liabilities, damages, or injuries that may occur.
             </p>
             <p style={{ margin: '0 0 10px' }}>
               <strong>3. Cancellation &amp; Conduct Policy:</strong> Class bookings cancelled within 6 hours of scheduled start time are subject to credit forfeiture. Attendees must adhere to house studio etiquette and instructor directions at all times.
             </p>
-            <p style={{ margin: 0 }}>
-              <strong>4. Emergency Medical Care:</strong> In the event of an emergency, I authorize Aora House staff to administer or obtain emergency medical treatment on my behalf.
-            </p>
           </div>
 
-          {/* Emergency Contact & Medical Section */}
+          {/* Emergency Contact Section */}
           <div>
             <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--taupe, #9C8770)', fontWeight: 600, marginBottom: '10px' }}>
-              Emergency Contact &amp; Medical Notes
+              Emergency Contact (Optional)
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div>
@@ -180,17 +175,6 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 value={emergencyRelation}
                 onChange={(e) => setEmergencyRelation(e.target.value)}
                 style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
-              />
-            </div>
-
-            <div style={{ marginTop: '10px' }}>
-              <label style={{ display: 'block', fontSize: '11px', color: 'var(--cocoa-deep, #2B2015)', marginBottom: '4px' }}>Medical Considerations / Injuries (Optional)</label>
-              <textarea
-                rows={2}
-                placeholder="Please note any joint issues, pregnancy, or recent surgeries for instructors..."
-                value={medicalNotes}
-                onChange={(e) => setMedicalNotes(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', resize: 'vertical' }}
               />
             </div>
           </div>

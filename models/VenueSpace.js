@@ -19,6 +19,7 @@ const venueSpaceSchema = new mongoose.Schema({
   capacity:         { type: Number },
   suitableFor:      [{ type: String }],  // e.g. "Seminars", "Workshops", "Pilates", "Yoga"
   amenities:        [{ type: String }],  // "Wall Mirrors", "Reformer Beds", "AV Equipment", "Sound System"
+  seatingArrangements:[{ type: String }], // "Theatre", "U-Shape", "Banquet"
   images:           [{ type: String }],
   floorPlanImage:   { type: String },
   priceKobo:        { type: Number, default: 0 },

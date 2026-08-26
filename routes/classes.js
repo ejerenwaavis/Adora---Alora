@@ -16,6 +16,15 @@ router.get('/credit-packs', async (req, res) => {
   }
 });
 
+router.get('/types', async (req, res) => {
+  try {
+    const types = await ClassType.find({ isActive: true }).sort({ name: 1 });
+    res.json(types);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load class types' });
+  }
+});
+
 // PUBLIC: Get timetable for a date range
 router.get('/timetable', async (req, res) => {
   try {

@@ -27,6 +27,7 @@ export default function Fashion() {
   const [loading, setLoading] = useState(true);
   const [displayItem, setDisplayItem] = useState(null);
   const [displayImageIndex, setDisplayImageIndex] = useState(0);
+  const [mapUrl, setMapUrl] = useState('#');
   const [animState, setAnimState] = useState('idle');
   const [showCatalog, setShowCatalog] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -34,9 +35,14 @@ export default function Fashion() {
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/fashion')
-      .then(res => res.json())
-      .then(json => {
+    Promise.all([
+      fetch('/api/fashion').then(res => res.json()),
+      fetch('/api/site/settings/contact').then(res => res.json())
+    ])
+      .then(([json, settingsData]) => {
+        if (settingsData && settingsData.location_map_url) {
+          setMapUrl(settingsData.location_map_url);
+        }
         setData(json);
         if (json.length > 0) {
           setActiveLayer(json[0].layer);
@@ -192,15 +198,12 @@ export default function Fashion() {
                     <div className={styles.vcPriceSub}>in-store price</div>
                   </div>
                   
-                  {currentRenderItem?.raireListingUrl ? (
-                    <Button href={currentRenderItem.raireListingUrl} target="_blank" rel="noopener noreferrer" variant="primary">
-                      View on Raireapp &rarr;
-                    </Button>
-                  ) : (
-                    <Button variant="primary" onClick={() => setIsCheckoutOpen(true)}>
-                      Buy Item &rarr;
-                    </Button>
-                  )}
+                  <Button href={currentRenderItem?.raireListingUrl || "https://raireapp.com"} target="_blank" rel="noopener noreferrer" variant="primary">
+                    Buy online via Raireapp &rarr;
+                  </Button>
+                  <p style={{ marginTop: '12px', fontSize: '12.5px', color: 'var(--taupe)' }}>
+                    Or buy instore at <a href={mapUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'underline', color: 'var(--rust)', fontWeight: 600 }}>Aora House</a>
+                  </p>
                 </div>
 
                 {/* Center Column: Image (Arch Frame) */}

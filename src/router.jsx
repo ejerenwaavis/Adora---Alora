@@ -167,7 +167,8 @@ const internalRouter = createBrowserRouter([
     element: <RequireRole roles={['admin','concierge']}><ConciergeLayout /></RequireRole>,
     children: [
       { index: true, element: <ConciergeDashboard /> },
-      { path: 'whatsapp', element: <WhatsAppInbox /> }
+      { path: 'whatsapp', element: <WhatsAppInbox /> },
+      { path: 'venue-enquiries', element: <VenueEnquiriesCMS /> }
     ]
   },
   {
@@ -189,7 +190,6 @@ const internalRouter = createBrowserRouter([
       { path: 'timetable', element: <ScheduleCMS /> },
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
-      { path: 'venue-enquiries', element: <VenueEnquiriesCMS /> },
       { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
       { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
       { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },

@@ -474,6 +474,7 @@ router.post('/venue-spaces', upload.array('gallery', 5), async (req, res) => {
     }
 
     if (data.features) data.amenities = data.features.split(',').map(f => f.trim()).filter(Boolean);
+    if (data.seatingArrangements) data.seatingArrangements = data.seatingArrangements.split(',').map(s => s.trim()).filter(Boolean);
     if (data.suitableFor) data.suitableFor = data.suitableFor.split(',').map(s => s.trim()).filter(Boolean);
     if (data.isActive !== undefined) data.isActive = data.isActive === true || data.isActive === 'true';
     if (data.isClassStudio !== undefined) data.isClassStudio = data.isClassStudio === true || data.isClassStudio === 'true';
@@ -506,6 +507,7 @@ router.patch('/venue-spaces/:id', upload.array('gallery', 5), async (req, res) =
     }
 
     if (data.features && typeof data.features === 'string') data.amenities = data.features.split(',').map(f => f.trim()).filter(Boolean);
+    if (data.seatingArrangements && typeof data.seatingArrangements === 'string') data.seatingArrangements = data.seatingArrangements.split(',').map(s => s.trim()).filter(Boolean);
     if (data.suitableFor && typeof data.suitableFor === 'string') data.suitableFor = data.suitableFor.split(',').map(s => s.trim()).filter(Boolean);
     if (data.isActive !== undefined) data.isActive = data.isActive === true || data.isActive === 'true';
     if (data.isClassStudio !== undefined) data.isClassStudio = data.isClassStudio === true || data.isClassStudio === 'true';

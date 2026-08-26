@@ -111,8 +111,20 @@ router.post('/enquire', formLimiter, antiBotShield(), async (req, res) => {
   }
 });
 
+// User's own enquiries
+router.get('/my-enquiries', requireAuth, async (req, res) => {
+  try {
+    const enquiries = await VenueEnquiry.find({ email: new RegExp(`^${req.user.email}$`, 'i') })
+      .sort({ createdAt: -1 });
+    res.json({ success: true, enquiries });
+  } catch (err) {
+    console.error('Error fetching user enquiries:', err);
+    res.status(500).json({ error: 'Failed to fetch enquiries' });
+  }
+});
+
 // Admin / Clerk enquiry inbox
-router.get('/enquiries', requireAuth, requireRole('super_admin', 'admin', 'clerk', 'content_editor'), async (req, res) => {
+router.get('/enquiries', requireAuth, requireRole('super_admin', 'admin', 'clerk', 'content_editor', 'concierge'), async (req, res) => {
   try {
     const { status, limit = 50, page = 1 } = req.query;
     const filter = {};
@@ -135,7 +147,7 @@ router.get('/enquiries', requireAuth, requireRole('super_admin', 'admin', 'clerk
 });
 
 // Admin update enquiry status & notes
-router.patch('/enquiries/:id', requireAuth, requireRole('super_admin', 'admin', 'clerk'), async (req, res) => {
+router.patch('/enquiries/:id', requireAuth, requireRole('super_admin', 'admin', 'clerk', 'concierge'), async (req, res) => {
   try {
     const { status, adminNotes, assignedTo } = req.body;
     const updateData = {};
@@ -157,6 +169,53 @@ router.patch('/enquiries/:id', requireAuth, requireRole('super_admin', 'admin', 
   } catch (err) {
     console.error('Error updating venue enquiry:', err);
     res.status(500).json({ error: 'Failed to update venue enquiry' });
+  }
+});
+
+// Send a message on an enquiry (Internal Comms System)
+router.post('/enquiries/:id/message', requireAuth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'Message text is required' });
+    }
+
+    const enquiry = await VenueEnquiry.findById(req.params.id);
+    if (!enquiry) {
+      return res.status(404).json({ error: 'Enquiry not found' });
+    }
+
+    // Role check: If not staff, ensure this enquiry was submitted by this user (email match)
+    const isStaff = ['admin', 'super_admin', 'concierge', 'clerk'].includes(req.user.role);
+    if (!isStaff && enquiry.email.toLowerCase() !== req.user.email.toLowerCase()) {
+      return res.status(403).json({ error: 'Not authorized to message on this enquiry' });
+    }
+
+    const message = {
+      senderId: req.user._id,
+      senderName: `${req.user.firstName} ${req.user.lastName}`.trim(),
+      senderRole: isStaff ? req.user.role : 'user',
+      text: text.trim(),
+      createdAt: new Date(),
+      isRead: false
+    };
+
+    enquiry.messages.push(message);
+
+    // Update status based on who sent it
+    if (isStaff && enquiry.status === 'new') {
+      enquiry.status = 'awaiting_reply';
+    }
+
+    await enquiry.save();
+
+    // TODO: Trigger Outbound Email here if needed (e.g. notify user if staff sent it, notify staff if user sent it)
+    // For MVP we can just rely on the dashboard
+
+    res.json({ success: true, message, enquiry });
+  } catch (err) {
+    console.error('Error sending message:', err);
+    res.status(500).json({ error: 'Failed to send message' });
   }
 });
 

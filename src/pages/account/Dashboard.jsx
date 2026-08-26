@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import WaiverModal from './WaiverModal';
@@ -64,14 +64,14 @@ function WaitlistClaimCard({ booking, onClaim, onDecline, claimingId, decliningI
             Spot Open (Waitlist Priority)
           </span>
           <span style={{ fontSize: '13px', fontWeight: 600, color: isExpired ? '#8B2020' : '#A4451F' }}>
-            ⏱️ {isExpired ? 'Claim window expired' : `${timeLeft} remaining to claim`}
+            â±ï¸ {isExpired ? 'Claim window expired' : `${timeLeft} remaining to claim`}
           </span>
         </div>
         <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', margin: '0.2rem 0', color: 'var(--cocoa-deep)' }}>
           {className}
         </h3>
         <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--taupe)' }}>
-          {startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {classSession?.instructor?.firstName} {classSession?.instructor?.lastName}
+          {startTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Â· {classSession?.instructor?.firstName} {classSession?.instructor?.lastName}
         </p>
       </div>
 
@@ -124,6 +124,7 @@ export default function Dashboard() {
   const [claimingId, setClaimingId] = useState(null);
   const [decliningId, setDecliningId] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
+  const [enquiryMessage, setEnquiryMessage] = useState({});
 
   useEffect(() => {
     loadUserBookings();
@@ -132,17 +133,51 @@ export default function Dashboard() {
   async function loadUserBookings() {
     setLoading(true);
     try {
-      const res = await authFetch('/api/user/bookings');
-      if (res.ok) {
-        const data = await res.json();
-        setDashboardData(data);
+      const [bookingsRes, enquiriesRes] = await Promise.all([
+        authFetch('/api/user/bookings'),
+        authFetch('/api/venue/my-enquiries')
+      ]);
+      
+      let finalData = {};
+      
+      if (bookingsRes.ok) {
+        finalData = await bookingsRes.json();
       }
+      
+      if (enquiriesRes.ok) {
+        const enqData = await enquiriesRes.json();
+        finalData.venueEnquiries = enqData.enquiries || [];
+      }
+      
+      setDashboardData(prev => ({ ...prev, ...finalData }));
     } catch (err) {
-      console.error('Failed to load user bookings:', err);
+      console.error('Failed to load user bookings & enquiries:', err);
     } finally {
       setLoading(false);
     }
   }
+  const handleSendEnquiryMessage = async (enquiryId) => {
+    const text = enquiryMessage[enquiryId];
+    if (!text || !text.trim()) return;
+    try {
+      const res = await authFetch(`/api/venue/enquiries/${enquiryId}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDashboardData(prev => ({
+          ...prev,
+          venueEnquiries: prev.venueEnquiries.map(eq => eq._id === enquiryId ? data.enquiry : eq)
+        }));
+        setEnquiryMessage(prev => ({ ...prev, [enquiryId]: '' }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
 
   const handleOpenQR = (pass, type = 'class') => {
     setSelectedPass({ ...pass, type });
@@ -396,7 +431,7 @@ export default function Dashboard() {
             {user?.membershipStatus && user.membershipStatus !== 'none' ? user.membershipStatus : 'House Member'}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
-            Access to Café, Loft &amp; Boutique
+            Access to CafÃ©, Loft &amp; Boutique
           </div>
         </div>
 
@@ -428,7 +463,7 @@ export default function Dashboard() {
               </span>
             ) : (
               <span onClick={() => setIsWaiverModalOpen(true)} style={{ color: 'var(--rust)', cursor: 'pointer', fontWeight: 600 }}>
-                Sign to unlock classes →
+                Sign to unlock classes â†’
               </span>
             )}
           </div>
@@ -453,7 +488,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ─── TAB 1: OVERVIEW ─── */}
+      {/* â”€â”€â”€ TAB 1: OVERVIEW â”€â”€â”€ */}
       {activeTab === 'overview' && (
         <div>
           {/* Next Up Hero Card */}
@@ -474,7 +509,7 @@ export default function Dashboard() {
               <div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(200, 155, 74, 0.12)', color: 'var(--rust)', padding: '0.25rem 0.65rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, marginBottom: '0.65rem' }}>
                   {nextPassType === 'event' ? <IconTicket size={12} color="var(--rust)" /> : <IconQr size={12} color="var(--rust)" />}
-                  <span>Next Upcoming Pass · {nextPassType === 'event' ? 'Loft Event' : 'Movement Studio'}</span>
+                  <span>Next Upcoming Pass Â· {nextPassType === 'event' ? 'Loft Event' : 'Movement Studio'}</span>
                 </div>
                 <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.75rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
                   {nextPassType === 'event' ? nextPass.event?.title : nextPass.classSession?.classType?.name}
@@ -549,20 +584,20 @@ export default function Dashboard() {
 
             <div className={styles.card} style={{ margin: 0 }}>
               <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
-                Café &amp; Boutique
+                CafÃ© &amp; Boutique
               </h4>
               <p style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
                 Browse daily seasonal kitchen menus, organic matcha, and curated fashion collection.
               </p>
               <button onClick={() => navigate('/cafe')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                View Café Menu <IconArrowRight size={14} />
+                View CafÃ© Menu <IconArrowRight size={14} />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── TAB 2: MY BOOKINGS & PASSES ─── */}
+      {/* â”€â”€â”€ TAB 2: MY BOOKINGS & PASSES â”€â”€â”€ */}
       {activeTab === 'bookings' && (
         <div>
           {/* Subfilter Bar */}
@@ -572,6 +607,7 @@ export default function Dashboard() {
               { id: 'classes', label: `Classes (${dashboardData.upcomingClasses?.length || 0})` },
               { id: 'events', label: `Events (${dashboardData.upcomingEvents?.length || 0})` },
               { id: 'orders', label: `Orders (${(dashboardData.cafeOrders?.length || 0) + (dashboardData.fashionOrders?.length || 0)})` },
+                { id: 'enquiries', label: `Venue Enquiries (${dashboardData.venueEnquiries?.length || 0})` },
               { id: 'past', label: 'Past & History' }
             ].map(f => (
               <button
@@ -643,11 +679,11 @@ export default function Dashboard() {
                               <IconCalendar size={13} color="var(--taupe)" />
                               {new Date(session?.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at {new Date(session?.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
-                            {session?.instructor && <span>· Instructor: {session.instructor.firstName} {session.instructor.lastName}</span>}
+                            {session?.instructor && <span>Â· Instructor: {session.instructor.firstName} {session.instructor.lastName}</span>}
                           </div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--forest)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <IconPin size={13} color="var(--forest)" />
-                            <span>{session?.classType?.room || 'Movement Studio Level 2'} · Duration: {session?.classType?.durationMinutes || 50} mins</span>
+                            <span>{session?.classType?.room || 'Movement Studio Level 2'} Â· Duration: {session?.classType?.durationMinutes || 50} mins</span>
                           </div>
                         </div>
 
@@ -744,11 +780,11 @@ export default function Dashboard() {
                           </div>
                           <div style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <IconCalendar size={13} color="var(--taupe)" />
-                            <span>{evt?.startDate ? new Date(evt.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'} {evt?.time ? `· ${evt.time}` : ''}</span>
+                            <span>{evt?.startDate ? new Date(evt.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : 'Scheduled'} {evt?.time ? `Â· ${evt.time}` : ''}</span>
                           </div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--rust)', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <IconPin size={13} color="var(--rust)" />
-                            <span>{evt?.space || 'The Loft'} · Tickets: {eventBooking.quantity || 1}</span>
+                            <span>{evt?.space || 'The Loft'} Â· Tickets: {eventBooking.quantity || 1}</span>
                           </div>
                         </div>
 
@@ -786,7 +822,7 @@ export default function Dashboard() {
           {(bookingFilter === 'all' || bookingFilter === 'orders') && (
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
-                Café &amp; Fashion Receipts
+                CafÃ© &amp; Fashion Receipts
               </h3>
               {(dashboardData.cafeOrders?.length === 0 && dashboardData.fashionOrders?.length === 0) ? (
                 <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
@@ -797,13 +833,13 @@ export default function Dashboard() {
                   {dashboardData.cafeOrders?.map(order => (
                     <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <div>
-                        <strong style={{ color: 'var(--cocoa-deep)' }}>Café Order #{order.orderNumber}</strong>
+                        <strong style={{ color: 'var(--cocoa-deep)' }}>CafÃ© Order #{order.orderNumber}</strong>
                         <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '2px' }}>
                           {order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((order.totalAmountKobo || 0) / 100).toLocaleString()}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>â‚¦{((order.totalAmountKobo || 0) / 100).toLocaleString()}</div>
                         <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--forest)', fontWeight: 600 }}>{order.status}</span>
                       </div>
                     </div>
@@ -813,11 +849,11 @@ export default function Dashboard() {
                       <div>
                         <strong style={{ color: 'var(--cocoa-deep)' }}>Boutique Item: {order.itemName}</strong>
                         <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '2px' }}>
-                          Size: {order.selectedSize || 'One Size'} · {order.orderNumber}
+                          Size: {order.selectedSize || 'One Size'} Â· {order.orderNumber}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>₦{((order.priceKobo || 0) / 100).toLocaleString()}</div>
+                        <div style={{ fontWeight: 600, color: 'var(--cocoa-deep)' }}>â‚¦{((order.priceKobo || 0) / 100).toLocaleString()}</div>
                         <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--rust)', fontWeight: 600 }}>{order.status}</span>
                       </div>
                     </div>
@@ -827,7 +863,51 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Past History */}
+          
+            {/* Enquiries Section */}
+            {(bookingFilter === 'all' || bookingFilter === 'enquiries') && (
+              <div style={{ marginBottom: '2.5rem' }}>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
+                  Venue Hire Enquiries
+                </h3>
+                {dashboardData.venueEnquiries?.length === 0 ? (
+                  <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
+                    You have not submitted any venue hire enquiries.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {dashboardData.venueEnquiries?.map(enq => (
+                      <div key={enq._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.8)', borderRadius: '8px', padding: '1.5rem', overflow: 'hidden' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                          <div>
+                            <strong style={{ color: 'var(--cocoa-deep)', fontSize: '1.1rem', textTransform: 'capitalize' }}>{enq.spacePreference.replace('-', ' ')}</strong>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--taupe)' }}>{new Date(enq.preferredDate).toLocaleDateString()} A· {enq.guestCount} Guests</div>
+                          </div>
+                          <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: enq.status === 'confirmed' ? 'var(--forest)' : enq.status === 'awaiting_reply' ? '#A4451F' : 'var(--taupe)', fontWeight: 600, padding: '4px 10px', background: '#FAF6EF', borderRadius: '12px' }}>{enq.status.replace('_', ' ')}</span>
+                        </div>
+                        <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(227, 211, 184, 0.4)', paddingTop: '1rem' }}>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', marginBottom: '8px' }}>Messages with Concierge</div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', marginBottom: '12px' }}>
+                            {enq.messages && enq.messages.length > 0 ? enq.messages.map((msg, i) => (
+                              <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', background: msg.senderRole === 'user' ? '#FAF6EF' : '#FFF', border: '1px solid rgba(227, 211, 184, 0.5)', alignSelf: msg.senderRole === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                                <div style={{ fontSize: '10px', color: 'var(--taupe)', marginBottom: '4px' }}>{msg.senderName} A· {new Date(msg.createdAt).toLocaleString()}</div>
+                                <div style={{ fontSize: '12.5px', color: 'var(--cocoa-deep)' }}>{msg.text}</div>
+                              </div>
+                            )) : <div style={{ fontSize: '12px', color: 'var(--taupe)' }}>No replies yet. We will review your enquiry and respond here shortly.</div>}
+                          </div>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                            <input type="text" placeholder="Reply to concierge..." value={enquiryMessage[enq._id] || ''} onChange={e => setEnquiryMessage({ ...enquiryMessage, [enq._id]: e.target.value })} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }} onKeyDown={e => { if (e.key === 'Enter') handleSendEnquiryMessage(enq._id); }} />
+                            <button onClick={() => handleSendEnquiryMessage(enq._id)} style={{ background: 'var(--rust)', color: '#FFF', border: 'none', padding: '0 16px', borderRadius: '4px', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Send</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Past History */}
           {(bookingFilter === 'all' || bookingFilter === 'past') && (
             <div style={{ marginTop: '2rem' }}>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
@@ -857,7 +937,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ─── TAB 3: DIGITAL QR PASSES GALLERY ─── */}
+      {/* â”€â”€â”€ TAB 3: DIGITAL QR PASSES GALLERY â”€â”€â”€ */}
       {activeTab === 'passes' && (
         <div>
           <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '0.4rem', fontWeight: 400 }}>
@@ -954,7 +1034,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ─── TAB 4: WAIVER & HEALTH ─── */}
+      {/* â”€â”€â”€ TAB 4: WAIVER & HEALTH â”€â”€â”€ */}
       {activeTab === 'waiver' && (
         <div style={{ maxWidth: '760px' }}>
           <div className={styles.card}>

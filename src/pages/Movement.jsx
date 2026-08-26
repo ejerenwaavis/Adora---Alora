@@ -1,292 +1,188 @@
-import React, { useState, useEffect, Fragment } from 'react';
+﻿import React, { useState, useEffect, Fragment } from 'react';
 import BookingModal from '../components/BookingModal';
 import PageHeader from '../components/ui/PageHeader';
 import styles from './Movement.module.css';
 
 export default function Movement() {
+  const [classTypes, setClassTypes] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [activeSession, setActiveSession] = useState(null);
-  const [selectedDay, setSelectedDay] = useState('All');
-  const [selectedType, setSelectedType] = useState('All');
+  
+  const [selectedClassType, setSelectedClassType] = useState(null);
+  const [selectedSessionToBook, setSelectedSessionToBook] = useState(null);
 
   useEffect(() => {
-    // In a real app, we'd pass ?start=...&end=... for the current week
-    // For now, just grab all public sessions
-    fetch('/api/classes/timetable')
-      .then(res => res.json())
-      .then(data => {
-        setSessions(data);
-        if (data.length > 0) setActiveSession(data[0]);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+    Promise.all([
+      fetch('/api/classes/types').then(res => res.json()),
+      fetch('/api/classes/timetable').then(res => res.json())
+    ])
+    .then(([typesData, sessionsData]) => {
+      setClassTypes(Array.isArray(typesData) ? typesData : []);
+      setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+      setLoading(false);
+    })
+    .catch(err => {
+      console.error(err);
+      setLoading(false);
+    });
   }, []);
 
-  const uniqueDays = ['All', ...new Set(sessions.map(s => new Date(s.startTime).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase()))];
-  const uniqueTypes = ['All', ...new Set(sessions.map(s => s.classType?.name).filter(Boolean))];
-
-  const filteredSessions = sessions.filter(s => {
-    const dayMatch = selectedDay === 'All' || new Date(s.startTime).toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase() === selectedDay;
-    const typeMatch = selectedType === 'All' || s.classType?.name === selectedType;
-    return dayMatch && typeMatch;
-  });
-
-  // Update active session if current active session is filtered out
-  useEffect(() => {
-    if (filteredSessions.length > 0 && (!activeSession || !filteredSessions.find(s => s._id === activeSession._id))) {
-      setActiveSession(filteredSessions[0]);
-    }
-  }, [selectedDay, selectedType]); // only run when filters change
-
-  const groupSessions = (sessions) => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-
+  // Group sessions by date for the selected class type
+  const getGroupedSessions = () => {
+    if (!selectedClassType) return {};
+    
+    const filtered = sessions.filter(s => s.classType?._id === selectedClassType._id);
     const groups = {};
-    sessions.forEach(session => {
-      const sessionDate = new Date(session.startTime);
-      sessionDate.setHours(0, 0, 0, 0);
-      const diffTime = sessionDate - now;
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    filtered.forEach(s => {
+      const dateObj = new Date(s.startTime);
+      // Group by "Mon, Sep 15" format
+      const dateStr = dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
       
-      let groupName = '';
-      if (diffDays < 0) {
-        groupName = 'Past';
-      } else if (diffDays <= 7) {
-        groupName = 'This Week';
-      } else if (diffDays <= 14) {
-        groupName = 'Next Week';
-      } else {
-        groupName = 'Upcoming';
-      }
-      
-      if (!groups[groupName]) groups[groupName] = [];
-      groups[groupName].push(session);
+      if (!groups[dateStr]) groups[dateStr] = [];
+      groups[dateStr].push(s);
     });
     
-    // order of groups: This Week, Next Week, Upcoming, Past
-    const order = ['This Week', 'Next Week', 'Upcoming', 'Past'];
-    return order.map(name => ({ name, sessions: groups[name] || [] })).filter(g => g.sessions.length > 0);
+    return groups;
   };
 
-  const groupedSessions = groupSessions(filteredSessions);
+  const groupedSessions = getGroupedSessions();
 
   return (
-    <div className={styles.container}>
+    <div className={styles.pageContainer}>
       <PageHeader 
-        eyebrow="The Studio"
-        title="Movement"
-        description="Book your spot in our signature classes."
+        title="Movement" 
+        subtitle="One Rhythm. Move with intention."
+        backgroundImage="https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=2000"
       />
 
-      <div className={styles.timetable}>
+      <div className={styles.container}>
         {loading ? (
-          <p style={{ padding: '2rem', textAlign: 'center' }}>Loading timetable...</p>
-        ) : sessions.length === 0 ? (
-          <p style={{ padding: '2rem', textAlign: 'center' }}>No classes scheduled right now. Check back soon!</p>
+          <div style={{ textAlign: 'center', padding: '100px 0', color: 'var(--taupe)' }}>Loading classes...</div>
+        ) : !selectedClassType ? (
+          // View 1: Available Class Types
+          <div className={styles.typesGrid}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>Select a Class</h2>
+              <p style={{ color: 'var(--taupe)', maxWidth: '600px', margin: '0 auto' }}>Choose from our signature movement and wellness practices to view available dates and times.</p>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem' }}>
+              {classTypes.map(type => (
+                <div 
+                  key={type._id} 
+                  className={styles.typeCard}
+                  onClick={() => setSelectedClassType(type)}
+                  style={{ cursor: 'pointer', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '12px', overflow: 'hidden', background: '#FFFDF9', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(200, 155, 74, 0.15)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                  <div style={{ height: '200px', width: '100%', background: '#eaeaea', overflow: 'hidden' }}>
+                    <img 
+                      src={type.image || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} 
+                      alt={type.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </div>
+                  <div style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.4rem', fontFamily: 'var(--font-heading)', color: 'var(--cocoa-deep)' }}>{type.name}</h3>
+                      <span style={{ fontSize: '0.75rem', background: '#FAF6EF', padding: '4px 10px', borderRadius: '12px', color: 'var(--taupe)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{type.durationMinutes} MIN</span>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: 'var(--taupe)', lineHeight: 1.5, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                      {type.description}
+                    </p>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--rust)', fontWeight: 600, textTransform: 'uppercase' }}>
+                      View Available Dates &rarr;
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
-          <>
-            <div className={styles.filterBar}>
-              <div className={styles.vaDayNav}>
-                {uniqueDays.map(day => (
-                  <button 
-                    key={day} 
-                    className={`${styles.vaDay} ${selectedDay === day ? styles.vaDayOn : ''}`}
-                    onClick={() => setSelectedDay(day)}
-                  >
-                    {day}
-                  </button>
-                ))}
+          // View 2: Class Timetable
+          <div className={styles.timetableSection}>
+            <button 
+              onClick={() => setSelectedClassType(null)}
+              style={{ background: 'none', border: 'none', color: 'var(--taupe)', fontSize: '0.9rem', cursor: 'pointer', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              &larr; Back to all classes
+            </button>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '3rem', marginBottom: '3rem', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 400px' }}>
+                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '2.5rem', color: 'var(--cocoa-deep)', marginBottom: '1rem' }}>{selectedClassType.name}</h2>
+                <p style={{ color: 'var(--taupe)', fontSize: '1.1rem', lineHeight: 1.6 }}>{selectedClassType.description}</p>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+                  <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>{selectedClassType.durationMinutes} Minutes</span>
+                  <span style={{ padding: '6px 12px', background: '#FAF6EF', borderRadius: '4px', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}>Intensity: {selectedClassType.intensityLevel}/5</span>
+                </div>
               </div>
-              <div className={styles.vcFilters}>
-                {uniqueTypes.map(type => (
-                  <button 
-                    key={type} 
-                    className={`${styles.vcFilt} ${selectedType === type ? styles.vcFiltOn : ''}`}
-                    onClick={() => setSelectedType(type)}
-                  >
-                    {type}
-                  </button>
-                ))}
+              <div style={{ flex: '1 1 300px', height: '300px', borderRadius: '12px', overflow: 'hidden' }}>
+                 <img src={selectedClassType.image || 'https://images.unsplash.com/photo-1599901860904-17e08c2d28f8?auto=format&fit=crop&q=80&w=800'} alt={selectedClassType.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
             </div>
 
-            {filteredSessions.length === 0 ? (
-              <p style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--taupe)' }}>No classes match your selected filters.</p>
+            <h3 style={{ borderBottom: '1px solid rgba(227, 211, 184, 0.6)', paddingBottom: '1rem', marginBottom: '2rem', color: 'var(--cocoa-deep)', fontSize: '1.5rem', fontFamily: 'var(--font-heading)' }}>Available Dates</h3>
+            
+            {Object.keys(groupedSessions).length === 0 ? (
+              <div style={{ padding: '3rem', background: '#FFFDF9', textAlign: 'center', borderRadius: '8px', color: 'var(--taupe)', border: '1px dashed rgba(227, 211, 184, 0.8)' }}>
+                No upcoming sessions scheduled for {selectedClassType.name}. Please check back later.
+              </div>
             ) : (
-              <>
-                {/* Desktop Variant C */}
-                <div className={styles.vc}>
-                  <div className={styles.vcLeft}>
-                    <div className={styles.vcHeader}>
-                      <div className={styles.vcHLeft}>
-                        <div className={styles.vcEyebrow}>The Studio</div>
-                        <div className={styles.vcTitle}>Upcoming <em>classes</em></div>
-                      </div>
-                    </div>
-                    <div className={styles.vcList}>
-                      {groupedSessions.map(group => (
-                        <div key={group.name} className={styles.vcGroup}>
-                          <div className={styles.vcGroupHeader}>
-                            {group.name}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {Object.entries(groupedSessions).map(([dateStr, daySessions]) => (
+                  <div key={dateStr} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.6)', borderRadius: '12px', padding: '1.5rem' }}>
+                    <h4 style={{ color: 'var(--cocoa-deep)', fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid #FAF6EF', paddingBottom: '0.5rem' }}>{dateStr}</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {daySessions.map(session => (
+                        <div key={session._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: '#FAF6EF', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 600, color: 'var(--cocoa-deep)', width: '90px' }}>
+                              {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: '1rem', color: 'var(--cocoa-deep)', fontWeight: 500 }}>{session.instructor?.firstName} {session.instructor?.lastName}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>{session.venueSpace?.name || 'Main Studio'}</div>
+                            </div>
                           </div>
-                          {group.sessions.map((session, i) => {
-                            const dStr = new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-                            const prevStr = i > 0 ? new Date(group.sessions[i - 1].startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' }) : null;
-                            const isNewDay = dStr !== prevStr;
-                            return (
-                              <Fragment key={session._id}>
-                                {isNewDay && (
-                                  <div className={styles.vcDaySubheader}>{dStr}</div>
-                                )}
-                                <div 
-                                  className={`${styles.vcRow} ${activeSession?._id === session._id ? styles.vcRowActive : ''}`}
-                                  onClick={() => setActiveSession(session)}
-                                >
-                                  <div className={styles.vcTimeCol}>
-                                    <div className={styles.vcHour}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0]}</div>
-                                    <div className={styles.vcAmPm}>{new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1]}</div>
-                                    <div className={styles.vcDate}>
-                                      {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short' })}<br/>
-                                      {new Date(session.startTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                    </div>
-                                  </div>
-                                  <div className={styles.vcMid}>
-                                    <div className={styles.vcRowType}>{session.classType?.name} · {session.classType?.durationMinutes} min</div>
-                                    <div className={styles.vcRowName}>{session.classType?.name}</div>
-                                    <div className={styles.vcRowInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
-                                  </div>
-                                  <div className={styles.vcRightCol}>
-                                    <div className={`${styles.vcSpotsBadge} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
-                                      {session.maxCapacity - session.bookedCount} left
-                                    </div>
-                                    <div className={styles.vcLvl}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
-                                  </div>
-                                </div>
-                              </Fragment>
-                            );
-                          })}
+                          <button 
+                            onClick={() => setSelectedSessionToBook(session)}
+                            disabled={session.bookedCount >= session.capacity}
+                            style={{ 
+                              background: session.bookedCount >= session.capacity ? 'transparent' : 'var(--cocoa-deep)', 
+                              color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
+                              border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
+                              padding: '10px 20px', 
+                              borderRadius: '20px', 
+                              fontSize: '0.85rem', 
+                              cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}
+                          >
+                            {session.bookedCount >= session.capacity ? 'Waitlist' : 'Book Session'}
+                          </button>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {activeSession && (
-                    <div className={styles.vcDetail}>
-                      <div className={styles.vcDetImg}>
-                        <img 
-                          src={activeSession.classType?.coverImage || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=600"} 
-                          alt={activeSession.classType?.name} 
-                        />
-                      </div>
-                      <div className={styles.vcDetBody}>
-                        <div className={styles.vcDetTime}>
-                          {new Date(activeSession.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()} · {new Date(activeSession.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {activeSession.classType?.durationMinutes} min
-                        </div>
-                        <div className={styles.vcDetName}>{activeSession.classType?.name}</div>
-                        <div className={styles.vcDetType}>{activeSession.classType?.name} · {activeSession.classType?.level === 'all-levels' ? 'All levels' : activeSession.classType?.level}</div>
-                        
-                        <div className={styles.vcDetInstRow}>
-                          <div className={styles.vcDetAvatar}>
-                            {activeSession.instructor?.firstName?.[0] || ''}{activeSession.instructor?.lastName?.[0] || ''}
-                          </div>
-                          <div className={styles.vcDetIname}>{activeSession.instructor?.firstName} {activeSession.instructor?.lastName}</div>
-                        </div>
-
-                        <div className={styles.vcDetStats}>
-                          <div className={styles.vcDetStat}>
-                            <div className={styles.vcDetStatVal}>{activeSession.maxCapacity - activeSession.bookedCount}</div>
-                            <div className={styles.vcDetStatLbl}>Spots left</div>
-                          </div>
-                          <div className={styles.vcDetStat}>
-                            <div className={styles.vcDetStatVal}>{activeSession.classType?.durationMinutes}m</div>
-                            <div className={styles.vcDetStatLbl}>Duration</div>
-                          </div>
-                        </div>
-
-                        <button className={styles.vcDetBtn} onClick={() => setSelectedSession(activeSession)}>Book this class &rarr;</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Mobile Variant A */}
-                <div className={styles.vaRailWrapper}>
-                  {groupedSessions.map(group => {
-                    const daysMap = {};
-                    group.sessions.forEach(s => {
-                      const d = new Date(s.startTime).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
-                      if (!daysMap[d]) daysMap[d] = [];
-                      daysMap[d].push(s);
-                    });
-                    const daysArr = Object.entries(daysMap);
-
-                    return (
-                      <div key={group.name} className={styles.vaRailGroup}>
-                        <div className={styles.vaGroupHeader}>
-                          {group.name}
-                        </div>
-                        {daysArr.map(([dayStr, daySessions]) => (
-                          <div key={dayStr} className={styles.vaDayGroup}>
-                            <div className={styles.vaDaySubheader}>{dayStr}</div>
-                            <div className={styles.vaRail}>
-                              {daySessions.map(session => (
-                                <div 
-                                  key={session._id} 
-                                  className={styles.vaCard}
-                                  onClick={() => setSelectedSession(session)}
-                                >
-                                  <div className={styles.vaCardImg}>
-                                    <img 
-                                      src={session.classType?.coverImage || "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=600"} 
-                                      alt={session.classType?.name} 
-                                    />
-                                    <div className={`${styles.vaSpots} ${session.maxCapacity - session.bookedCount < 3 ? styles.hot : styles.good}`}>
-                                      {session.maxCapacity - session.bookedCount} spots left
-                                    </div>
-                                  </div>
-                                  <div className={styles.vaCardBody}>
-                                    <div className={styles.vaCardHeader}>
-                                      <div className={styles.vaCardDate}>
-                                        {new Date(session.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
-                                      </div>
-                                      <div className={styles.vaCardTime}>
-                                        {new Date(session.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                      </div>
-                                    </div>
-                                    <div className={styles.vaCardType}>{session.classType?.name}</div>
-                                    <div className={styles.vaCardName}>{session.classType?.name}</div>
-                                    <div className={styles.vaCardInst}>with {session.instructor?.firstName} {session.instructor?.lastName}</div>
-                                    
-                                    <div className={styles.vaCardFoot}>
-                                      <div className={styles.vaLevel}>{session.classType?.level === 'all-levels' ? 'All levels' : session.classType?.level}</div>
-                                      <button className={styles.vaBook} onClick={() => setSelectedSession(session)}>Book</button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
+                ))}
+              </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
-      {selectedSession && (
+      {selectedSessionToBook && (
         <BookingModal 
-          session={selectedSession} 
-          onClose={() => setSelectedSession(null)} 
+          session={selectedSessionToBook} 
+          onClose={() => setSelectedSessionToBook(null)}
+          onSuccess={() => {
+            // Optional: Refresh timetable data here
+            setSelectedSessionToBook(null);
+          }}
         />
       )}
     </div>

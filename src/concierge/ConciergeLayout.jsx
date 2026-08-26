@@ -63,6 +63,19 @@ export default function ConciergeLayout() {
             WhatsApp Inbox
             <span style={{ marginLeft: 'auto', background: '#8B3318', color: 'white', fontSize: '10px', padding: '2px 6px', borderRadius: '10px' }}>3</span>
           </NavLink>
+
+          <NavLink 
+            to="/concierge/venue-enquiries" 
+            style={({ isActive }) => ({
+              display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
+              borderRadius: '6px', textDecoration: 'none',
+              background: isActive ? 'rgba(200, 155, 74, 0.1)' : 'transparent',
+              color: isActive ? 'var(--cocoa-deep)' : 'var(--taupe)',
+              fontSize: '13px', fontWeight: 600, transition: 'all 0.2s'
+            })}
+          >
+            <Icon name="announcements" size={18} /> Venue Enquiries
+          </NavLink>
         </nav>
 
         {/* User Profile Footer */}

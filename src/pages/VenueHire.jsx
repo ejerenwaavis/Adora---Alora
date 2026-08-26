@@ -108,6 +108,7 @@ export default function VenueHire({ section }) {
               description: v.description || '',
               suitableFor: v.suitableFor?.length > 0 ? v.suitableFor : ['Private Events', 'Gatherings', 'Photoshoots'],
               features: v.amenities?.join(', ') || 'Various features available upon request.',
+              seatingArrangements: v.seatingArrangements || [],
               bookingPrompt: `Enquire about booking ${v.name} for your next event.`,
               images: v.images?.length > 0 ? v.images : ['https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&q=80&w=2000'],
               capacity: v.capacity,
@@ -397,12 +398,25 @@ export default function VenueHire({ section }) {
             </div>
             <div className={styles.inputGroup}>
               <label>Seating Arrangement</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Theatre-style, Round-table, Cocktail" 
-                value={formData.seatingStyle}
-                onChange={e => setFormData({ ...formData, seatingStyle: e.target.value })}
-              />
+              {venuesMap[formData.spacePreference]?.seatingArrangements?.length > 0 ? (
+                <select 
+                  value={formData.seatingStyle}
+                  onChange={e => setFormData({ ...formData, seatingStyle: e.target.value })}
+                >
+                  <option value="">Select an arrangement...</option>
+                  {venuesMap[formData.spacePreference].seatingArrangements.map((style, idx) => (
+                    <option key={idx} value={style}>{style}</option>
+                  ))}
+                  <option value="Other">Other (Please specify in notes)</option>
+                </select>
+              ) : (
+                <input 
+                  type="text" 
+                  placeholder="e.g. Theatre-style, Round-table, Cocktail" 
+                  value={formData.seatingStyle}
+                  onChange={e => setFormData({ ...formData, seatingStyle: e.target.value })}
+                />
+              )}
             </div>
           </div>
 

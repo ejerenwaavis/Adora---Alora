@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useModal } from '../contexts/ModalContext';
@@ -38,6 +38,7 @@ export default function EventsCMS() {
     suitableFor: '', 
     price: '', 
     features: '', 
+    seatingArrangements: '',
     sortOrder: 0, 
     isActive: true, 
     galleryItems: [] 
@@ -116,6 +117,7 @@ export default function EventsCMS() {
       formData.append('capacity', venueForm.capacity || venueForm.defaultCapacity);
       formData.append('priceKobo', Math.round(parseFloat(venueForm.price || 0) * 100));
       formData.append('features', venueForm.features);
+      formData.append('seatingArrangements', venueForm.seatingArrangements);
       formData.append('suitableFor', venueForm.suitableFor);
       formData.append('sortOrder', venueForm.sortOrder);
       formData.append('isActive', venueForm.isActive);
@@ -188,6 +190,7 @@ export default function EventsCMS() {
       capacity: venue.capacity || venue.defaultCapacity || 14, 
       price: venue.priceKobo !== undefined && venue.priceKobo > 0 ? (venue.priceKobo / 100) : '', 
       features: venue.amenities?.join(', ') || '', 
+      seatingArrangements: venue.seatingArrangements?.join(', ') || '',
       sortOrder: venue.sortOrder || 0, 
       isActive: venue.isActive ?? venue.isAvailable ?? true,
       galleryItems: venue.images ? venue.images.map(url => ({ type: 'existing', url })) : []
@@ -541,7 +544,7 @@ export default function EventsCMS() {
                     <option value="all">All Spaces & Types</option>
                     <option value="studio">Class & Movement Studios</option>
                     <option value="venue_hire">Venue Hire Spaces</option>
-                    <option value="cafe">Café & Seating</option>
+                    <option value="cafe">CafÃ© & Seating</option>
                   </select>
                   <select className={styles.filterSelect} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
                     <option value="all">All Status</option>
@@ -593,7 +596,7 @@ export default function EventsCMS() {
                               )}
                               {v.isCafeArea && (
                                 <span className={styles.badge} style={{ background: 'rgba(164, 69, 31, 0.15)', color: '#A4451F' }}>
-                                  CAFÉ
+                                  CAFÃ‰
                                 </span>
                               )}
                               {!isVenActive && <span className={styles.badge} style={{ color: 'var(--rust)', background: 'rgba(164, 69, 31, 0.1)' }}>Inactive</span>}
@@ -602,8 +605,8 @@ export default function EventsCMS() {
                               <span>Capacity: <strong>{v.capacity || v.defaultCapacity || 14}</strong> guests/members</span>
                               {v.isHireableVenue && v.priceKobo > 0 && (
                                 <>
-                                  <span>•</span>
-                                  <span className={styles.itemPrice}>₦{(v.priceKobo / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} / day</span>
+                                  <span>â€¢</span>
+                                  <span className={styles.itemPrice}>â‚¦{(v.priceKobo / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })} / day</span>
                                 </>
                               )}
                             </div>
@@ -660,7 +663,7 @@ export default function EventsCMS() {
                   <select value={venueForm.spaceType} onChange={e => setVenueForm({...venueForm, spaceType: e.target.value})}>
                     <option value="studio">Movement & Class Studio</option>
                     <option value="venue_hire">Public Venue Hire Space</option>
-                    <option value="cafe">Café & Dining Lounge</option>
+                    <option value="cafe">CafÃ© & Dining Lounge</option>
                     <option value="wellness">Wellness & Treatment Room</option>
                     <option value="multi_purpose">Multi-Purpose Facility</option>
                   </select>
@@ -699,7 +702,7 @@ export default function EventsCMS() {
                       onChange={e => setVenueForm({...venueForm, isClassStudio: e.target.checked})} 
                     />
                     <label htmlFor="capClassStudio">
-                      <strong>Available for Class & Movement Scheduling</strong> — Automatically appears in Timetable CMS, Day View column tracks, and class scheduling dropdowns.
+                      <strong>Available for Class & Movement Scheduling</strong> â€” Automatically appears in Timetable CMS, Day View column tracks, and class scheduling dropdowns.
                     </label>
                   </div>
                   <div className={styles.checkboxField}>
@@ -710,7 +713,7 @@ export default function EventsCMS() {
                       onChange={e => setVenueForm({...venueForm, isHireableVenue: e.target.checked})} 
                     />
                     <label htmlFor="capHireableVenue">
-                      <strong>Available for Public Venue Hire & Private Events</strong> — Listed on public /venue-hire with daily rental rates and private event enquiries.
+                      <strong>Available for Public Venue Hire & Private Events</strong> â€” Listed on public /venue-hire with daily rental rates and private event enquiries.
                     </label>
                   </div>
                   <div className={styles.checkboxField}>
@@ -721,7 +724,7 @@ export default function EventsCMS() {
                       onChange={e => setVenueForm({...venueForm, isCafeArea: e.target.checked})} 
                     />
                     <label htmlFor="capCafeArea">
-                      <strong>Dedicated Café Seating & Dining Area</strong> — Integrated with café reservations and clerk desk walk-ins.
+                      <strong>Dedicated CafÃ© Seating & Dining Area</strong> â€” Integrated with cafÃ© reservations and clerk desk walk-ins.
                     </label>
                   </div>
                 </div>
@@ -744,7 +747,7 @@ export default function EventsCMS() {
                 </div>
                 {venueForm.isHireableVenue && (
                   <div className={styles.field}>
-                    <label>Price / Day (₦)</label>
+                    <label>Price / Day (â‚¦)</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -765,6 +768,11 @@ export default function EventsCMS() {
               <div className={styles.field}>
                 <label>Features / Amenities (comma separated)</label>
                 <input type="text" value={venueForm.features} onChange={e => setVenueForm({...venueForm, features: e.target.value})} placeholder="e.g. Wall Mirrors, Reformer Beds, Yoga Mats & Blocks, Sound System, WiFi, Air Conditioning" />
+              </div>
+
+              <div className={styles.field}>
+                <label>Seating Arrangements (comma separated, for venue hire)</label>
+                <input type="text" value={venueForm.seatingArrangements} onChange={e => setVenueForm({...venueForm, seatingArrangements: e.target.value})} placeholder="e.g. Theatre, U-Shape, Banquet, Standing Cocktail" />
               </div>
               
               <div className={styles.row}>
@@ -812,7 +820,7 @@ export default function EventsCMS() {
                         const newItems = [...venueForm.galleryItems];
                         newItems.splice(i, 1);
                         setVenueForm({...venueForm, galleryItems: newItems});
-                      }} style={{position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '0.8rem'}}>✕</button>
+                      }} style={{position: 'absolute', top: 0, right: 0, background: 'red', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px', fontSize: '0.8rem'}}>âœ•</button>
                     </div>
                   ))}
                 </div>
@@ -920,10 +928,10 @@ export default function EventsCMS() {
                             </div>
                             <div className={styles.meta}>
                               <span>{new Date(evt.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                              <span>•</span>
+                              <span>â€¢</span>
                               <span style={{ textTransform: 'capitalize' }}>{evt.organiser}</span>
-                              <span>•</span>
-                              <span className={styles.itemPrice}>{evt.isFree ? 'Free' : `₦${((evt.priceKobo || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</span>
+                              <span>â€¢</span>
+                              <span className={styles.itemPrice}>{evt.isFree ? 'Free' : `â‚¦${((evt.priceKobo || 0) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}</span>
                             </div>
                             {evt.shortDescription && <p className={styles.itemDesc}>{evt.shortDescription}</p>}
                           </div>
@@ -1020,7 +1028,7 @@ export default function EventsCMS() {
                   />
                   {isStartDateInvalid && (
                     <div style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                      ⚠️ Start date & time must be at least 6 hours from now.
+                      âš ï¸ Start date & time must be at least 6 hours from now.
                     </div>
                   )}
                 </div>
@@ -1036,7 +1044,7 @@ export default function EventsCMS() {
                   />
                   {isEndDateInvalid && (
                     <div style={{ color: '#d32f2f', fontSize: '0.75rem', marginTop: '5px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
-                      ⚠️ End date & time must be after the start date & time.
+                      âš ï¸ End date & time must be after the start date & time.
                     </div>
                   )}
                 </div>
@@ -1067,7 +1075,7 @@ export default function EventsCMS() {
                   />
                 </div>
                 <div className={styles.field}>
-                  <label>Ticket Price (₦)</label>
+                  <label>Ticket Price (â‚¦)</label>
                   <input 
                     type="number" 
                     step="0.01" 
@@ -1128,7 +1136,7 @@ export default function EventsCMS() {
                 </div>
               </div>
 
-              {/* ── Recurring Event Controls ── */}
+              {/* â”€â”€ Recurring Event Controls â”€â”€ */}
               <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(227, 211, 184, 0.4)', paddingTop: '1.25rem' }}>
                 <div className={styles.checkboxField} style={{ marginBottom: '0.75rem' }}>
                   <input 
@@ -1230,7 +1238,7 @@ export default function EventsCMS() {
                 )}
               </div>
 
-              {/* ── Adaptive Event Specifications & Custom Fields ── */}
+              {/* â”€â”€ Adaptive Event Specifications & Custom Fields â”€â”€ */}
               <div style={{ marginTop: '1.25rem', borderTop: '1px solid rgba(227, 211, 184, 0.5)', paddingTop: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
@@ -1314,7 +1322,7 @@ export default function EventsCMS() {
                           }}
                           title="Remove Field"
                         >
-                          ✕
+                          âœ•
                         </button>
                       </div>
                     ))}
