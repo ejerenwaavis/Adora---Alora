@@ -94,7 +94,8 @@ router.get('/site/settings/contact', async (req, res) => {
       key: { $in: [
         'contact_email', 'contact_phone', 'location_address',
         'location_map_url', 'location_map_query', 'opening_hours_weekday',
-        'opening_hours_weekend', 'open_today_text'
+        'opening_hours_weekend', 'open_today_text',
+        'whatsapp_number', 'instagram_url', 'raire_app_url'
       ]}
     });
     

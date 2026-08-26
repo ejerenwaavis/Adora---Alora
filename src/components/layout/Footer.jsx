@@ -1,6 +1,7 @@
-import { useState }    from 'react';
-import { Link }        from 'react-router-dom';
-import styles          from './Footer.module.css';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import styles from './Footer.module.css';
 
 const EXPLORE = [
   { to: '/movement',   label: 'Movement'   },
@@ -14,16 +15,23 @@ const HOUSE = [
   { to: '/visit',      label: 'Visit'      },
   { to: '/account',    label: 'Account'    },
 ];
-const CONNECT = [
-  { href: 'https://instagram.com', label: 'Instagram' },
-  { href: import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER ? `https://wa.me/${import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER.replace(/\D/g, '')}` : 'https://wa.me/17372324091', label: 'WhatsApp'  },
-  { href: 'https://raire.app',     label: 'Raire App' },
-];
 
 export default function Footer() {
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
+  const [settings,  setSettings]  = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get('/api/site/settings/contact');
+        setSettings(res.data);
+      } catch (err) {
+        console.error('Failed to load contact settings:', err);
+      }
+    })();
+  }, []);
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
@@ -33,6 +41,20 @@ export default function Footer() {
     setSubmitted(true);
     setLoading(false);
   };
+
+  // Determine WhatsApp link from DB setting, then VITE env, then fallback
+  let whatsappHref = 'https://wa.me/17372324091';
+  if (settings?.whatsapp_number) {
+    whatsappHref = `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`;
+  } else if (import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER) {
+    whatsappHref = `https://wa.me/${import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER.replace(/\D/g, '')}`;
+  }
+
+  const CONNECT = [
+    { href: settings?.instagram_url || 'https://instagram.com', label: 'Instagram' },
+    { href: whatsappHref,                                       label: 'WhatsApp'  },
+    { href: settings?.raire_app_url || 'https://raire.app',     label: 'Raire App' },
+  ];
 
   return (
     <footer className={styles.footer}>
