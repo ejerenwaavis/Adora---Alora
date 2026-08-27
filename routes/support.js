@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const SupportTicket = require('../models/SupportTicket');
 const VenueEnquiry = require('../models/VenueEnquiry');
@@ -15,7 +15,7 @@ router.get('/my-tickets', requireAuth, async (req, res) => {
         _id: v._id,
         isVenue: true,
         type: 'Venue Enquiry',
-        subject: \Venue: \ (\)\,
+        subject: `Venue: ${v.space || 'General'} (${v.eventType || 'Event'})`,
         status: v.status,
         updatedAt: v.updatedAt,
         createdAt: v.createdAt,
@@ -32,103 +32,30 @@ router.get('/my-tickets', requireAuth, async (req, res) => {
         messages: t.messages
       }))
     ];
-    merged.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    merged.sort((a, b) => b.updatedAt - a.updatedAt);
     res.json(merged);
   } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Create a new support ticket
-router.post('/', requireAuth, async (req, res) => {
+// Admin: Get ALL tickets and enquiries
+router.get('/admin', requireAuth, requireRole(['admin', 'clerk']), async (req, res) => {
   try {
-    const { subject, type, message, priority } = req.body;
-    if (!subject || !message) return res.status(400).json({ error: 'Subject and message are required' });
-
-    const newTicket = new SupportTicket({
-      user: req.user._id,
-      subject,
-      type: type || 'General Message',
-      priority: priority || 'medium',
-      messages: [{
-        senderId: req.user._id,
-        senderName: \\ \\,
-        senderRole: 'user',
-        text: message
-      }]
-    });
-    
-    await newTicket.save();
-    res.status(201).json({ message: 'Ticket created', ticket: newTicket });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to create ticket' });
-  }
-});
-
-// Add message to ticket (User or Admin/Concierge)
-router.post('/:id/message', requireAuth, async (req, res) => {
-  try {
-    const ticket = await SupportTicket.findById(req.params.id);
-    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-    
-    const isOwner = ticket.user.toString() === req.user._id.toString();
-    const isStaff = ['admin', 'super_admin', 'concierge'].includes(req.user.role);
-    if (!isOwner && !isStaff) return res.status(403).json({ error: 'Unauthorized' });
-
-    const { text } = req.body;
-    if (!text) return res.status(400).json({ error: 'Message text required' });
-
-    ticket.messages.push({
-      senderId: req.user._id,
-      senderName: \\ \\,
-      senderRole: isStaff ? 'concierge' : 'user',
-      text
-    });
-
-    if (isStaff && ticket.status === 'open') ticket.status = 'in_progress';
-    await ticket.save();
-    res.json({ message: 'Message sent', ticket });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Update ticket status (Admin/Concierge)
-router.put('/:id/status', requireAuth, requireRole(['admin', 'super_admin', 'concierge']), async (req, res) => {
-  try {
-    const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
-    res.json({ ticket });
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Get all requests for concierge
-router.get('/concierge-requests', requireAuth, requireRole(['admin', 'super_admin', 'concierge']), async (req, res) => {
-  try {
-    const { status } = req.query;
-    let vqQuery = {};
-    let stQuery = {};
-    if (status && status !== 'all') {
-      vqQuery.status = status;
-      stQuery.status = status;
-    }
-
-    const venues = await VenueEnquiry.find(vqQuery).sort({ updatedAt: -1 }).lean();
-    const tickets = await SupportTicket.find(stQuery).populate('user', 'firstName lastName email').sort({ updatedAt: -1 }).lean();
+    const venues = await VenueEnquiry.find().sort({ updatedAt: -1 }).lean();
+    const tickets = await SupportTicket.find().populate('user', 'firstName lastName email').sort({ updatedAt: -1 }).lean();
 
     const merged = [
       ...venues.map(v => ({
         _id: v._id,
         isVenue: true,
         type: 'Venue Enquiry',
-        subject: \Venue: \ (\)\,
+        subject: `Venue: ${v.space || 'General'} (${v.eventType || 'Event'})`,
         user: { firstName: v.firstName, lastName: v.lastName, email: v.email },
         status: v.status,
         createdAt: v.createdAt,
         updatedAt: v.updatedAt,
-        messages: v.messages,
-        originalData: v
       })),
       ...tickets.map(t => ({
         _id: t._id,
@@ -139,16 +66,85 @@ router.get('/concierge-requests', requireAuth, requireRole(['admin', 'super_admi
         status: t.status,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
-        messages: t.messages,
-        originalData: t
       }))
     ];
 
-    merged.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    merged.sort((a, b) => b.updatedAt - a.updatedAt);
     res.json(merged);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch requests' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create new Support Ticket
+router.post('/', requireAuth, async (req, res) => {
+  try {
+    const { subject, type, message } = req.body;
+    if (!subject || !message) return res.status(400).json({ error: 'Subject and message are required' });
+
+    const ticket = new SupportTicket({
+      user: req.user._id,
+      subject,
+      type: type || 'General Message',
+      status: 'open',
+      messages: [{
+        sender: 'user',
+        senderName: `${req.user.firstName} ${req.user.lastName}`,
+        message
+      }]
+    });
+    
+    await ticket.save();
+    res.status(201).json(ticket);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Reply to Ticket (User or Admin)
+router.post('/:id/message', requireAuth, async (req, res) => {
+  try {
+    const { message } = req.body;
+    if (!message) return res.status(400).json({ error: 'Message cannot be empty' });
+
+    const ticket = await SupportTicket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+    const isAdmin = ['admin', 'clerk'].includes(req.user.role);
+    
+    // Auth check
+    if (!isAdmin && ticket.user.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    ticket.messages.push({
+      sender: isAdmin ? 'admin' : 'user',
+      senderName: isAdmin ? `Aora House (${req.user.firstName})` : `${req.user.firstName} ${req.user.lastName}`,
+      message
+    });
+
+    if (isAdmin && ticket.status === 'open') {
+      ticket.status = 'in-progress';
+    } else if (!isAdmin && ticket.status === 'closed') {
+      ticket.status = 'open'; // Reopen on user reply
+    }
+
+    await ticket.save();
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin: Change ticket status
+router.patch('/:id/status', requireAuth, requireRole(['admin', 'clerk']), async (req, res) => {
+  try {
+    const { status } = req.body;
+    const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
