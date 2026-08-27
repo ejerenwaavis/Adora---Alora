@@ -480,7 +480,8 @@ export default function Dashboard() {
           { id: 'overview', label: 'Overview' },
           { id: 'bookings', label: `My Bookings (${(dashboardData.upcomingClasses?.length || 0) + (dashboardData.upcomingEvents?.length || 0)})` },
           { id: 'passes', label: 'Digital QR Passes' },
-          { id: 'waiver', label: 'Waiver & Health' }
+          { id: 'waiver', label: 'Waiver & Health' },
+            { id: 'support', label: 'Concierge Support' }
         ].map(tab => (
           <button
             key={tab.id}
