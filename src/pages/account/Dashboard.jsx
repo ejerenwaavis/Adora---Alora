@@ -121,6 +121,8 @@ export default function Dashboard() {
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [isWaiverModalOpen, setIsWaiverModalOpen] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [supportForm, setSupportForm] = useState({ subject: '', type: 'General Message', message: '' });
   const [claimingId, setClaimingId] = useState(null);
   const [decliningId, setDecliningId] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
@@ -612,7 +614,6 @@ export default function Dashboard() {
               { id: 'classes', label: `Classes (${dashboardData.upcomingClasses?.length || 0})` },
               { id: 'events', label: `Events (${dashboardData.upcomingEvents?.length || 0})` },
               { id: 'orders', label: `Orders (${(dashboardData.cafeOrders?.length || 0) + (dashboardData.fashionOrders?.length || 0)})` },
-                { id: 'enquiries', label: `Venue Enquiries (${dashboardData.venueEnquiries?.length || 0})` },
               { id: 'past', label: 'Past & History' }
             ].map(f => (
               <button
@@ -1109,7 +1110,7 @@ export default function Dashboard() {
       
       {/* 🔹🔹🔹 TAB 5: SUPPORT TICKETS 🔹🔹🔹 */}
       {activeTab === 'support' && (
-        <div style={{ maxWidth: '800px' }}>
+        <div style={{ width: "100%" }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
             <div>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.45rem', color: 'var(--cocoa-deep)', margin: 0, fontWeight: 400 }}>
@@ -1120,21 +1121,11 @@ export default function Dashboard() {
               </p>
             </div>
             <button
-              onClick={() => {
-                const subject = window.prompt('Brief subject for your ticket:');
-                if (!subject) return;
-                const message = window.prompt('How can we help you?');
-                if (!message) return;
-                authFetch('/api/support', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ subject, type: 'General Message', message })
-                }).then(() => loadUserBookings());
-              }}
-              className="btn btn-primary"
-            >
-              New Message
-            </button>
+                onClick={() => setIsSupportModalOpen(true)}
+                className="btn btn-primary"
+              >
+                New Message
+              </button>
           </div>
 
           {!dashboardData.supportTickets || dashboardData.supportTickets.length === 0 ? (
@@ -1191,6 +1182,84 @@ export default function Dashboard() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      
+      {/* 🔹🔹🔹 SUPPORT TICKET MODAL 🔹🔹🔹 */}
+      {isSupportModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(20, 10, 4, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+          <div style={{ background: '#FFFDF9', borderRadius: '8px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', border: '1px solid rgba(227, 211, 184, 0.8)', overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper)' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', color: 'var(--cocoa-deep)', margin: 0, fontWeight: 400 }}>New Support Ticket</h3>
+                <p style={{ color: 'var(--taupe)', fontSize: '0.8rem', margin: '4px 0 0 0' }}>Our concierge team is here to help.</p>
+              </div>
+              <button type="button" onClick={() => setIsSupportModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--taupe)' }}>✕</button>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                const res = await authFetch('/api/support', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(supportForm)
+                });
+                if (res.ok) {
+                  setIsSupportModalOpen(false);
+                  setSupportForm({ subject: '', type: 'General Message', message: '' });
+                  loadUserBookings();
+                }
+              } catch (err) {
+                console.error(err);
+              }
+            }} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ticket Type</label>
+                <select 
+                  required 
+                  value={supportForm.type} 
+                  onChange={e => setSupportForm({ ...supportForm, type: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FFF', fontSize: '0.9rem', fontFamily: 'inherit' }}
+                >
+                  <option value="General Message">General Message</option>
+                  <option value="Booking Support">Booking Support</option>
+                  <option value="Feedback">Feedback</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Subject</label>
+                <input 
+                  required 
+                  type="text" 
+                  placeholder="Brief description of your issue" 
+                  value={supportForm.subject} 
+                  onChange={e => setSupportForm({ ...supportForm, subject: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FFF', fontSize: '0.9rem', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Message</label>
+                <textarea 
+                  required 
+                  rows="4"
+                  placeholder="How can we help you today?" 
+                  value={supportForm.message} 
+                  onChange={e => setSupportForm({ ...supportForm, message: e.target.value })}
+                  style={{ padding: '12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FFF', fontSize: '0.9rem', fontFamily: 'inherit', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setIsSupportModalOpen(false)} className="btn btn-outline" style={{ padding: '10px 16px', fontSize: '0.8rem' }}>Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ padding: '10px 16px', fontSize: '0.8rem' }}>Submit Ticket</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
