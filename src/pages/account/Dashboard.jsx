@@ -1001,7 +1001,7 @@ export default function Dashboard() {
 
       {/* â”€â”€â”€ TAB 4: WAIVER & HEALTH â”€â”€â”€ */}
       {activeTab === 'waiver' && (
-        <div style={{ maxWidth: '760px' }}>
+          <div style={{ width: '100%' }}>
           <div className={styles.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
               <div>
