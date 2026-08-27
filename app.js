@@ -119,6 +119,7 @@ app.use('/api/classes',  require('./routes/classes'));
 app.use('/api/events',   require('./routes/events'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/venue',    require('./routes/venue'));
+app.use('/api/support',  require('./routes/support'));
 app.use('/api/admin',    require('./routes/admin'));
 app.use('/api/cms',      require('./routes/cms'));
 app.use('/api/clerk',    require('./routes/clerk'));
