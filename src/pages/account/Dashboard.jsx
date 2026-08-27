@@ -620,16 +620,18 @@ export default function Dashboard() {
                 key={f.id}
                 onClick={() => setBookingFilter(f.id)}
                 style={{
-                  background: bookingFilter === f.id ? 'var(--cocoa-deep)' : '#FFFDF9',
-                  color: bookingFilter === f.id ? '#F7EFE1' : 'var(--cocoa-deep)',
-                  border: '1px solid rgba(227, 211, 184, 0.9)',
-                  padding: '7px 16px',
-                  borderRadius: '20px',
-                  fontSize: '0.82rem',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
+                    background: bookingFilter === f.id ? 'var(--black)' : 'transparent',
+                    color: bookingFilter === f.id ? 'var(--white)' : 'var(--cocoa-deep)',
+                    border: bookingFilter === f.id ? '1px solid var(--black)' : '1px solid var(--line)',
+                    padding: '8px 20px',
+                    borderRadius: '0px',
+                    fontSize: '0.8rem',
+                    fontWeight: 500,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
               >
                 {f.label}
               </button>
@@ -1014,7 +1016,7 @@ export default function Dashboard() {
                 background: isWaiverSigned ? 'rgba(46, 107, 62, 0.1)' : 'rgba(164, 69, 31, 0.1)',
                 color: isWaiverSigned ? '#2E6B3E' : '#A4451F',
                 padding: '5px 14px',
-                borderRadius: '20px',
+                borderRadius: 'var(--radius-sm, 2px)',
                 fontSize: '0.78rem',
                 fontWeight: 600,
                 textTransform: 'uppercase',
