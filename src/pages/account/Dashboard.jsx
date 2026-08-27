@@ -435,7 +435,7 @@ export default function Dashboard() {
             {user?.membershipStatus && user.membershipStatus !== 'none' ? user.membershipStatus : 'House Member'}
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
-            Access to CafÃ©, Loft &amp; Boutique
+            Access to Café, Loft &amp; Boutique
           </div>
         </div>
 
@@ -588,13 +588,13 @@ export default function Dashboard() {
 
             <div className={styles.card} style={{ margin: 0 }}>
               <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: '0 0 0.5rem', fontWeight: 400 }}>
-                CafÃ© &amp; Boutique
+                Café &amp; Boutique
               </h4>
               <p style={{ fontSize: '0.88rem', color: 'var(--taupe)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
                 Browse daily seasonal kitchen menus, organic matcha, and curated fashion collection.
               </p>
               <button onClick={() => navigate('/cafe')} style={{ background: 'none', border: 'none', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', padding: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                View CafÃ© Menu <IconArrowRight size={14} />
+                View Café Menu <IconArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -826,7 +826,7 @@ export default function Dashboard() {
           {(bookingFilter === 'all' || bookingFilter === 'orders') && (
             <div style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
-                CafÃ© &amp; Fashion Receipts
+                Café &amp; Fashion Receipts
               </h3>
               {(dashboardData.cafeOrders?.length === 0 && dashboardData.fashionOrders?.length === 0) ? (
                 <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
@@ -837,7 +837,7 @@ export default function Dashboard() {
                   {dashboardData.cafeOrders?.map(order => (
                     <div key={order._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.7)', borderRadius: '6px', padding: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                       <div>
-                        <strong style={{ color: 'var(--cocoa-deep)' }}>CafÃ© Order #{order.orderNumber}</strong>
+                        <strong style={{ color: 'var(--cocoa-deep)' }}>Café Order #{order.orderNumber}</strong>
                         <div style={{ fontSize: '0.82rem', color: 'var(--taupe)', marginTop: '2px' }}>
                           {order.items?.map(i => `${i.quantity}x ${i.name}`).join(', ')}
                         </div>
