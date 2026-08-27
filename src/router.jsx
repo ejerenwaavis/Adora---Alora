@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+﻿import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 
 // Layout
@@ -39,7 +39,7 @@ import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
 import UsersCMS        from './admin/UsersCMS.jsx';
-import VenueEnquiriesCMS from './admin/VenueEnquiriesCMS.jsx';
+import GuestConciergeCMS from './admin/GuestConciergeCMS.jsx';
 import AdminActivityLogs from './admin/ActivityLogs.jsx';
 
 // Clerk Dashboard
@@ -53,10 +53,10 @@ import ActivityLogs    from './clerk/ActivityLogs.jsx';
 // Kitchen KDS
 import KitchenKDS from './kitchen/KitchenKDS.jsx';
 
-// ── Route Guards ──────────────────────────────────────────────────────────────
+// â”€â”€ Route Guards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div style={{ display:'flex', justifyContent:'center', padding:'8rem', color:'var(--taupe)', fontFamily:'var(--f-body)' }}>Loading…</div>;
+  if (loading) return <div style={{ display:'flex', justifyContent:'center', padding:'8rem', color:'var(--taupe)', fontFamily:'var(--f-body)' }}>Loadingâ€¦</div>;
   if (!user)   return <Navigate to="/login" replace />;
   return children;
 }
@@ -79,7 +79,7 @@ import ConciergeLayout from './concierge/ConciergeLayout.jsx';
 import ConciergeDashboard from './concierge/ConciergeDashboard.jsx';
 import WhatsAppInbox from './concierge/WhatsAppInbox.jsx';
 
-// ── Role-Based Home Redirect ──────────────────────────────────────────────────
+// â”€â”€ Role-Based Home Redirect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function StaffHomeRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -96,7 +96,7 @@ function StaffHomeRedirect() {
   return <Navigate to="/login" replace />;
 }
 
-// ── Hostname Detection ────────────────────────────────────────────────────────
+// â”€â”€ Hostname Detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const host = window.location.hostname;
 
 // Enable testing HQ mode on devices via IP address by using ?hq=true
@@ -105,7 +105,7 @@ if (window.location.search.includes('hq=false')) localStorage.removeItem('hq_ove
 
 const isInternal = host.startsWith('hq.') || host.startsWith('staff.') || host.startsWith('portal.') || host.startsWith('admin.') || localStorage.getItem('hq_override') === 'true';
 
-// ── Public Router ─────────────────────────────────────────────────────────────
+// â”€â”€ Public Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const publicRouter = createBrowserRouter([
   {
     path: '/',
@@ -144,7 +144,7 @@ const publicRouter = createBrowserRouter([
 import InstructorLayout from './instructor/InstructorLayout.jsx';
 import InstructorDashboard from './instructor/InstructorDashboard.jsx';
 
-// ── Internal Staff Router ─────────────────────────────────────────────────────
+// â”€â”€ Internal Staff Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const internalRouter = createBrowserRouter([
   {
     path: '/',
@@ -168,7 +168,7 @@ const internalRouter = createBrowserRouter([
     children: [
       { index: true, element: <ConciergeDashboard /> },
       { path: 'whatsapp', element: <WhatsAppInbox /> },
-      { path: 'venue-enquiries', element: <VenueEnquiriesCMS /> }
+      { path: 'requests', element: <GuestConciergeCMS /> }
     ]
   },
   {

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import Icon from '../components/ui/Icon.jsx';
@@ -8,7 +8,7 @@ export default function ConciergeLayout() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--paper)' }}>
-      {/* ── SIDEBAR ── */}
+      {/* â”€â”€ SIDEBAR â”€â”€ */}
       <aside style={{
         width: '260px',
         background: '#FAF6EF', // Lighter cream for Concierge
@@ -65,7 +65,7 @@ export default function ConciergeLayout() {
           </NavLink>
 
           <NavLink 
-            to="/concierge/venue-enquiries" 
+            to="/concierge/requests" 
             style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
               borderRadius: '6px', textDecoration: 'none',
@@ -74,7 +74,7 @@ export default function ConciergeLayout() {
               fontSize: '13px', fontWeight: 600, transition: 'all 0.2s'
             })}
           >
-            <Icon name="announcements" size={18} /> Venue Enquiries
+            <Icon name="announcements" size={18} /> Support & Enquiries
           </NavLink>
         </nav>
 
@@ -97,7 +97,7 @@ export default function ConciergeLayout() {
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT AREA ── */}
+      {/* â”€â”€ MAIN CONTENT AREA â”€â”€ */}
       <main style={{ flex: 1, height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <Outlet />
       </main>

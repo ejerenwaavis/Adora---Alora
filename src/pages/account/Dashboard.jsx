@@ -135,7 +135,7 @@ export default function Dashboard() {
     try {
       const [bookingsRes, enquiriesRes] = await Promise.all([
         authFetch('/api/user/bookings'),
-        authFetch('/api/venue/my-enquiries')
+        authFetch('/api/support/my-tickets')
       ]);
       
       let finalData = {};
@@ -145,8 +145,8 @@ export default function Dashboard() {
       }
       
       if (enquiriesRes.ok) {
-        const enqData = await enquiriesRes.json();
-        finalData.venueEnquiries = enqData.enquiries || [];
+        const supportData = await enquiriesRes.json();
+        finalData.supportTickets = supportData || [];
       }
       
       setDashboardData(prev => ({ ...prev, ...finalData }));
@@ -156,27 +156,31 @@ export default function Dashboard() {
       setLoading(false);
     }
   }
-  const handleSendEnquiryMessage = async (enquiryId) => {
-    const text = enquiryMessage[enquiryId];
-    if (!text || !text.trim()) return;
-    try {
-      const res = await authFetch(`/api/venue/enquiries/${enquiryId}/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDashboardData(prev => ({
-          ...prev,
-          venueEnquiries: prev.venueEnquiries.map(eq => eq._id === enquiryId ? data.enquiry : eq)
-        }));
-        setEnquiryMessage(prev => ({ ...prev, [enquiryId]: '' }));
+  
+    const handleSendSupportMessage = async (ticketId, isVenue) => {
+      const text = enquiryMessage[ticketId];
+      if (!text || !text.trim()) return;
+      try {
+        const url = isVenue ? `/api/venue/enquiries/${ticketId}/message` : `/api/support/${ticketId}/message`;
+        const res = await authFetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const updatedDoc = isVenue ? data.enquiry : data.ticket;
+          setDashboardData(prev => ({
+            ...prev,
+            supportTickets: prev.supportTickets.map(eq => eq._id === ticketId ? { ...eq, messages: updatedDoc.messages } : eq)
+          }));
+          setEnquiryMessage(prev => ({ ...prev, [ticketId]: '' }));
+        }
+      } catch (err) {
+        console.error(err);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
+
 
 
   const handleOpenQR = (pass, type = 'class') => {
@@ -864,49 +868,6 @@ export default function Dashboard() {
           )}
 
           
-            {/* Enquiries Section */}
-            {(bookingFilter === 'all' || bookingFilter === 'enquiries') && (
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', color: 'var(--cocoa-deep)', marginBottom: '1.25rem', fontWeight: 400 }}>
-                  Venue Hire Enquiries
-                </h3>
-                {dashboardData.venueEnquiries?.length === 0 ? (
-                  <div style={{ padding: '2rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
-                    You have not submitted any venue hire enquiries.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {dashboardData.venueEnquiries?.map(enq => (
-                      <div key={enq._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.8)', borderRadius: '8px', padding: '1.5rem', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                          <div>
-                            <strong style={{ color: 'var(--cocoa-deep)', fontSize: '1.1rem', textTransform: 'capitalize' }}>{enq.spacePreference.replace('-', ' ')}</strong>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--taupe)' }}>{new Date(enq.preferredDate).toLocaleDateString()} A· {enq.guestCount} Guests</div>
-                          </div>
-                          <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: enq.status === 'confirmed' ? 'var(--forest)' : enq.status === 'awaiting_reply' ? '#A4451F' : 'var(--taupe)', fontWeight: 600, padding: '4px 10px', background: '#FAF6EF', borderRadius: '12px' }}>{enq.status.replace('_', ' ')}</span>
-                        </div>
-                        <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(227, 211, 184, 0.4)', paddingTop: '1rem' }}>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', marginBottom: '8px' }}>Messages with Concierge</div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', marginBottom: '12px' }}>
-                            {enq.messages && enq.messages.length > 0 ? enq.messages.map((msg, i) => (
-                              <div key={i} style={{ padding: '8px 12px', borderRadius: '6px', background: msg.senderRole === 'user' ? '#FAF6EF' : '#FFF', border: '1px solid rgba(227, 211, 184, 0.5)', alignSelf: msg.senderRole === 'user' ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
-                                <div style={{ fontSize: '10px', color: 'var(--taupe)', marginBottom: '4px' }}>{msg.senderName} A· {new Date(msg.createdAt).toLocaleString()}</div>
-                                <div style={{ fontSize: '12.5px', color: 'var(--cocoa-deep)' }}>{msg.text}</div>
-                              </div>
-                            )) : <div style={{ fontSize: '12px', color: 'var(--taupe)' }}>No replies yet. We will review your enquiry and respond here shortly.</div>}
-                          </div>
-                          <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                            <input type="text" placeholder="Reply to concierge..." value={enquiryMessage[enq._id] || ''} onChange={e => setEnquiryMessage({ ...enquiryMessage, [enq._id]: e.target.value })} style={{ flex: 1, padding: '8px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }} onKeyDown={e => { if (e.key === 'Enter') handleSendEnquiryMessage(enq._id); }} />
-                            <button onClick={() => handleSendEnquiryMessage(enq._id)} style={{ background: 'var(--rust)', color: '#FFF', border: 'none', padding: '0 16px', borderRadius: '4px', fontSize: '11px', textTransform: 'uppercase', cursor: 'pointer' }}>Send</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Past History */}
           {(bookingFilter === 'all' || bookingFilter === 'past') && (
             <div style={{ marginTop: '2rem' }}>
@@ -1141,6 +1102,94 @@ export default function Dashboard() {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      
+      {/* 🔹🔹🔹 TAB 5: SUPPORT TICKETS 🔹🔹🔹 */}
+      {activeTab === 'support' && (
+        <div style={{ maxWidth: '800px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.45rem', color: 'var(--cocoa-deep)', margin: 0, fontWeight: 400 }}>
+                Concierge Support
+              </h3>
+              <p style={{ color: 'var(--taupe)', fontSize: '0.9rem', marginTop: '0.4rem' }}>
+                Manage your messages, venue enquiries, and booking support tickets.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                const subject = window.prompt('Brief subject for your ticket:');
+                if (!subject) return;
+                const message = window.prompt('How can we help you?');
+                if (!message) return;
+                authFetch('/api/support', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ subject, type: 'General Message', message })
+                }).then(() => loadUserBookings());
+              }}
+              className="btn btn-primary"
+            >
+              New Message
+            </button>
+          </div>
+
+          {!dashboardData.supportTickets || dashboardData.supportTickets.length === 0 ? (
+            <div style={{ padding: '3rem', background: '#FFFDF9', border: '1px dashed rgba(227, 211, 184, 0.85)', borderRadius: '6px', textAlign: 'center', color: 'var(--taupe)', fontSize: '0.9rem' }}>
+              You have no active support tickets or venue enquiries.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {dashboardData.supportTickets.map(ticket => (
+                <div key={ticket._id} style={{ background: '#FFFDF9', border: '1px solid rgba(227, 211, 184, 0.8)', borderRadius: '8px', padding: '1.5rem', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div>
+                      <strong style={{ color: 'var(--cocoa-deep)', fontSize: '1.1rem' }}>{ticket.subject}</strong>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--taupe)' }}>
+                        {ticket.type} &bull; Updated {new Date(ticket.updatedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <span style={{ 
+                      fontSize: '0.7rem', 
+                      background: ticket.status === 'resolved' || ticket.status === 'closed' ? '#E8F3EB' : 'rgba(164, 69, 31, 0.1)', 
+                      color: ticket.status === 'resolved' || ticket.status === 'closed' ? '#2E6B3E' : 'var(--rust)', 
+                      padding: '4px 10px', 
+                      borderRadius: '12px', 
+                      textTransform: 'uppercase', 
+                      fontWeight: 600,
+                      letterSpacing: '0.05em'
+                    }}>
+                      {ticket.status.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(227, 211, 184, 0.4)', paddingTop: '1rem' }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--cocoa-deep)', marginBottom: '8px' }}>Messages with Concierge</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '250px', overflowY: 'auto', marginBottom: '12px', paddingRight: '8px' }}>
+                      {ticket.messages && ticket.messages.length > 0 ? ticket.messages.map((msg, i) => {
+                        const isUser = msg.senderRole === 'user';
+                        return (
+                          <div key={i} style={{ padding: '10px 14px', borderRadius: '8px', background: isUser ? '#FAF6EF' : '#FFF', border: '1px solid rgba(227, 211, 184, 0.5)', alignSelf: isUser ? 'flex-end' : 'flex-start', maxWidth: '85%' }}>
+                            <div style={{ fontSize: '10px', color: 'var(--taupe)', marginBottom: '4px' }}>{msg.senderName} &bull; {new Date(msg.createdAt).toLocaleString()}</div>
+                            <div style={{ fontSize: '13px', color: 'var(--cocoa-deep)', lineHeight: 1.5 }}>{msg.text}</div>
+                          </div>
+                        );
+                      }) : <div style={{ fontSize: '12px', color: 'var(--taupe)' }}>No replies yet.</div>}
+                    </div>
+                    
+                    {ticket.status !== 'closed' && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                        <input type="text" placeholder="Reply to concierge..." value={enquiryMessage[ticket._id] || ''} onChange={e => setEnquiryMessage({ ...enquiryMessage, [ticket._id]: e.target.value })} style={{ flex: 1, padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFF' }} onKeyDown={e => { if (e.key === 'Enter') handleSendSupportMessage(ticket._id, ticket.isVenue); }} />
+                        <button onClick={() => handleSendSupportMessage(ticket._id, ticket.isVenue)} style={{ background: 'var(--rust)', color: '#FFF', border: 'none', padding: '0 16px', borderRadius: '6px', fontSize: '12px', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600 }}>Send</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
