@@ -121,10 +121,10 @@
 .submitBtn {
   width: 100%;
   padding: 1rem;
-  background: var(--primary-dark);
+  background: var(--cocoa-deep);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 2px;
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
