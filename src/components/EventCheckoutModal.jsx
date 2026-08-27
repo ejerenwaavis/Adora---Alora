@@ -69,7 +69,7 @@ export default function EventCheckoutModal({ event, onClose, onComplete }) {
               <p>Your tickets have been secured. We've sent a confirmation to {form.customerEmail}.</p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit}>
+            <form id="event-checkout-form" onSubmit={handleSubmit}>
               <div className={styles.summary}>
                 <h3>Event Summary</h3>
                 <p>{event.date} at {event.time}</p>
@@ -81,14 +81,24 @@ export default function EventCheckoutModal({ event, onClose, onComplete }) {
               <div className={styles.formGroup}>
                 <label>Ticket Quantity</label>
                 <input 
-                  type="number" 
-                  min="1" 
-                  max={event.capacity ? event.capacity - (event.ticketsSold || 0) : 10} 
-                  className={styles.input} 
-                  value={form.ticketQuantity} 
-                  onChange={e => setForm({...form, ticketQuantity: parseInt(e.target.value) || 1})}
-                  required 
-                />
+                    type="number" 
+                    min="1" 
+                    max={event.capacity ? event.capacity - (event.ticketsSold || 0) : 10} 
+                    className={styles.input} 
+                    value={form.ticketQuantity} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setForm({...form, ticketQuantity: ''});
+                        return;
+                      }
+                      let num = parseInt(val, 10);
+                      const maxLimit = event.capacity ? event.capacity - (event.ticketsSold || 0) : 10;
+                      if (num > maxLimit) num = maxLimit;
+                      setForm({...form, ticketQuantity: num});
+                    }}
+                    required 
+                  />
               </div>
 
               <div className={styles.formGroup}>
@@ -124,13 +134,13 @@ export default function EventCheckoutModal({ event, onClose, onComplete }) {
         {!success && (
           <div className={styles.footer}>
             <button 
-              type="button" 
-              className={styles.submitBtn} 
-              disabled={loading}
-              onClick={handleSubmit}
-            >
-              {loading ? 'Processing...' : (event.isFree ? 'Complete Registration' : 'Pay Now')}
-            </button>
+                type="submit" 
+                form="event-checkout-form"
+                className={styles.submitBtn} 
+                disabled={loading}
+              >
+                {loading ? 'Processing...' : (event.isFree ? 'Complete Registration' : 'Pay Now')}
+              </button>
           </div>
         )}
       </div>

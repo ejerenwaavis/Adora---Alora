@@ -272,22 +272,22 @@ export default function Movement() {
                               </div>
                               <button 
                                 onClick={() => setSelectedSessionToBook(session)}
-                                disabled={session.bookedCount >= session.capacity}
+                                
                                 style={{ 
-                                  background: session.bookedCount >= session.capacity ? 'transparent' : 'var(--cocoa-deep)', 
-                                  color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
-                                  border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
+                                  background: session.bookedCount >= session.maxCapacity ? 'transparent' : 'var(--cocoa-deep)', 
+                                  color: session.bookedCount >= session.maxCapacity ? 'var(--taupe)' : '#FFF', 
+                                  border: session.bookedCount >= session.maxCapacity ? '1px solid var(--taupe)' : 'none',
                                   padding: '8px 16px', 
                                   borderRadius: 'var(--radius-sm)', 
                                   fontSize: '0.8rem', 
-                                  cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
+                                  cursor: 'pointer',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em',
                                   width: '100%',
                                   maxWidth: '140px'
                                 }}
                               >
-                                {session.bookedCount >= session.capacity ? 'Waitlist' : 'Book Session'}
+                                {session.bookedCount >= session.maxCapacity ? 'Waitlist' : 'Book Session'}
                               </button>
                             </div>
                           ))}
@@ -331,20 +331,20 @@ export default function Movement() {
                               </div>
                               <button 
                                 onClick={() => setSelectedSessionToBook(session)}
-                                disabled={session.bookedCount >= session.capacity}
+                                
                                 style={{ 
-                                  background: session.bookedCount >= session.capacity ? 'transparent' : 'var(--cocoa-deep)', 
-                                  color: session.bookedCount >= session.capacity ? 'var(--taupe)' : '#FFF', 
-                                  border: session.bookedCount >= session.capacity ? '1px solid var(--taupe)' : 'none',
+                                  background: session.bookedCount >= session.maxCapacity ? 'transparent' : 'var(--cocoa-deep)', 
+                                  color: session.bookedCount >= session.maxCapacity ? 'var(--taupe)' : '#FFF', 
+                                  border: session.bookedCount >= session.maxCapacity ? '1px solid var(--taupe)' : 'none',
                                   padding: '10px 20px', 
                                   borderRadius: 'var(--radius-sm)', 
                                   fontSize: '0.85rem', 
-                                  cursor: session.bookedCount >= session.capacity ? 'not-allowed' : 'pointer',
+                                  cursor: 'pointer',
                                   textTransform: 'uppercase',
                                   letterSpacing: '0.05em'
                                 }}
                               >
-                                {session.bookedCount >= session.capacity ? 'Waitlist' : 'Book Session'}
+                                {session.bookedCount >= session.maxCapacity ? 'Waitlist' : 'Book Session'}
                               </button>
                             </div>
                           ))}
