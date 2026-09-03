@@ -38,11 +38,19 @@ const userSchema = new mongoose.Schema({
   dateOfBirth: { type: Date },
 
   // ── Waiver & Emergency Contact — required for movement bookings ──
+  waiver: {
+    signed:      { type: Boolean, default: false },
+    signedAt:    { type: Date },
+    version:     { type: String },        // e.g. "2026-09" — matches current waiver version
+    ipAddress:   { type: String },
+    userAgent:   { type: String },
+    method:      { type: String, default: 'electronic' },
+  },
   waiverSigned:             { type: Boolean, default: false },
   waiverDate:               { type: Date },
   waiverSignedAt:           { type: Date },
   waiverSignature:          { type: String },
-  waiverVersion:            { type: String, default: 'v1.0' },
+  waiverVersion:            { type: String, default: '2026-09' },
   emergencyContactName:     { type: String },
   emergencyContactPhone:    { type: String },
   emergencyContactRelation: { type: String },

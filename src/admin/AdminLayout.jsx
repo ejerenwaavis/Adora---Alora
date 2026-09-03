@@ -170,6 +170,9 @@ export default function AdminLayout() {
               <Link to="/admin/users?tab=access" className={isLinkActive('/admin/users', 'access') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
                 <Icon name="settings" size={16} className={styles.navIcon} /> Access Matrix
               </Link>
+              <NavLink to="/admin/waivers" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+                <Icon name="site-content" size={16} className={styles.navIcon} /> Waivers & Records
+              </NavLink>
             </div>
           )}
 

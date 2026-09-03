@@ -55,8 +55,55 @@ router.patch('/preferences', async (req, res) => {
   }
 });
 
-// ── POST /api/user/waiver ────────────────────────────────────────────────────
-router.post('/waiver', async (req, res) => {
+const WaiverVersion = require('../models/WaiverVersion');
+const WaiverRecord  = require('../models/WaiverRecord');
+const Setting       = require('../models/Setting');
+const logActivity   = require('../utils/activityLogger');
+
+// ── GET /api/user/waiver/active ─────────────────────────────────────────────
+router.get('/waiver/active', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    const [activeWaiver, waiverRequiredSetting] = await Promise.all([
+      WaiverVersion.findOne({ isActive: true }),
+      Setting.findOne({ key: 'waiver_required' }),
+    ]);
+
+    const isRequired = waiverRequiredSetting ? (waiverRequiredSetting.value !== false && waiverRequiredSetting.value !== 'false') : true;
+    const currentVersion = activeWaiver ? activeWaiver.version : '2026-09';
+    const hasSigned = (user.waiver?.signed && user.waiver?.version === currentVersion) ||
+                      (user.waiverSigned && user.waiverVersion === currentVersion);
+
+    res.json({
+      success: true,
+      activeWaiver,
+      isRequired,
+      currentVersion,
+      hasSigned,
+      userWaiver: user.waiver || {
+        signed: Boolean(user.waiverSigned || user.waiverSignedAt),
+        signedAt: user.waiverSignedAt || user.waiverDate,
+        version: user.waiverVersion || '2026-09',
+        method: 'electronic'
+      },
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        emergencyContactName: user.emergencyContactName,
+        emergencyContactPhone: user.emergencyContactPhone,
+        emergencyContactRelation: user.emergencyContactRelation,
+        medicalNotes: user.medicalNotes,
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── POST /api/user/waiver/sign (and /api/user/waiver) ────────────────────────
+const handleWaiverSign = async (req, res) => {
   try {
     const {
       emergencyContactName,
@@ -64,24 +111,58 @@ router.post('/waiver', async (req, res) => {
       emergencyContactRelation,
       medicalNotes,
       signatureName,
-      agreedToTerms
+      agreedToTerms,
+      confirmed,
+      waiverVersion: requestedVersion
     } = req.body;
 
-    if (!agreedToTerms) {
-      return res.status(400).json({ error: 'You must agree to the liability waiver terms and conditions.' });
+    const isConfirmed = Boolean(confirmed === true || confirmed === 'true' || agreedToTerms);
+    if (!isConfirmed) {
+      return res.status(400).json({
+        success: false,
+        error: 'You must check the confirmation box to agree to the liability waiver terms.'
+      });
     }
 
-    if (!signatureName || !signatureName.trim()) {
-      return res.status(400).json({ error: 'Digital signature name is required.' });
+    const sig = (signatureName || `${req.user.firstName} ${req.user.lastName}`).trim();
+    if (!sig) {
+      return res.status(400).json({
+        success: false,
+        error: 'Digital signature name is required.'
+      });
     }
 
+    // Get active waiver (or requested version)
+    let waiver = null;
+    if (requestedVersion) {
+      waiver = await WaiverVersion.findOne({ version: requestedVersion });
+    }
+    if (!waiver) {
+      waiver = await WaiverVersion.findOne({ isActive: true });
+    }
+
+    const versionId = waiver ? waiver.version : (requestedVersion || '2026-09');
+    const waiverText = waiver ? waiver.content : 'Aora House Movement Studio Client Liability Waiver (Lagos, Nigeria)';
+
+    const forwarded = req.headers['x-forwarded-for'];
+    const ip = (forwarded ? forwarded.split(',')[0].trim() : (req.socket?.remoteAddress || req.ip || 'unknown'));
+    const userAgent = req.headers['user-agent'] || 'unknown';
     const now = new Date();
+
     const updates = {
+      waiver: {
+        signed: true,
+        signedAt: now,
+        version: versionId,
+        ipAddress: ip,
+        userAgent: userAgent,
+        method: 'electronic',
+      },
       waiverSigned: true,
       waiverDate: now,
       waiverSignedAt: now,
-      waiverSignature: signatureName.trim(),
-      waiverVersion: 'v1.0'
+      waiverSignature: sig,
+      waiverVersion: versionId,
     };
 
     if (emergencyContactName) updates.emergencyContactName = emergencyContactName.trim();
@@ -90,11 +171,35 @@ router.post('/waiver', async (req, res) => {
     if (medicalNotes !== undefined) updates.medicalNotes = medicalNotes.trim();
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
-    res.json({ message: 'Liability & health waiver signed successfully.', user });
+
+    // Store permanent audit record in WaiverRecord
+    await WaiverRecord.create({
+      userId: req.user._id,
+      waiverVersion: versionId,
+      waiverText: waiverText,
+      signedAt: now,
+      ipAddress: ip,
+      userAgent: userAgent,
+      method: 'electronic',
+      memberName: `${user.firstName} ${user.lastName}`,
+      memberEmail: user.email,
+    });
+
+    await logActivity(req.user._id, 'SIGN', 'WAIVER', `Liability Waiver ${versionId} signed by ${user.firstName} ${user.lastName}`);
+
+    res.json({
+      success: true,
+      message: 'Liability & health waiver signed successfully.',
+      user
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[Waiver Sign Error]', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
-});
+};
+
+router.post('/waiver/sign', handleWaiverSign);
+router.post('/waiver', handleWaiverSign);
 
 // ── GET /api/user/bookings ───────────────────────────────────────────────────
 router.get('/bookings', async (req, res) => {

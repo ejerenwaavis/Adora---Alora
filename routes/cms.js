@@ -17,6 +17,8 @@ const Instructor      = require('../models/Instructor');
 const ClassSession    = require('../models/ClassSession');
 const Setting         = require('../models/Setting');
 const CreditPack      = require('../models/CreditPack');
+const WaiverVersion   = require('../models/WaiverVersion');
+const WaiverRecord    = require('../models/WaiverRecord');
 const logActivity     = require('../utils/activityLogger');
 
 // CMS routes — content_editor or admin
@@ -790,6 +792,194 @@ router.delete('/events/series/:seriesId', async (req, res) => {
     const result = await EventRecord.deleteMany({ seriesId: req.params.seriesId });
     res.json({ message: `Successfully deleted ${result.deletedCount} events in recurring series.`, count: result.deletedCount });
   } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/* ==========================================================================
+   WAIVERS & AUDIT RECORDS
+   ========================================================================== */
+router.get('/waivers', async (req, res) => {
+  try {
+    const waivers = await WaiverVersion.find().populate('publishedBy', 'firstName lastName email').sort({ publishedAt: -1, createdAt: -1 });
+    res.json(waivers);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/waivers', async (req, res) => {
+  try {
+    const { version, title, content } = req.body;
+    if (!version || !title || !content) {
+      return res.status(400).json({ error: 'Version ID, title, and waiver content are all required.' });
+    }
+
+    const waiver = new WaiverVersion({
+      version: version.trim(),
+      title: title.trim(),
+      content,
+      isActive: true,
+      publishedBy: req.user._id,
+      publishedAt: new Date()
+    });
+
+    await waiver.save();
+
+    // Automatically update global setting
+    await Setting.findOneAndUpdate(
+      { key: 'waiver_current_version' },
+      { value: waiver.version, description: 'Current active waiver version ID' },
+      { upsert: true, new: true }
+    );
+
+    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Published new liability waiver version: ${waiver.version}`);
+    res.status(201).json(waiver);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.patch('/waivers/:id/activate', async (req, res) => {
+  try {
+    const waiver = await WaiverVersion.findById(req.params.id);
+    if (!waiver) return res.status(404).json({ error: 'Waiver version not found' });
+
+    waiver.isActive = true;
+    await waiver.save();
+
+    await Setting.findOneAndUpdate(
+      { key: 'waiver_current_version' },
+      { value: waiver.version, description: 'Current active waiver version ID' },
+      { upsert: true, new: true }
+    );
+
+    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Activated liability waiver version: ${waiver.version}`);
+    res.json(waiver);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+router.get('/waivers/records', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 30;
+    const search = req.query.search ? req.query.search.trim() : '';
+
+    const query = search
+      ? {
+          $or: [
+            { memberName: { $regex: search, $options: 'i' } },
+            { memberEmail: { $regex: search, $options: 'i' } },
+            { ipAddress: { $regex: search, $options: 'i' } },
+            { waiverVersion: { $regex: search, $options: 'i' } },
+          ]
+        }
+      : {};
+
+    const [records, total] = await Promise.all([
+      WaiverRecord.find(query)
+        .sort({ signedAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+      WaiverRecord.countDocuments(query)
+    ]);
+
+    res.json({
+      records,
+      total,
+      page,
+      pages: Math.ceil(total / limit) || 1
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/waivers/records/:id/export', async (req, res) => {
+  try {
+    const record = await WaiverRecord.findById(req.params.id);
+    if (!record) return res.status(404).send('Record not found');
+
+    const cleanName = (record.memberName || 'Member').replace(/[^a-zA-Z0-9_-]/g, '-');
+    const filename = `waiver-${cleanName}-${record.waiverVersion || '2026-09'}.html`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aora House — Signed Liability Waiver (${record.memberName})</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Georgia, serif;
+      max-width: 820px;
+      margin: 40px auto;
+      padding: 24px;
+      line-height: 1.7;
+      color: #2B2015;
+      background: #FFFFFF;
+    }
+    h1 { font-size: 22px; color: #1E1610; margin-bottom: 6px; }
+    .header-sub { font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #9C8770; margin-bottom: 20px; font-weight: 600; }
+    .meta {
+      background: #FAF6EF;
+      border: 1px solid #E3D3B8;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      font-family: monospace, sans-serif;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .meta b { color: #1E1610; }
+    .content-box {
+      border: 1px solid #E8E0D2;
+      border-radius: 6px;
+      padding: 24px;
+      background: #FFFDF9;
+      margin-bottom: 24px;
+      font-size: 14px;
+    }
+    hr { border: none; border-top: 1px solid #E3D3B8; margin: 24px 0; }
+    .footer-notice {
+      font-size: 12px;
+      color: #6E5E4E;
+      line-height: 1.6;
+      border-top: 1px dashed #CCC;
+      padding-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Aora House — Signed Client Liability Waiver</h1>
+  <div class="header-sub">Official Electronic Forensic Audit Record · Lagos, Nigeria</div>
+
+  <div class="meta">
+    <b>Member Name:</b> ${record.memberName || 'N/A'}<br>
+    <b>Member Email:</b> ${record.memberEmail || 'N/A'}<br>
+    <b>Signed Date & Time:</b> ${new Date(record.signedAt).toUTCString()} (${new Date(record.signedAt).toLocaleString()})<br>
+    <b>Waiver Version:</b> ${record.waiverVersion}<br>
+    <b>IP Address:</b> ${record.ipAddress}<br>
+    <b>Signing Method:</b> ${record.method || 'electronic'}<br>
+    <b>Browser / Device Agent:</b> ${record.userAgent || 'N/A'}<br>
+    <b>Record ID:</b> ${record._id}
+  </div>
+
+  <div class="content-box">
+    ${record.waiverText}
+  </div>
+
+  <div class="footer-notice">
+    <strong>Legal Verification:</strong> This electronic record was captured from the Aora House membership audit database. In accordance with the Arbitration and Mediation Act 2023 and the Evidence Act of the Federal Republic of Nigeria, electronic signatures and digital confirmations carry full legal evidentiary validity.
+  </div>
+</body>
+</html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(html);
+  } catch (err) {
+    res.status(500).send('Export failed: ' + err.message);
+  }
 });
 
 module.exports = router;

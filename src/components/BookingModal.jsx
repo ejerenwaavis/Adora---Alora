@@ -32,7 +32,8 @@ export default function BookingModal({ session, onClose }) {
   }
 
   async function handleBook() {
-    if (!user.waiverSigned && !user.waiverDate) {
+    const hasSigned = Boolean(user?.waiver?.signed || user?.waiverSigned || user?.waiverDate || user?.waiverSignedAt);
+    if (!hasSigned) {
       setShowWaiver(true);
       return;
     }
@@ -46,7 +47,13 @@ export default function BookingModal({ session, onClose }) {
         body: JSON.stringify({ classSessionId: session._id, useCredit: true })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to book class');
+      if (!res.ok) {
+        if (data.requiresWaiver) {
+          setShowWaiver(true);
+          throw new Error(data.error || 'Please complete and sign the liability waiver before reserving your spot.');
+        }
+        throw new Error(data.error || 'Failed to book class');
+      }
       
       if (refreshUser) await refreshUser();
       setStep(3); // success

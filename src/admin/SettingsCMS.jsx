@@ -42,6 +42,8 @@ const DEFAULT_GROUPS = {
       { key: 'waitlist_auto_promote', label: 'Auto-promote waitlist', defaultValue: 'true', hint: 'Automatically fill spots from standby when a booking cancels', type: 'bool' },
       { key: 'waitlist_expiration_hours', label: 'Waitlist expiration (hours)', defaultValue: '360', hint: 'Time until standby position expires without confirmation', type: 'num' },
       { key: 'max_class_capacity', label: 'Default class capacity', defaultValue: '14', hint: 'Override per class; this is the house default', type: 'num' },
+      { key: 'waiver_required', label: 'Liability waiver required', defaultValue: 'true', hint: 'Strictly gate movement bookings until waiver is signed', type: 'bool' },
+      { key: 'waiver_current_version', label: 'Active waiver version ID', defaultValue: '2026-09', hint: 'Must match active version in Waivers CMS. Members on older versions must re-sign', type: 'text' },
     ]
   },
   social: {
@@ -117,7 +119,7 @@ function getGroupForKey(key) {
   if (k.includes('contact') || k.includes('phone') || k.includes('address') || k.includes('location') || k.includes('map') || k.includes('hour') || k.includes('open')) {
     return 'contact';
   }
-  if (k.includes('cancel') || k.includes('booking') || k.includes('waitlist') || k.includes('walkin') || k.includes('capacity') || k.includes('roster')) {
+  if (k.includes('cancel') || k.includes('booking') || k.includes('waitlist') || k.includes('walkin') || k.includes('capacity') || k.includes('roster') || k.includes('waiver')) {
     return 'booking';
   }
   if (k.includes('instagram') || k.includes('whatsapp') || k.includes('social') || k.includes('raire') || k.includes('twitter')) {

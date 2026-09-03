@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext.jsx';
 
 // Layout
@@ -25,6 +25,7 @@ import ResetPassword   from './pages/ResetPassword.jsx';
 import AccountLayout   from './pages/account/AccountLayout.jsx';
 import Dashboard       from './pages/account/Dashboard.jsx';
 import ProfileSettings from './pages/account/ProfileSettings.jsx';
+import WaiverPage      from './pages/account/WaiverPage.jsx';
 
 // Admin CMS
 import AdminLayout     from './admin/AdminLayout.jsx';
@@ -39,6 +40,7 @@ import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
 import UsersCMS        from './admin/UsersCMS.jsx';
+import WaiversCMS      from './admin/WaiversCMS.jsx';
 import GuestConciergeCMS from './admin/GuestConciergeCMS.jsx';
 import AdminActivityLogs from './admin/ActivityLogs.jsx';
 
@@ -127,6 +129,7 @@ const publicRouter = createBrowserRouter([
       { path: 'register',               element: <Register /> },
       { path: 'forgot-password',        element: <ForgotPassword /> },
       { path: 'reset-password',         element: <ResetPassword /> },
+      { path: 'member/waiver',          element: <RequireAuth><WaiverPage /></RequireAuth> },
     ],
   },
   {
@@ -135,6 +138,7 @@ const publicRouter = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'profile', element: <ProfileSettings /> },
+      { path: 'waiver', element: <WaiverPage /> },
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
     ]
   },
@@ -192,6 +196,7 @@ const internalRouter = createBrowserRouter([
       { path: 'events', element: <EventsCMS /> },
       { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
       { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
+      { path: 'waivers', element: <RequireRole roles={['admin']}><WaiversCMS /></RequireRole> },
       { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },
       { path: 'activity-logs', element: <RequireRole roles={['admin']}><AdminActivityLogs /></RequireRole> },
       { path: '*', element: <AdminDashboard /> }

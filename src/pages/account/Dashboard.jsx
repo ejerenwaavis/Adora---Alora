@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import WaiverModal from './WaiverModal';
@@ -1039,12 +1039,18 @@ export default function Dashboard() {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--taupe)' }}>Signed Date:</span>
-                    <span>{dashboardData.waiverDate ? new Date(dashboardData.waiverDate).toLocaleString() : 'On file'}</span>
+                    <span>{user?.waiver?.signedAt ? new Date(user.waiver.signedAt).toLocaleString() : (dashboardData.waiverDate ? new Date(dashboardData.waiverDate).toLocaleString() : 'On file')}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: user?.waiver?.ipAddress ? '8px' : '0', flexWrap: 'wrap' }}>
                     <span style={{ color: 'var(--taupe)' }}>Agreement Version:</span>
-                    <span>{user?.waiverVersion || 'v1.0 (Movement Studio Policy)'}</span>
+                    <span>{user?.waiver?.version || user?.waiverVersion || '2026-09'} (Lagos, Nigeria)</span>
                   </div>
+                  {user?.waiver?.ipAddress && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                      <span style={{ color: 'var(--taupe)' }}>Digital Audit IP:</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{user.waiver.ipAddress}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: '1.75rem' }}>

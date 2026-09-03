@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const mongoose = require('mongoose');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const requireWaiver = require('../middleware/requireWaiver');
 
 const Booking = require('../models/Booking');
 const ClassSession = require('../models/ClassSession');
@@ -68,7 +69,7 @@ router.get('/me', requireAuth, async (req, res) => {
 });
 
 // Create a booking or join waitlist
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireWaiver, async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {

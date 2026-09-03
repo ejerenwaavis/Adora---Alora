@@ -21,7 +21,7 @@ Follow these exact steps in order when the user asks you to deploy or run the bu
    - Commit the latest changes and built files to Git. 
    - Run `git push origin <branch_name>`.
 4. **Deploy to Namecheap**:
-   - Run SSH command to pull and restart the app on the remote server (conditionally running `npm ci --omit=dev` only when `package.json` changes): 
-     `ssh -o BatchMode=yes -o StrictHostKeyChecking=no -p 21098 rokiroqw@server121.web-hosting.com -i "$env:USERPROFILE\.ssh\namecheap_key" 'source /home/rokiroqw/nodevenv/aa/22/bin/activate && cd /home/rokiroqw/aa && CHANGED=$(git diff --name-only HEAD origin/simplification | grep -E "package(-lock)?\.json") && git pull origin simplification && if [ -n "$CHANGED" ]; then echo "Dependencies changed, running npm ci..."; npm ci --omit=dev; fi && touch tmp/restart.txt'`
+   - Run SSH command to pull and restart the app on the remote server via configured `rokitonline` SSH alias:
+     `ssh -o BatchMode=yes rokitonline 'source /home/rokiroqw/nodevenv/aa/22/bin/activate && cd /home/rokiroqw/aa && CHANGED=$(git diff --name-only HEAD origin/simplification | grep -E "package(-lock)?\.json") && git pull origin simplification && if [ -n "$CHANGED" ]; then echo "Dependencies changed, running npm ci..."; npm ci --omit=dev; fi && touch tmp/restart.txt'`
 5. **Verify**:
    - Confirm to the user that the app has been safely checked, built, synced, pushed, and restarted remotely.
