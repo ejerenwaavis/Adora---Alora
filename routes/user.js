@@ -205,6 +205,8 @@ router.post('/waiver', handleWaiverSign);
 router.get('/bookings', async (req, res) => {
   try {
     const now = new Date();
+    const userEmail = (req.user.email || '').trim();
+    const emailRegex = new RegExp(`^${userEmail.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i');
 
     const [classBookings, eventBookings, cafeOrders, fashionOrders] = await Promise.all([
       Booking.find({ user: req.user._id })
@@ -218,13 +220,21 @@ router.get('/bookings', async (req, res) => {
         .sort({ createdAt: -1 }),
 
       EventBooking.find({
-        $or: [{ user: req.user._id }, { customerEmail: req.user.email.toLowerCase() }]
+        $or: [{ user: req.user._id }, { customerEmail: emailRegex }]
       })
         .populate('event')
         .sort({ createdAt: -1 }),
 
-      Order.find({ customerEmail: req.user.email.toLowerCase() }).sort({ createdAt: -1 }).limit(15),
-      FashionOrder.find({ customerEmail: req.user.email.toLowerCase() }).populate('fashionItem').sort({ createdAt: -1 }).limit(15)
+      Order.find({
+        $or: [
+          { user: req.user._id },
+          { customerEmail: emailRegex }
+        ]
+      }).sort({ createdAt: -1 }),
+
+      FashionOrder.find({
+        customerEmail: emailRegex
+      }).populate('fashionItem').sort({ createdAt: -1 })
     ]);
 
     // Partition classes
@@ -271,6 +281,47 @@ router.get('/bookings', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/user/orders ─────────────────────────────────────────────────────
+router.get('/orders', async (req, res) => {
+  try {
+    const userEmail = (req.user.email || '').trim();
+    const emailRegex = new RegExp(`^${userEmail.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i');
+
+    const [cafeOrders, fashionOrders] = await Promise.all([
+      Order.find({
+        $or: [
+          { user: req.user._id },
+          { customerEmail: emailRegex }
+        ]
+      }).sort({ createdAt: -1 }),
+
+      FashionOrder.find({
+        customerEmail: emailRegex
+      }).populate('fashionItem').sort({ createdAt: -1 })
+    ]);
+
+    const pendingCafeOrders = cafeOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+    const pastCafeOrders = cafeOrders.filter(o => !['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+
+    const pendingFashionOrders = fashionOrders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status));
+    const pastFashionOrders = fashionOrders.filter(o => !['PENDING', 'CONFIRMED'].includes(o.status));
+
+    res.json({
+      success: true,
+      cafeOrders,
+      fashionOrders,
+      pendingCafeOrders,
+      pastCafeOrders,
+      pendingFashionOrders,
+      pastFashionOrders,
+      totalOrdersCount: cafeOrders.length + fashionOrders.length,
+      pendingCount: pendingCafeOrders.length + pendingFashionOrders.length
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

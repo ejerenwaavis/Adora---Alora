@@ -79,13 +79,18 @@ export default function Cafe() {
     setIsSubmitting(true);
     
     try {
+      const token = localStorage.getItem('aa_access_token');
       const response = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           customerName: checkoutForm.name,
           customerPhone: checkoutForm.phone,
           customerEmail: (checkoutForm.email && checkoutForm.email.trim()) || user?.email || undefined,
+          userId: user?._id,
           _aora_uid: honeypot._aora_uid,
           _aora_session: honeypot._aora_session,
           items: cart.map(item => ({

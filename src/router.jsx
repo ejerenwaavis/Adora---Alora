@@ -137,6 +137,7 @@ const publicRouter = createBrowserRouter([
     element: <RequireAuth><AccountLayout /></RequireAuth>,
     children: [
       { index: true, element: <Dashboard /> },
+      { path: 'orders', element: <Dashboard defaultTab="orders" /> },
       { path: 'profile', element: <ProfileSettings /> },
       { path: 'waiver', element: <WaiverPage /> },
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },

@@ -8,13 +8,26 @@ const { sendCafeOrderReceipt, sendCafeOrderReady } = require('../services/mailer
 // Create a new order (Checkout)
 router.post('/', formLimiter, antiBotShield(), async (req, res) => {
   try {
-    const { customerName, customerPhone, customerEmail, items, totalAmountKobo } = req.body;
+    const { customerName, customerPhone, customerEmail, items, totalAmountKobo, user: bodyUser, userId } = req.body;
     
+    let associatedUser = bodyUser || userId || null;
+    if (!associatedUser && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const token = req.headers.authorization.slice(7);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded && (decoded.sub || decoded.id || decoded._id)) {
+          associatedUser = decoded.sub || decoded.id || decoded._id;
+        }
+      } catch (e) {}
+    }
+
     // Create the Order document in PENDING state
     const newOrder = new Order({
       customerName,
       customerPhone,
       customerEmail: (customerEmail && customerEmail.trim()) || 'guest@aorahouse.com',
+      user: associatedUser || undefined,
       items,
       totalAmountKobo,
       status: 'PENDING'

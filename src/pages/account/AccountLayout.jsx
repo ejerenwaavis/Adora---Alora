@@ -54,6 +54,13 @@ export default function AccountLayout() {
             Dashboard &amp; Passes
           </NavLink>
           <NavLink 
+            to="/account/orders" 
+            onClick={() => setIsMobileOpen(false)}
+            className={({isActive}) => isActive ? styles.navLinkActive : styles.navLink}
+          >
+            My Orders
+          </NavLink>
+          <NavLink 
             to="/account/profile" 
             onClick={() => setIsMobileOpen(false)}
             className={({isActive}) => isActive ? styles.navLinkActive : styles.navLink}

@@ -149,6 +149,26 @@ export function AuthProvider({ children }) {
     return res;
   }, [refreshToken]);
 
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('aa_access_token');
+    if (!token) return null;
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.user) {
+          setUser(data.user);
+          return data.user;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh user profile:', e);
+    }
+    return null;
+  }, []);
+
   const isAdmin          = user?.role === 'admin';
   const isClerk          = user?.role === 'clerk';
   const isContentEditor  = user?.role === 'content_editor';
@@ -159,7 +179,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading,
+      user, loading, refreshUser,
       login, logout, register, authFetch, verify2FA, resend2FA,
       isAdmin, isClerk, isContentEditor, isInstructor, isFinance, isMember, isStaff,
     }}>
