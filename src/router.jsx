@@ -24,6 +24,7 @@ import ResetPassword   from './pages/ResetPassword.jsx';
 // Account Dashboard
 import AccountLayout   from './pages/account/AccountLayout.jsx';
 import Dashboard       from './pages/account/Dashboard.jsx';
+import OrdersPage      from './pages/account/OrdersPage.jsx';
 import ProfileSettings from './pages/account/ProfileSettings.jsx';
 import WaiverPage      from './pages/account/WaiverPage.jsx';
 
@@ -137,7 +138,7 @@ const publicRouter = createBrowserRouter([
     element: <RequireAuth><AccountLayout /></RequireAuth>,
     children: [
       { index: true, element: <Dashboard /> },
-      { path: 'orders', element: <Dashboard defaultTab="orders" /> },
+      { path: 'orders', element: <OrdersPage /> },
       { path: 'profile', element: <ProfileSettings /> },
       { path: 'waiver', element: <WaiverPage /> },
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
