@@ -9,9 +9,8 @@ import SearchOverlay                         from '../ui/SearchOverlay';
 
 /* ─── Nav Links ─────────────────────────────────────────────────────────────── */
 const NAV_LINKS = [
-  { to: '/our-house',   label: 'Our House'   },
-  { to: '/cafe',        label: 'Café'        },
   { to: '/movement',    label: 'Movement'    },
+  { to: '/cafe',        label: 'Café'        },
   { to: '/fashion',     label: 'Fashion'     },
   { to: '/venue-hire',  label: 'Venue Hire'  },
   { to: '/events',      label: 'Events'      },
@@ -115,17 +114,22 @@ export default function Nav() {
                       <strong>{user.firstName} {user.lastName}</strong>
                       <span>{user.email}</span>
                     </div>
-                    <Link to="/account"   onClick={() => setUserMenu(false)}>My Account</Link>
+                    <Link to="/account" onClick={() => setUserMenu(false)}>Dashboard Overview</Link>
+                    <Link to="/account?tab=bookings" onClick={() => setUserMenu(false)}>My Classes &amp; Events</Link>
+                    <Link to="/account?tab=passes" onClick={() => setUserMenu(false)}>Digital QR Passes</Link>
+                    <Link to="/account/waiver" onClick={() => setUserMenu(false)}>Liability Waiver</Link>
                     {isStaff && (
                       <>
+                        <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0' }} />
                         {['admin','content_editor','finance','instructor'].includes(user.role) && (
-                          <Link to="/admin"  onClick={() => setUserMenu(false)}>Admin Panel</Link>
+                          <Link to="/admin" onClick={() => setUserMenu(false)}>Admin Panel</Link>
                         )}
                         {['admin','clerk'].includes(user.role) && (
                           <Link to="/clerk" onClick={() => setUserMenu(false)}>Clerk Desk</Link>
                         )}
                       </>
                     )}
+                    <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0' }} />
                     <button onClick={handleLogout} className={styles.logoutBtn}>Sign Out</button>
                   </div>
                 )}

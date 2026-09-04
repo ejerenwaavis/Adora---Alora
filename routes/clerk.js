@@ -10,6 +10,8 @@ const CafeReservation = require('../models/CafeReservation');
 const EventRecord = require('../models/EventRecord');
 const EventBooking = require('../models/EventBooking');
 const ActivityLog = require('../models/ActivityLog');
+const Order = require('../models/Order');
+const { sendCafeOrderReady } = require('../services/mailer');
 
 // Clerk routes — clerk or admin
 router.use(requireAuth);
@@ -307,6 +309,68 @@ router.post('/cafe/walkin', async (req, res) => {
     await reservation.save();
     await logActivity(req.user.id, 'cafe_walkin', 'CafeReservation', reservation._id, `Seated cafe walk-in ${name}`);
     res.json({ message: 'Cafe walk-in seated', reservation });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Takeout Orders Management ──
+router.get('/cafe/orders', async (req, res) => {
+  try {
+    const { status, period } = req.query;
+    const query = {};
+    if (status && status !== 'all') {
+      query.status = status.toUpperCase();
+    }
+    if (period === 'today') {
+      const startOfDay = new Date(); startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(); endOfDay.setHours(23, 59, 59, 999);
+      query.createdAt = { $gte: startOfDay, $lte: endOfDay };
+    } else if (period === 'week') {
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - 7);
+      startOfWeek.setHours(0, 0, 0, 0);
+      query.createdAt = { $gte: startOfWeek };
+    }
+    const orders = await Order.find(query)
+      .populate('user', 'firstName lastName email phone')
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/cafe/orders/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+
+    const prevStatus = order.status;
+    order.status = status.toUpperCase();
+    await order.save();
+
+    // Broadcast via WebSockets to KDS
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('order_updated', order);
+    }
+
+    // Trigger ready email when status changes to READY
+    if (order.status === 'READY' && prevStatus !== 'READY' && order.customerEmail && order.customerEmail !== 'guest@aorahouse.com') {
+      sendCafeOrderReady({ order }).catch(e => console.warn('Cafe order ready email error:', e.message));
+    }
+
+    await logActivity(
+      req.user.id,
+      'takeout_order_status_update',
+      'Order',
+      order._id,
+      `Updated takeout order #${order._id.toString().slice(-4).toUpperCase()} (${order.customerName}) from ${prevStatus} to ${order.status}`
+    );
+
+    res.json({ message: 'Order status updated', order });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

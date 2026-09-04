@@ -132,6 +132,61 @@ function generateOccurrences({ baseStart, baseEnd, frequency, daysOfWeek = [], r
   return occurrences;
 }
 
+// Conflict validation helper: prevents double-booking studio rooms and instructors
+async function checkScheduleConflicts({ startTime, endTime, location, instructor, excludeSessionId = null }) {
+  const query = {
+    isCancelled: { $ne: true },
+    $and: [
+      { startTime: { $lt: endTime } },
+      { endTime: { $gt: startTime } }
+    ]
+  };
+  if (excludeSessionId) {
+    query._id = { $ne: excludeSessionId };
+  }
+
+  // 1. Studio space overlap check
+  if (location && location.trim()) {
+    const spaceConflict = await ClassSession.findOne({
+      ...query,
+      location: location.trim()
+    }).populate('classType instructor');
+
+    if (spaceConflict) {
+      const clsName = spaceConflict.classType?.name || 'Class';
+      const instName = spaceConflict.instructor ? `${spaceConflict.instructor.firstName} ${spaceConflict.instructor.lastName}` : '';
+      const startStr = new Date(spaceConflict.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const endStr = new Date(spaceConflict.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return {
+        hasConflict: true,
+        error: `Studio Room Conflict: '${location}' is already booked for '${clsName}' (${startStr} – ${endStr})${instName ? ` with ${instName}` : ''}. Please choose another room or adjust the time slot.`
+      };
+    }
+  }
+
+  // 2. Instructor double-booking check
+  if (instructor) {
+    const instConflict = await ClassSession.findOne({
+      ...query,
+      instructor
+    }).populate('classType instructor');
+
+    if (instConflict) {
+      const clsName = instConflict.classType?.name || 'Class';
+      const instName = instConflict.instructor ? `${instConflict.instructor.firstName} ${instConflict.instructor.lastName}` : 'This instructor';
+      const startStr = new Date(instConflict.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const endStr = new Date(instConflict.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const locStr = instConflict.location ? ` in ${instConflict.location}` : '';
+      return {
+        hasConflict: true,
+        error: `Instructor Double-Booking: ${instName} is already assigned to '${clsName}' (${startStr} – ${endStr}${locStr}). An instructor cannot lead two sessions simultaneously.`
+      };
+    }
+  }
+
+  return { hasConflict: false };
+}
+
 // ADMIN: Create new class session (single or recurring)
 router.post('/', requireAuth, requireRole('admin', 'content_editor'), async (req, res) => {
   try {
@@ -160,6 +215,20 @@ router.post('/', requireAuth, requireRole('admin', 'content_editor'), async (req
         return res.status(400).json({ error: 'No recurring sessions could be generated with the given parameters.' });
       }
 
+      // Validate all occurrences for room and instructor conflicts
+      for (const occ of occurrences) {
+        const conflict = await checkScheduleConflicts({
+          startTime: occ.startTime,
+          endTime: occ.endTime,
+          location: req.body.location,
+          instructor: req.body.instructor
+        });
+        if (conflict.hasConflict) {
+          const occDate = new Date(occ.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+          return res.status(400).json({ error: `Conflict on ${occDate}: ${conflict.error}` });
+        }
+      }
+
       const seriesId = 'series_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
       const docsToInsert = occurrences.map(occ => ({
         ...req.body,
@@ -184,6 +253,17 @@ router.post('/', requireAuth, requireRole('admin', 'content_editor'), async (req
       });
     }
 
+    // Single session conflict check
+    const conflict = await checkScheduleConflicts({
+      startTime: baseStart,
+      endTime: baseEnd,
+      location: req.body.location,
+      instructor: req.body.instructor
+    });
+    if (conflict.hasConflict) {
+      return res.status(400).json({ error: conflict.error });
+    }
+
     const session = new ClassSession(req.body);
     await session.save();
     res.status(201).json(await session.populate('classType instructor'));
@@ -200,6 +280,8 @@ router.patch('/:id', requireAuth, requireRole('admin', 'content_editor'), async 
 
     const newStart = req.body.startTime ? new Date(req.body.startTime) : new Date(existing.startTime);
     const newEnd = req.body.endTime ? new Date(req.body.endTime) : new Date(existing.endTime);
+    const newLocation = req.body.location !== undefined ? req.body.location : existing.location;
+    const newInstructor = req.body.instructor !== undefined ? req.body.instructor : existing.instructor;
     const oldStart = new Date(existing.startTime);
     
     if (newStart.getTime() !== oldStart.getTime()) {
@@ -208,6 +290,18 @@ router.patch('/:id', requireAuth, requireRole('admin', 'content_editor'), async 
       if (hoursDifference < 6) {
         return res.status(400).json({ error: 'A class must be scheduled at least 6 hours in advance.' });
       }
+    }
+
+    // Conflict check for updated parameters
+    const conflict = await checkScheduleConflicts({
+      startTime: newStart,
+      endTime: newEnd,
+      location: newLocation,
+      instructor: newInstructor,
+      excludeSessionId: existing._id
+    });
+    if (conflict.hasConflict) {
+      return res.status(400).json({ error: conflict.error });
     }
 
     // CASE 1: Converting a single session into a new recurring series

@@ -8,48 +8,106 @@ const CafeReservation = require('../models/CafeReservation');
 const EventBooking = require('../models/EventBooking');
 const VenueEnquiry = require('../models/VenueEnquiry');
 const ActivityLog = require('../models/ActivityLog');
+const Order = require('../models/Order');
+const ClassSession = require('../models/ClassSession');
 
 // All admin routes require admin role
 router.use(requireAuth);
 router.use(requireRole('admin'));
 
-// Live Executive House Metrics
+// Live Executive House Metrics with Period Filtering
 router.get('/metrics', async (req, res) => {
   try {
+    const period = req.query.period || 'all'; // 'today' | 'week' | 'all'
+    const now = new Date();
+    
+    let dateFilter = {};
+    if (period === 'today') {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      dateFilter = { $gte: startOfDay, $lte: endOfDay };
+    } else if (period === 'week') {
+      const startOfWeek = new Date();
+      startOfWeek.setDate(startOfWeek.getDate() - 7);
+      startOfWeek.setHours(0, 0, 0, 0);
+      dateFilter = { $gte: startOfWeek };
+    }
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
+    const bookingQuery = { status: { $ne: 'cancelled' } };
+    const eventQuery = { status: 'confirmed' };
+    const cafeQuery = { status: { $ne: 'cancelled' } };
+    const orderQuery = {};
+    const enquiryQuery = {};
+    const userQuery = { role: { $in: ['member', 'user'] } };
+
+    if (period !== 'all') {
+      bookingQuery.createdAt = dateFilter;
+      eventQuery.createdAt = dateFilter;
+      cafeQuery.createdAt = dateFilter;
+      orderQuery.createdAt = dateFilter;
+      enquiryQuery.createdAt = dateFilter;
+      userQuery.createdAt = dateFilter;
+    }
+
     const [
       totalMembers,
+      allTimeMembers,
       activeStaff,
       classBookings,
-      classCheckInsToday,
-      eventCheckInsToday,
+      classCheckIns,
+      eventCheckIns,
       cafeReservations,
       eventBookings,
       venueEnquiries,
-      todayLogsCount
+      takeoutOrdersCount,
+      todayLogsCount,
+      pendingTakeoutOrders,
+      unreadEnquiries,
+      failedPayments,
+      upcomingClasses
     ] = await Promise.all([
+      User.countDocuments(userQuery).catch(() => 0),
       User.countDocuments({ role: { $in: ['member', 'user'] } }).catch(() => 0),
       User.countDocuments({ role: { $in: ['admin', 'clerk', 'instructor', 'content_editor'] } }).catch(() => 0),
-      Booking.countDocuments({ status: { $ne: 'cancelled' } }).catch(() => 0),
-      Booking.countDocuments({ checkedInAt: { $gte: startOfDay } }).catch(() => 0),
-      EventBooking.countDocuments({ checkedInAt: { $gte: startOfDay } }).catch(() => 0),
-      CafeReservation.countDocuments({ status: { $ne: 'cancelled' } }).catch(() => 0),
-      EventBooking.countDocuments({ status: 'confirmed' }).catch(() => 0),
-      VenueEnquiry.countDocuments().catch(() => 0),
-      ActivityLog.countDocuments({ createdAt: { $gte: startOfDay } }).catch(() => 0)
+      Booking.countDocuments(bookingQuery).catch(() => 0),
+      Booking.countDocuments({ checkedInAt: period === 'all' ? { $exists: true } : dateFilter }).catch(() => 0),
+      EventBooking.countDocuments({ checkedInAt: period === 'all' ? { $exists: true } : dateFilter }).catch(() => 0),
+      CafeReservation.countDocuments(cafeQuery).catch(() => 0),
+      EventBooking.countDocuments(eventQuery).catch(() => 0),
+      VenueEnquiry.countDocuments(enquiryQuery).catch(() => 0),
+      Order.countDocuments(orderQuery).catch(() => 0),
+      ActivityLog.countDocuments({ createdAt: { $gte: startOfDay } }).catch(() => 0),
+      // Urgent Operational Highlights (always live count)
+      Order.countDocuments({ status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING'] } }).catch(() => 0),
+      VenueEnquiry.countDocuments({ status: { $in: ['new', 'awaiting_reply'] } }).catch(() => 0),
+      Order.countDocuments({ paymentStatus: 'FAILED' }).catch(() => 0),
+      ClassSession.countDocuments({ startTime: { $gte: now }, isCancelled: { $ne: true } }).catch(() => 0)
     ]);
 
     res.json({
+      period,
       totalMembers,
+      allTimeMembers,
       activeStaff,
       classBookings,
-      todayCheckIns: classCheckInsToday + eventCheckInsToday,
+      todayCheckIns: classCheckIns + eventCheckIns,
       cafeReservations,
       eventBookings,
       venueEnquiries,
-      todayLogsCount
+      takeoutOrdersCount,
+      todayLogsCount,
+      // Operational Highlights
+      highlights: {
+        pendingTakeoutOrders,
+        unreadEnquiries,
+        failedPayments,
+        upcomingClasses
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

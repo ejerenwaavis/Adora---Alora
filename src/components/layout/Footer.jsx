@@ -10,7 +10,6 @@ const EXPLORE = [
   { to: '/events',     label: 'Events'     },
 ];
 const HOUSE = [
-  { to: '/our-house',  label: 'Our House'  },
   { to: '/venue-hire', label: 'Venue Hire' },
   { to: '/visit',      label: 'Visit'      },
   { to: '/account',    label: 'Account'    },

@@ -45,13 +45,16 @@ async function send({ to, subject, html, text, attachments, bcc }) {
   }
 
   const t = getTransport();
+  const fromAddress = process.env.FROM_EMAIL || '"Aora House" <hello@adoraalora.com>';
+  const replyToAddress = process.env.REPLY_TO || 'hello@adoraalora.com';
   return t.sendMail({
-    from:    process.env.FROM_EMAIL || '"Aora House Concierge" <concierge@aorahouse.com>',
+    from:    fromAddress,
+    replyTo: replyToAddress,
     to,
     bcc:     bccList.length > 0 ? bccList : undefined,
     subject,
     html,
-    text: text || html.replace(/<[^>]+>/g, ''),
+    text: text || html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
     attachments: attachments || []
   });
 }

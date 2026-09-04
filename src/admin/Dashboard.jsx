@@ -26,7 +26,9 @@ export default function AdminDashboard() {
     recentLogs: [],
     allLogs: []
   });
+  const [period, setPeriod] = useState('today'); // 'today' | 'week' | 'all'
   const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const [showAllLogsModal, setShowAllLogsModal] = useState(false);
 
   // Drill-down Modal State
@@ -35,12 +37,30 @@ export default function AdminDashboard() {
   const [modalData, setModalData] = useState(null);
   const [modalSearch, setModalSearch] = useState('');
 
+  // Fetch metrics when period changes
+  useEffect(() => {
+    async function fetchPeriodMetrics() {
+      setMetricsLoading(true);
+      try {
+        const res = await authFetch(`/api/admin/metrics?period=${period}`);
+        if (res.ok) {
+          const metricData = await res.json();
+          setMetrics(metricData);
+        }
+      } catch (e) {
+        console.error('Error fetching period metrics:', e);
+      } finally {
+        setMetricsLoading(false);
+      }
+    }
+    fetchPeriodMetrics();
+  }, [period, authFetch]);
+
   useEffect(() => {
     async function loadStats() {
       setLoading(true);
       try {
-        const [metricsRes, menuRes, classRes, eventRes, fashionRes, announceRes, creditRes, logsRes] = await Promise.all([
-          authFetch('/api/admin/metrics').catch(() => null),
+        const [menuRes, classRes, eventRes, fashionRes, announceRes, creditRes, logsRes] = await Promise.all([
           authFetch('/api/cms/menu-items').catch(() => null),
           authFetch('/api/cms/class-types').catch(() => null),
           authFetch('/api/cms/events').catch(() => null),
@@ -59,15 +79,6 @@ export default function AdminDashboard() {
             return [];
           }
         };
-
-        if (metricsRes && metricsRes.ok) {
-          try {
-            const metricData = await metricsRes.json();
-            setMetrics(metricData);
-          } catch (e) {
-            console.error('Error parsing admin metrics:', e);
-          }
-        }
 
         const [menu, classes, events, fashion, announcements, credits, logs] = await Promise.all([
           parseData(menuRes),
@@ -183,12 +194,149 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* House Operations & Performance Pulse (3x2 Balanced Grid) */}
+      {/* Operational Highlights & Attention Items */}
+      {metrics.highlights && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          {/* Highlight 1: Pending Takeout Orders */}
+          <Link
+            to="/clerk/cafe"
+            style={{
+              textDecoration: 'none',
+              background: (metrics.highlights.pendingTakeoutOrders > 0) ? 'rgba(184, 95, 60, 0.08)' : '#FFFDF9',
+              border: '1px solid ' + ((metrics.highlights.pendingTakeoutOrders > 0) ? 'var(--rust, #B85F3C)' : 'rgba(227, 211, 184, 0.8)'),
+              borderRadius: '6px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)' }}>Takeout Kitchen</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: (metrics.highlights.pendingTakeoutOrders > 0) ? 'var(--rust, #B85F3C)' : 'var(--cocoa-deep)', marginTop: '2px' }}>
+                {metrics.highlights.pendingTakeoutOrders} Pending
+              </div>
+            </div>
+            <span style={{ fontSize: '1.4rem' }}>🛍️</span>
+          </Link>
+
+          {/* Highlight 2: Unread Enquiries */}
+          <Link
+            to="/admin/enquiries"
+            style={{
+              textDecoration: 'none',
+              background: (metrics.highlights.unreadEnquiries > 0) ? 'rgba(200, 155, 74, 0.08)' : '#FFFDF9',
+              border: '1px solid ' + ((metrics.highlights.unreadEnquiries > 0) ? 'var(--gold, #C89B4A)' : 'rgba(227, 211, 184, 0.8)'),
+              borderRadius: '6px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)' }}>Venue Enquiries</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: (metrics.highlights.unreadEnquiries > 0) ? '#8C5815' : 'var(--cocoa-deep)', marginTop: '2px' }}>
+                {metrics.highlights.unreadEnquiries} Unread
+              </div>
+            </div>
+            <span style={{ fontSize: '1.4rem' }}>✉️</span>
+          </Link>
+
+          {/* Highlight 3: Failed Payments */}
+          <Link
+            to="/finance"
+            style={{
+              textDecoration: 'none',
+              background: (metrics.highlights.failedPayments > 0) ? 'rgba(139, 32, 32, 0.06)' : '#FFFDF9',
+              border: '1px solid ' + ((metrics.highlights.failedPayments > 0) ? 'rgba(139, 32, 32, 0.4)' : 'rgba(227, 211, 184, 0.8)'),
+              borderRadius: '6px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)' }}>Failed Payments</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: (metrics.highlights.failedPayments > 0) ? '#8B2020' : '#2E6B3E', marginTop: '2px' }}>
+                {metrics.highlights.failedPayments > 0 ? `${metrics.highlights.failedPayments} Action Needed` : 'All Clear ✓'}
+              </div>
+            </div>
+            <span style={{ fontSize: '1.4rem' }}>💳</span>
+          </Link>
+
+          {/* Highlight 4: Upcoming Classes */}
+          <Link
+            to="/admin/classes"
+            style={{
+              textDecoration: 'none',
+              background: '#FFFDF9',
+              border: '1px solid rgba(227, 211, 184, 0.8)',
+              borderRadius: '6px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <div>
+              <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)' }}>Upcoming Classes</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--forest, #414F36)', marginTop: '2px' }}>
+                {metrics.highlights.upcomingClasses} Scheduled
+              </div>
+            </div>
+            <span style={{ fontSize: '1.4rem' }}>🧘</span>
+          </Link>
+        </div>
+      )}
+
+      {/* House Operations & Performance Pulse with Time Period Toggle */}
       <div style={{ marginBottom: '2.5rem' }}>
-        <h2 style={{ fontFamily: 'var(--f-display)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', marginBottom: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span>House Operational Pulse</span>
-          <span style={{ fontSize: '0.72rem', fontWeight: 400, color: '#2E6B3E', background: 'rgba(46, 107, 62, 0.08)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>Live Data · Click Card for Details</span>
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+          <h2 style={{ fontFamily: 'var(--f-display)', fontSize: '1.25rem', color: 'var(--cocoa-deep)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span>House Operational Pulse</span>
+            <span style={{ fontSize: '0.72rem', fontWeight: 400, color: '#2E6B3E', background: 'rgba(46, 107, 62, 0.08)', padding: '0.2rem 0.6rem', borderRadius: '12px' }}>
+              {metricsLoading ? 'Updating…' : 'Live Data · Click Card for Details'}
+            </span>
+          </h2>
+
+          {/* Period Filter Selector */}
+          <div style={{ display: 'inline-flex', background: '#FAF6EF', padding: '3px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)' }}>
+            {[
+              { id: 'today', label: 'Today' },
+              { id: 'week', label: 'This Week' },
+              { id: 'all', label: 'All Time' }
+            ].map(p => (
+              <button
+                key={p.id}
+                onClick={() => setPeriod(p.id)}
+                style={{
+                  background: period === p.id ? 'var(--cocoa-deep, #2A1D14)' : 'transparent',
+                  color: period === p.id ? '#FCF8F0' : 'var(--cocoa-deep, #2A1D14)',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
+                  fontSize: '0.78rem',
+                  fontWeight: period === p.id ? 600 : 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
           {/* Card 1: Members */}
           <div 
