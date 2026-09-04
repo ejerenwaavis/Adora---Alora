@@ -74,7 +74,7 @@ export default function Fashion() {
     { step: '04', label: 'NEW WARDROBE', sub: 'Delivered to its next chapter' }
   ];
 
-  const appStoreUrl = 'https://apps.apple.com/app/raire/id6478909876';
+  const raireUrl = 'https://raireapp.com';
 
   const scrollToExplore = () => {
     const el = document.getElementById('introduction');
@@ -86,14 +86,13 @@ export default function Fashion() {
       
       {/* ─── 01 HERO SECTION ─── */}
       <section className={styles.heroSection}>
-        <div className={styles.heroTopTag}>
-          Aora House Presents
-        </div>
-
         <div className={styles.heroGrid}>
           <div className={styles.heroTitleGroup}>
+            <div className={styles.heroTopTag}>
+              Aora House Presents
+            </div>
+
             <h1 className={styles.heroWordmark}>RAIRE</h1>
-            <span className={styles.heroScriptAccent}>something worth keeping</span>
             
             <h2 className={styles.heroSubtitle}>
               Fashion worth keeping.
@@ -108,12 +107,12 @@ export default function Fashion() {
                 Explore Raire <span style={{ marginLeft: '4px' }}>↓</span>
               </button>
               <a 
-                href={appStoreUrl} 
+                href={raireUrl} 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className={styles.secondaryCta}
               >
-                Download on App Store <span style={{ fontSize: '0.9rem' }}>↗</span>
+                Download on Raireapp.com <span style={{ fontSize: '0.9rem' }}>↗</span>
               </a>
             </div>
           </div>
@@ -337,7 +336,7 @@ export default function Fashion() {
               Raire currently charges a 10% commission only when an item successfully sells.
             </div>
 
-            <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryCta}>
+            <a href={raireUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryCta}>
               Sell on Raire <span style={{ marginLeft: '4px' }}>→</span>
             </a>
           </div>
@@ -429,13 +428,13 @@ export default function Fashion() {
 
         <div style={{ marginTop: '2rem' }}>
           <a 
-            href={appStoreUrl}
+            href={raireUrl}
             target="_blank"
             rel="noopener noreferrer"
             className={styles.primaryCta}
             style={{ padding: '1.1rem 2.5rem', fontSize: '0.88rem' }}
           >
-            Download on the App Store ↗
+            Get the App on Raireapp.com ↗
           </a>
         </div>
       </section>
@@ -453,10 +452,10 @@ export default function Fashion() {
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-          <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryCta}>
+          <a href={raireUrl} target="_blank" rel="noopener noreferrer" className={styles.primaryCta}>
             Explore Raire →
           </a>
-          <a href={appStoreUrl} target="_blank" rel="noopener noreferrer" className={styles.secondaryCta}>
+          <a href={raireUrl} target="_blank" rel="noopener noreferrer" className={styles.secondaryCta}>
             Sell on Raire ↗
           </a>
         </div>

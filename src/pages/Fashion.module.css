@@ -1,4 +1,4 @@
-﻿/* ============================================================
+/* ============================================================
    AORA HOUSE x RAIRE — EDITORIAL FASHION STORY
    ============================================================ */
 
@@ -25,23 +25,24 @@
 }
 
 .heroTopTag {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--rust, #B85F3C);
   font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
+.heroTopTag::before,
 .heroTopTag::after {
   content: '';
   display: inline-block;
-  width: 40px;
+  width: 32px;
   height: 1px;
-  background: var(--rust, #B85F3C);
+  background: var(--gold, #C89B4A);
 }
 
 .heroGrid {
@@ -58,21 +59,12 @@
 
 .heroWordmark {
   font-family: var(--f-display, 'Fraunces', serif);
-  font-size: clamp(4rem, 11vw, 8.5rem);
+  font-size: clamp(3.5rem, 9vw, 7rem);
   font-weight: 300;
-  line-height: 0.9;
+  line-height: 0.95;
   letter-spacing: -0.03em;
   color: var(--cocoa-deep, #2B2015);
-  margin: 0 0 0.5rem 0;
-}
-
-.heroScriptAccent {
-  font-family: var(--f-script, 'Beau Rivage', cursive);
-  font-size: clamp(2rem, 4vw, 3.25rem);
-  color: var(--rust, #B85F3C);
-  line-height: 1.1;
-  margin-bottom: 1.5rem;
-  display: block;
+  margin: 0 0 1rem 0;
 }
 
 .heroSubtitle {
@@ -240,8 +232,9 @@
 }
 
 .introNote {
-  font-family: var(--f-script, 'Beau Rivage', cursive);
-  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+  font-family: var(--f-display, 'Fraunces', serif);
+  font-style: italic;
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
   color: var(--gold, #C89B4A);
   display: block;
 }
@@ -327,8 +320,9 @@
 }
 
 .pillarSub {
-  font-family: var(--f-script, 'Beau Rivage', cursive);
-  font-size: 1.45rem;
+  font-family: var(--f-display, 'Fraunces', serif);
+  font-style: italic;
+  font-size: 1.1rem;
   color: var(--rust, #B85F3C);
   margin-bottom: 0.75rem;
   display: block;
@@ -659,8 +653,9 @@
 }
 
 .finalSignature {
-  font-family: var(--f-script, 'Beau Rivage', cursive);
-  font-size: clamp(2.2rem, 3.5vw, 3.25rem);
+  font-family: var(--f-display, 'Fraunces', serif);
+  font-style: italic;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
   color: var(--rust, #B85F3C);
   margin-top: 3.5rem;
   display: block;
