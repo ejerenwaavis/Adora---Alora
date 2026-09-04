@@ -387,15 +387,17 @@ export default function Fashion() {
         </p>
 
         <div className={styles.appStageWrap}>
-          {/* Floating Pill Tags */}
-          <div className={styles.floatingPillTag} style={{ top: '15%', left: '5%' }}>
-            ✦ Discover Something New
-          </div>
-          <div className={styles.floatingPillTag} style={{ top: '48%', right: '5%' }}>
-            ✦ Make an Offer
-          </div>
-          <div className={styles.floatingPillTag} style={{ bottom: '18%', left: '8%' }}>
-            ✦ Sell What You No Longer Wear
+          {/* Floating Pill Badges */}
+          <div className={styles.pillsContainer}>
+            <div className={`${styles.floatingPillTag} ${styles.tagDiscover}`}>
+              ✦ Discover Something New
+            </div>
+            <div className={`${styles.floatingPillTag} ${styles.tagOffer}`}>
+              ✦ Make an Offer
+            </div>
+            <div className={`${styles.floatingPillTag} ${styles.tagSell}`}>
+              ✦ Sell What You No Longer Wear
+            </div>
           </div>
 
           <div className={styles.appHeroPhone}>

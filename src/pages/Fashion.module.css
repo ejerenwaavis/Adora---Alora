@@ -602,6 +602,49 @@
   align-items: center;
 }
 
+.pillsContainer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.floatingPillTag {
+  pointer-events: auto;
+  background: rgba(32, 22, 15, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(227, 211, 184, 0.35);
+  color: #FCF8F0;
+  padding: 0.65rem 1.25rem;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  white-space: nowrap;
+}
+
+@media (min-width: 769px) {
+  .tagDiscover {
+    position: absolute;
+    top: 18%;
+    left: clamp(1%, 6vw, 12%);
+  }
+
+  .tagOffer {
+    position: absolute;
+    top: 48%;
+    right: clamp(1%, 6vw, 12%);
+  }
+
+  .tagSell {
+    position: absolute;
+    bottom: 12%;
+    left: clamp(2%, 8vw, 14%);
+  }
+}
+
 .appHeroPhone {
   width: clamp(260px, 32vw, 340px);
   background: #251B14;
@@ -618,21 +661,6 @@
   height: 520px;
   display: flex;
   flex-direction: column;
-}
-
-.floatingPillTag {
-  position: absolute;
-  background: rgba(43, 32, 21, 0.92);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(227, 211, 184, 0.25);
-  color: #FCF8F0;
-  padding: 0.65rem 1.25rem;
-  border-radius: 30px;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-weight: 600;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.3);
 }
 
 /* 10 FINAL AORA HOUSE MOMENT */
@@ -672,6 +700,34 @@
   }
   .heroFloatingPhone {
     display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .appStageWrap {
+    flex-direction: column;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+
+  .pillsContainer {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 1.75rem;
+    width: 100%;
+    pointer-events: auto;
+  }
+
+  .floatingPillTag {
+    position: static;
+    font-size: 0.72rem;
+    padding: 0.55rem 1.15rem;
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
   }
 }
 
