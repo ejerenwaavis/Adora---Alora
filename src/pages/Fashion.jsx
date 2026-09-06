@@ -202,7 +202,7 @@ export default function Fashion() {
               Discover differently.
             </h2>
           </div>
-          <p style={{ maxWidth: '460px', color: 'var(--taupe)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
+          <p style={{ maxWidth: '460px', color: 'var(--cocoa-deep)', fontSize: '0.95rem', lineHeight: 1.6, margin: 0 }}>
             The current app lets shoppers explore women's, men's and designer fashion, along with trending styles, curated collections, new arrivals and standout closet finds.
           </p>
         </div>
@@ -229,7 +229,7 @@ export default function Fashion() {
             <p style={{ fontSize: '1.05rem', color: 'var(--cocoa)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
               Not every fashion decision happens at the checkout. Sometimes you want to know: <em>Does it fit true to size? What's the condition? How does it drape?</em>
             </p>
-            <p style={{ fontSize: '0.95rem', color: 'var(--taupe)', lineHeight: 1.65, marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.95rem', color: 'var(--cocoa-deep)', lineHeight: 1.65, marginBottom: '2rem' }}>
               Raire lets buyers message sellers directly before purchasing. Buyers can also propose offers, while sellers can accept, decline or counter seamlessly.
             </p>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--rust)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -331,7 +331,7 @@ export default function Fashion() {
               </div>
             </div>
 
-            <div style={{ background: '#FAF6EF', padding: '1rem 1.25rem', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', marginBottom: '2rem', fontSize: '0.88rem', color: 'var(--taupe)' }}>
+            <div style={{ background: '#FAF6EF', padding: '1rem 1.25rem', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.8)', marginBottom: '2rem', fontSize: '0.88rem', color: 'var(--cocoa-deep)' }}>
               <strong style={{ color: 'var(--cocoa-deep)', display: 'block', marginBottom: '3px' }}>No upfront listing fee.</strong>
               Raire currently charges a 10% commission only when an item successfully sells.
             </div>
@@ -357,7 +357,7 @@ export default function Fashion() {
         <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(2rem, 4.5vw, 3.5rem)', color: 'var(--cocoa-deep)', fontWeight: 300, margin: '0 0 1rem 0' }}>
           From your story to someone else's.
         </h2>
-        <p style={{ maxWidth: '600px', margin: '0 auto', color: 'var(--taupe)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+        <p style={{ maxWidth: '600px', margin: '0 auto', color: 'var(--cocoa-deep)', fontSize: '0.95rem', lineHeight: 1.6 }}>
           Raire coordinates collection, inspection and delivery, while buyers and sellers can follow the item's progress through the live order tracker.
         </p>
 

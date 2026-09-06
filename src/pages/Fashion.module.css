@@ -79,7 +79,7 @@
 .heroBody {
   font-size: clamp(0.95rem, 1.1vw, 1.1rem);
   line-height: 1.65;
-  color: var(--taupe, #9C8770);
+  color: var(--cocoa-deep, #2A1D14);
   margin-bottom: 2.25rem;
   max-width: 520px;
 }
@@ -331,7 +331,7 @@
 .pillarDesc {
   font-size: 0.9rem;
   line-height: 1.6;
-  color: var(--taupe, #9C8770);
+  color: var(--cocoa-deep, #2A1D14);
   margin: 0;
 }
 
@@ -388,7 +388,7 @@
 .flowStepDesc {
   font-size: 0.85rem;
   line-height: 1.55;
-  color: var(--taupe, #9C8770);
+  color: var(--cocoa-deep, #2A1D14);
 }
 
 /* 05 THE HUMAN PART (ASK BEFORE YOU BUY) */
@@ -580,7 +580,7 @@
 
 .journeyNodeSub {
   font-size: 0.78rem;
-  color: var(--taupe, #9C8770);
+  color: var(--cocoa-deep, #2A1D14);
 }
 
 /* 09 THE APP REVEAL (DARK LUXURY SHOWCASE) */
