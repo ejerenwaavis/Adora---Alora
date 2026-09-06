@@ -5,7 +5,7 @@
 .pageWrap {
   background-color: var(--paper, #FCF8F0);
   color: var(--cocoa-deep, #2B2015);
-  font-family: 'Instrument Sans', 'Jost', system-ui, sans-serif;
+  font-family: var(--f-body, 'Montserrat', system-ui, sans-serif);
   overflow-x: hidden;
   position: relative;
 }

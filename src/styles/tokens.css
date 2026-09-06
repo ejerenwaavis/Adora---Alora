@@ -37,7 +37,7 @@
   /* ── Typography ── */
   --f-display: 'Fraunces', Georgia, serif;
   --f-script:  'Beau Rivage', cursive;
-  --f-body:    'Jost', system-ui, sans-serif;
+  --f-body:    'Montserrat', system-ui, sans-serif;
 
   /* ── Type Scale ── */
   --text-xs:   0.75rem;    /* 12px  */

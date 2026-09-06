@@ -6,7 +6,7 @@
 }
 
 .eyebrow {
-  font-family: var(--f-body, 'Jost', sans-serif);
+  font-family: var(--f-body, 'Montserrat', sans-serif);
   font-size: 10px;
   letter-spacing: .22em;
   text-transform: uppercase;
@@ -41,7 +41,7 @@
 }
 
 .description {
-  font-family: var(--f-body, 'Jost', sans-serif);
+  font-family: var(--f-body, 'Montserrat', sans-serif);
   font-size: 16px;
   color: rgba(26, 26, 26, 0.7);
   line-height: 1.6;

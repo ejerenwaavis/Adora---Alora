@@ -47,7 +47,7 @@
 .topbar-title { font-family:'Fraunces',serif; font-weight:500; font-size:20px; color:var(--ink); }
 .topbar-sub { font-size:11px; color:var(--taupe); margin-top:2px; letter-spacing:.03em; }
 .topbar-actions { display:flex; gap:8px; flex-wrap: wrap; }
-.tb-btn { font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; padding:9px 16px; border-radius:3px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; transition:all .2s; font-family:'Jost',sans-serif; white-space:nowrap; }
+.tb-btn { font-size:11.5px; letter-spacing:.07em; text-transform:uppercase; padding:9px 16px; border-radius:3px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; transition:all .2s; font-family:var(--f-body, 'Montserrat', sans-serif); white-space:nowrap; }
 .tb-btn:hover { background:var(--cream); border-color:var(--taupe-lt); }
 .tb-btn.primary { background:var(--rust); color:#FCF8F0; border-color:var(--rust); }
 .tb-btn.primary:hover { background:#8B3318; }
@@ -150,7 +150,7 @@
 .badge-ink { background:rgba(42,29,20,.07); color:var(--cocoa-deep); border:1px solid rgba(42,29,20,.15); }
 
 /* check-in action */
-.ci-btn { font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:5px 10px; border-radius:2px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; font-family:'Jost',sans-serif; transition:all .18s; white-space:nowrap; }
+.ci-btn { font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:5px 10px; border-radius:2px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; font-family:var(--f-body, 'Montserrat', sans-serif); transition:all .18s; white-space:nowrap; }
 .ci-btn:hover { background:var(--forest); color:#FCF8F0; border-color:var(--forest); }
 .ci-btn.done { background:var(--ok-bg, #EBF5EE); color:var(--ok, #2E6B3E); border-color:var(--ok-bd, #A8D5B5); cursor:default; }
 
@@ -161,7 +161,7 @@
 .walkin-form { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:8px; align-items:end; margin-bottom: 10px;}
 .wf-group { display:flex; flex-direction:column; gap:4px; }
 .wf-label { font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--taupe); }
-.wf-input { padding:9px 12px; border:1px solid var(--line); border-radius:3px; font-size:13px; color:var(--ink); background:var(--cream); font-family:'Jost',sans-serif; outline:none; transition:border-color .2s; }
+.wf-input { padding:9px 12px; border:1px solid var(--line); border-radius:3px; font-size:13px; color:var(--ink); background:var(--cream); font-family:var(--f-body, 'Montserrat', sans-serif); outline:none; transition:border-color .2s; }
 .wf-input:focus { border-color:var(--taupe-lt); }
 .wf-select { 
   padding: 9px 30px 9px 12px; 
@@ -177,7 +177,7 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  font-family: 'Jost', sans-serif; 
+  font-family: var(--f-body, 'Montserrat', sans-serif); 
   outline: none; 
   cursor: pointer;
   transition: all .2s;
@@ -206,7 +206,7 @@
 .loft-guest-row:hover { background:rgba(200,155,74,.04); }
 .lg-name { font-size:13px; color:var(--ink); font-weight:500; }
 .lg-detail { font-size:11px; color:var(--taupe); }
-.verify-btn { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:2px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; font-family:'Jost',sans-serif; transition:all .18s; }
+.verify-btn { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:2px; border:1px solid var(--line); color:var(--cocoa); background:var(--paper); cursor:pointer; font-family:var(--f-body, 'Montserrat', sans-serif); transition:all .18s; }
 .verify-btn:hover { background:var(--cocoa-deep); color:#F7EFE1; border-color:var(--cocoa-deep); }
 .verify-btn.verified { background:var(--ok-bg, #EBF5EE); color:var(--ok, #2E6B3E); border-color:var(--ok-bd, #A8D5B5); cursor:default; }
 
@@ -244,7 +244,7 @@
   position: relative;
 }
 .c-wordmark { font-family:'Fraunces',serif; font-size:16px; color:#F7EFE1; flex:1; letter-spacing:-.01em; }
-.c-wordmark small { font-family:'Jost',sans-serif; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:rgba(200,155,74,.7); margin-left:6px; }
+.c-wordmark small { font-family:var(--f-body, 'Montserrat', sans-serif); font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:rgba(200,155,74,.7); margin-left:6px; }
 .c-clock { font-family:'Fraunces',serif; font-size:14px; color:rgba(220,203,178,.65); flex-shrink:0; }
 
 /* Hamburger with ☰ → ✕ animation */
