@@ -50,14 +50,48 @@ router.post('/:id/book', async (req, res) => {
     if (event.capacity && (event.ticketsSold + qty > event.capacity)) {
       return res.status(400).json({ error: 'Not enough tickets available.' });
     }
-    
+
+    const totalKobo = (event.priceKobo || 0) * qty;
+
+    // If paid event, initialize Paystack transaction
+    if (totalKobo > 0) {
+      const paystack = require('../services/paystack');
+      const reference = paystack.generateReference('AH-EVENT');
+      const callbackUrl = `${req.protocol}://${req.get('host')}/payment/verify`;
+
+      const pData = await paystack.initialize({
+        email: customerEmail,
+        amountKobo: totalKobo,
+        reference,
+        callbackUrl,
+        metadata: {
+          paymentType: 'event_ticket',
+          eventId: event._id.toString(),
+          customerName,
+          customerEmail,
+          customerPhone: customerPhone || '',
+          ticketQuantity: qty,
+          userId: req.user?.id || undefined
+        }
+      });
+
+      return res.json({
+        success: true,
+        requiresPayment: true,
+        authorizationUrl: pData.authorization_url,
+        reference: pData.reference
+      });
+    }
+
+    // Free event: Confirm immediately
     const booking = new EventBooking({
       event: event._id,
       customerName,
       customerEmail,
       customerPhone: customerPhone || '',
       ticketQuantity: qty,
-      amountPaidKobo: (event.priceKobo || 0) * qty,
+      amountPaidKobo: 0,
+      paymentStatus: 'PAID',
       status: 'confirmed'
     });
     

@@ -14,6 +14,7 @@ import VenueHire    from './pages/VenueHire.jsx';
 import Events       from './pages/Events.jsx';
 import Visit        from './pages/Visit.jsx';
 import KioskCheckIn from './pages/KioskCheckIn.jsx';
+import PaymentVerify from './pages/PaymentVerify.jsx';
 
 // Auth Pages
 import Login           from './pages/Login.jsx';
@@ -132,6 +133,8 @@ const publicRouter = createBrowserRouter([
       { path: 'forgot-password',        element: <ForgotPassword /> },
       { path: 'reset-password',         element: <ResetPassword /> },
       { path: 'member/waiver',          element: <RequireAuth><WaiverPage /></RequireAuth> },
+      { path: 'payment/verify',         element: <PaymentVerify /> },
+      { path: 'cafe/verify',            element: <PaymentVerify /> },
     ],
   },
   {
@@ -160,6 +163,14 @@ const internalRouter = createBrowserRouter([
   {
     path: '/login',
     element: <Login /> // You might want a custom StaffLogin later
+  },
+  {
+    path: '/payment/verify',
+    element: <PaymentVerify />
+  },
+  {
+    path: '/cafe/verify',
+    element: <PaymentVerify />
   },
   {
     path: '/finance',

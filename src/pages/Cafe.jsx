@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Eyebrow from '../components/ui/Eyebrow.jsx';
 import Button from '../components/ui/Button.jsx';
 import PageHeader from '../components/ui/PageHeader';
@@ -33,12 +33,36 @@ export default function Cafe() {
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [checkoutForm, setCheckoutForm] = useState({ 
     name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
     phone: user?.phone || '',
     email: user?.email || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check if redirected from Paystack verification with orderSuccess=true
+  useEffect(() => {
+    const isSuccess = searchParams.get('orderSuccess') === 'true';
+    const orderIdParam = searchParams.get('orderId');
+
+    if (isSuccess && orderIdParam) {
+      localStorage.removeItem('aora_cart');
+      setCart([]);
+
+      fetch(`/api/orders/${orderIdParam}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && data.order) {
+            setConfirmedOrder(data.order);
+            setShowConfirmation(true);
+          }
+        })
+        .catch(err => console.warn('Could not load confirmed order:', err));
+
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (user) {
@@ -105,6 +129,16 @@ export default function Cafe() {
       
       const data = await response.json();
       if (data.success) {
+        if (data.authorizationUrl) {
+          sessionStorage.setItem('ah_pending_order_id', data.order?._id || '');
+          localStorage.removeItem('aora_cart');
+          setCart([]);
+          setShowCart(false);
+          // Redirect directly to Paystack secure checkout
+          window.location.href = data.authorizationUrl;
+          return;
+        }
+
         setConfirmedOrder(data.order || {
           orderNumber: `AH-ORD-${Date.now().toString().slice(-6)}`,
           customerName: checkoutForm.name,

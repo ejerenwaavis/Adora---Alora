@@ -219,4 +219,42 @@ router.post('/enquiries/:id/message', requireAuth, async (req, res) => {
   }
 });
 
+// Pay Venue Deposit / Quoted Invoice via Paystack
+router.post('/enquiries/:id/pay', async (req, res) => {
+  try {
+    const enquiry = await VenueEnquiry.findById(req.params.id);
+    if (!enquiry) return res.status(404).json({ error: 'Venue enquiry not found' });
+
+    const paystack = require('../services/paystack');
+    const amountKobo = req.body.amountKobo || enquiry.quotedAmountKobo || 10000000; // default ₦100,000 holding deposit if not set
+    const reference = paystack.generateReference('AH-VENUE');
+    const callbackUrl = `${req.protocol}://${req.get('host')}/payment/verify`;
+
+    const pData = await paystack.initialize({
+      email: enquiry.email,
+      amountKobo,
+      reference,
+      callbackUrl,
+      metadata: {
+        paymentType: 'venue_enquiry',
+        enquiryId: enquiry._id.toString(),
+        eventType: enquiry.eventType,
+        preferredDate: enquiry.preferredDate
+      }
+    });
+
+    enquiry.paymentReference = reference;
+    await enquiry.save();
+
+    res.json({
+      success: true,
+      authorizationUrl: pData.authorization_url,
+      reference: pData.reference
+    });
+  } catch (err) {
+    console.error('Error initiating venue payment:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.message || err.message || 'Failed to initiate venue payment' });
+  }
+});
+
 module.exports = router;

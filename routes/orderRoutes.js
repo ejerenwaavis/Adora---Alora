@@ -40,9 +40,11 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
 
     const paystackKey = process.env.PAYSTACK_SECRET_KEY;
 
-    // If Paystack is configured with a seemingly real key, attempt to initialize a real transaction
     if (paystackKey && !paystackKey.includes('replace') && paystackKey.length > 20) {
       try {
+        const callbackUrl = `${req.protocol}://${req.get('host')}/payment/verify`;
+        const reference = `aora_order_${newOrder._id}_${Date.now()}`;
+
         const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {
           method: 'POST',
           headers: {
@@ -52,30 +54,39 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
           body: JSON.stringify({
             email: newOrder.customerEmail,
             amount: totalAmountKobo,
-            reference: `aora_order_${newOrder._id}_${Date.now()}`,
-            callback_url: `${req.protocol}://${req.get('host')}/cafe/verify`,
-            metadata: { orderId: newOrder._id }
+            reference,
+            callback_url: callbackUrl,
+            metadata: {
+              paymentType: 'cafe_order',
+              orderId: newOrder._id.toString(),
+              orderNumber: newOrder.orderNumber
+            }
           })
         });
         
         const pData = await paystackRes.json();
-        if (pData.status) {
+        if (pData.status && pData.data) {
           authorizationUrl = pData.data.authorization_url;
           paystackRef = pData.data.reference;
         } else {
-          console.warn('Paystack initialization failed:', pData.message, '- Falling back to mock checkout.');
-          paystackRef = `mock_ref_${Date.now()}`;
-          authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
+          console.error('Paystack initialization failed:', pData.message);
+          return res.status(400).json({ 
+            success: false, 
+            error: pData.message || 'Payment initialization failed with Paystack.' 
+          });
         }
       } catch (err) {
-        console.warn('Paystack fetch error:', err.message, '- Falling back to mock checkout.');
-        paystackRef = `mock_ref_${Date.now()}`;
-        authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
+        console.error('Paystack fetch error:', err.message);
+        return res.status(500).json({ 
+          success: false, 
+          error: `Payment service communication error: ${err.message}` 
+        });
       }
     } else {
-      // Fallback for local development/staging without keys
-      paystackRef = `mock_ref_${Date.now()}`;
-      authorizationUrl = `/mock-checkout?ref=${paystackRef}`;
+      return res.status(500).json({
+        success: false,
+        error: 'Paystack is not configured. Please check server environment keys.'
+      });
     }
 
     newOrder.paymentReference = paystackRef;
@@ -114,6 +125,19 @@ router.get('/active', async (req, res) => {
     res.json({ success: true, orders });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch orders' });
+  }
+});
+
+// Get single order details (For confirmation & receipt view)
+router.get('/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+    res.json({ success: true, order });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch order' });
   }
 });
 

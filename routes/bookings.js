@@ -12,44 +12,117 @@ const Setting = require('../models/Setting');
 const CreditGrant = require('../models/CreditGrant');
 const { sendBookingConfirmation, sendWaitlistPromotion } = require('../services/mailer');
 const { promoteNextWaitlisted } = require('../services/waitlistManager');
+const paystack = require('../services/paystack');
 
-// Purchase a credit pack
+// Purchase a credit pack (Initializes Paystack transaction)
 router.post('/purchase-pack', requireAuth, async (req, res) => {
   try {
-    const { packId } = req.body;
+    const { packId, callbackUrl } = req.body;
     const pack = await CreditPack.findById(packId);
-    if (!pack) return res.status(404).json({ error: 'Pack not found' });
-    if (!pack.isActive) return res.status(400).json({ error: 'Pack is no longer available' });
+    if (!pack) return res.status(404).json({ error: 'Credit pack not found' });
+    if (!pack.isActive) return res.status(400).json({ error: 'This credit pack is no longer active' });
 
     const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    const expiresInDays = pack.expiresInDays || 30;
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+    // Handle free / 0-cost promo packs directly
+    if (!pack.priceKobo || pack.priceKobo <= 0) {
+      const expiresInDays = pack.expiresInDays || 30;
+      const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
 
-    const grant = new CreditGrant({
-      user: user._id,
-      creditPack: pack._id,
-      packName: pack.name,
-      creditsGranted: pack.credits,
-      creditsRemaining: pack.credits,
-      pricePaidKobo: pack.priceKobo,
-      expiresAt,
-      status: 'active'
+      const grant = new CreditGrant({
+        user: user._id,
+        creditPack: pack._id,
+        packName: pack.name,
+        creditsGranted: pack.credits,
+        creditsRemaining: pack.credits,
+        pricePaidKobo: 0,
+        paymentReference: `PROMO-${Date.now()}`,
+        expiresAt,
+        status: 'active'
+      });
+      await grant.save();
+
+      user.classCredits = (user.classCredits || 0) + pack.credits;
+      await user.save();
+
+      return res.json({
+        success: true,
+        message: `${pack.name} added to your account!`,
+        newCredits: user.classCredits,
+        grant
+      });
+    }
+
+    // Initialize real Paystack transaction
+    const reference = paystack.generateReference('AH-PACK');
+    const cbUrl = callbackUrl || `${req.protocol}://${req.get('host')}/payment/verify`;
+
+    const pData = await paystack.initialize({
+      email: user.email,
+      amountKobo: pack.priceKobo,
+      reference,
+      callbackUrl: cbUrl,
+      metadata: {
+        paymentType: 'credit_pack',
+        packId: pack._id.toString(),
+        userId: user._id.toString(),
+        packName: pack.name,
+        credits: pack.credits
+      }
     });
-    await grant.save();
-
-    user.classCredits = (user.classCredits || 0) + pack.credits;
-    await user.save();
 
     res.json({
       success: true,
-      message: `${pack.name} purchased successfully!`,
-      newCredits: user.classCredits,
-      grant
+      requiresPayment: true,
+      authorizationUrl: pData.authorization_url,
+      reference: pData.reference,
+      accessCode: pData.access_code
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error initiating credit pack purchase:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.message || err.message || 'Failed to initiate credit pack purchase' });
+  }
+});
+
+// Drop-in Class Session Purchase (Single class without pack)
+router.post('/purchase-dropin', requireAuth, requireWaiver, async (req, res) => {
+  try {
+    const { classSessionId, callbackUrl } = req.body;
+    const classSession = await ClassSession.findById(classSessionId).populate('classType');
+    if (!classSession) return res.status(404).json({ error: 'Class session not found' });
+    if (classSession.isCancelled) return res.status(400).json({ error: 'This class has been cancelled' });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const amountKobo = classSession.classType?.priceKobo || 500000; // default ₦5,000 if not set
+    const reference = paystack.generateReference('AH-CLASS');
+    const cbUrl = callbackUrl || `${req.protocol}://${req.get('host')}/payment/verify`;
+
+    const pData = await paystack.initialize({
+      email: user.email,
+      amountKobo,
+      reference,
+      callbackUrl: cbUrl,
+      metadata: {
+        paymentType: 'class_booking',
+        classSessionId: classSession._id.toString(),
+        userId: user._id.toString(),
+        className: classSession.classType?.name
+      }
+    });
+
+    res.json({
+      success: true,
+      requiresPayment: true,
+      authorizationUrl: pData.authorization_url,
+      reference: pData.reference,
+      accessCode: pData.access_code
+    });
+  } catch (err) {
+    console.error('Error initiating class drop-in payment:', err.response?.data || err.message);
+    res.status(500).json({ error: err.response?.data?.message || err.message || 'Failed to initiate class payment' });
   }
 });
 

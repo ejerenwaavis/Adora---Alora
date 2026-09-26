@@ -84,8 +84,14 @@ export default function BookingModal({ session, onClose }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to purchase pack');
       
+      if (data.authorizationUrl) {
+        // Forward directly to Paystack secure checkout
+        window.location.href = data.authorizationUrl;
+        return;
+      }
+
       if (refreshUser) await refreshUser();
-      user.classCredits = data.newCredits;
+      if (data.newCredits !== undefined) user.classCredits = data.newCredits;
       setStep(1);
     } catch (err) {
       setError(err.message);

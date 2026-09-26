@@ -41,6 +41,10 @@ export default function EventCheckoutModal({ event, onClose, onComplete }) {
     setError(null);
     try {
       const res = await axios.post(`/api/events/${event._id}/book`, form);
+      if (res.data.requiresPayment && res.data.authorizationUrl) {
+        window.location.href = res.data.authorizationUrl;
+        return;
+      }
       if (res.status === 200) {
         setSuccess(true);
         setTimeout(() => {

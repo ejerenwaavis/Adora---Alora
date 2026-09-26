@@ -34,6 +34,10 @@ const venueEnquirySchema = new mongoose.Schema({
   assignedTo:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   quotedAt:    { type: Date },
   confirmedAt: { type: Date },
+  quotedAmountKobo: { type: Number, default: 0 },
+  depositPaid:      { type: Boolean, default: false },
+  paymentReference: { type: String, index: true },
+  paidAt:           { type: Date },
 
   // ── Messaging & Comms ──
   messages: [{

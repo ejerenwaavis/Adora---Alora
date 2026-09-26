@@ -10,10 +10,12 @@ const eventBookingSchema = new mongoose.Schema({
   
   ticketQuantity: { type: Number, required: true, default: 1 },
   amountPaidKobo: { type: Number, default: 0 },
+  paymentReference: { type: String, index: true },
+  paymentStatus: { type: String, enum: ['PENDING', 'PAID', 'FAILED', 'REFUNDED'], default: 'PENDING' },
   
   status: {
     type: String,
-    enum: ['confirmed', 'cancelled', 'refunded'],
+    enum: ['pending_payment', 'confirmed', 'cancelled', 'refunded'],
     default: 'confirmed',
   },
   
