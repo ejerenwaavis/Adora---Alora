@@ -22,6 +22,6 @@ Follow these exact steps in order when the user asks you to deploy or run the bu
    - Run `git push origin <branch_name>`.
 4. **Deploy to Namecheap**:
    - Run SSH command to pull and restart the app on the remote server via configured `aorahouse` SSH alias:
-     `ssh -o BatchMode=yes aorahouse 'source /home/aoradmge/nodevenv/aa/22/bin/activate && cd /home/aoradmge/aa && CHANGED=$(git diff --name-only HEAD origin/simplification | grep -E "package(-lock)?\.json") && git pull origin simplification && if [ -n "$CHANGED" ]; then echo "Dependencies changed, running npm ci..."; npm ci --omit=dev; fi && touch tmp/restart.txt'`
+     `ssh -o BatchMode=yes aorahouse 'source /home/aoradmge/nodevenv/aorahouse/22/bin/activate && cd /home/aoradmge/aorahouse && CHANGED=$(git diff --name-only HEAD origin/simplification | grep -E "package(-lock)?\.json") && git pull origin simplification && if [ -n "$CHANGED" ]; then echo "Dependencies changed, running npm ci..."; npm ci --omit=dev; fi && touch tmp/restart.txt'`
 5. **Verify**:
    - Confirm to the user that the app has been safely checked, built, synced, pushed, and restarted remotely.
