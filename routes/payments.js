@@ -54,6 +54,9 @@ async function fulfillPayment(data, app) {
 
       if (io) {
         io.emit('order_updated', order);
+        if (!wasAlreadyPaid) {
+          io.emit('new_order', order);
+        }
       }
 
       if (!wasAlreadyPaid && order.customerEmail && order.customerEmail !== 'guest@aorahouse.com') {

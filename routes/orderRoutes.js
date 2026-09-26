@@ -92,16 +92,7 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
     newOrder.paymentReference = paystackRef;
     await newOrder.save();
     
-    // Broadcast via WebSockets to the KDS
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('new_order', newOrder);
-    }
-
-    // Trigger instant email receipt to customer (and staging override)
-    if (newOrder.customerEmail && newOrder.customerEmail !== 'guest@aorahouse.com') {
-      sendCafeOrderReceipt({ order: newOrder }).catch(e => console.warn('Cafe order email receipt error:', e.message));
-    }
+    // Notifications and kitchen preparation are strictly dispatched upon Paystack payment confirmation in fulfillPayment
     
     res.status(201).json({ 
       success: true, 
@@ -119,7 +110,8 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
 router.get('/active', async (req, res) => {
   try {
     const orders = await Order.find({ 
-      status: { $in: ['PENDING', 'ACCEPTED', 'PREPARING', 'READY'] } 
+      paymentStatus: 'PAID',
+      status: { $in: ['ACCEPTED', 'PREPARING', 'READY'] } 
     }).sort({ createdAt: 1 });
     
     res.json({ success: true, orders });
