@@ -224,7 +224,7 @@ export default function OrderConfirmationModal({
             </div>
           )}
 
-          {/* 3. FAILED / DECLINED STATE */}
+          {/* 3. FAILED / DECLINED / INCOMPLETE STATE */}
           {state === 'failed' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{
@@ -237,13 +237,13 @@ export default function OrderConfirmationModal({
                 lineHeight: 1.55
               }}>
                 <strong style={{ display: 'block', marginBottom: '4px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#B85F3C' }}>
-                  Gateway Response
+                  Checkout Status
                 </strong>
-                {error?.message || error?.gateway_response || 'The transaction could not be completed by Paystack. Your card was not charged.'}
+                {error?.message || error?.gateway_response || 'The transaction was cancelled or could not be completed.'}
               </div>
 
               <p style={{ color: 'var(--taupe, #9C8770)', fontSize: '12.5px', lineHeight: 1.55, margin: 0 }}>
-                You can try checking out again using a different card or payment method, or contact our team if you need assistance.
+                If you were debited by your bank, please wait a few moments before re-trying to avoid duplicate payments — our system will automatically verify and confirm your order if funds were captured. Otherwise, you can review your items and try again.
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
@@ -264,7 +264,7 @@ export default function OrderConfirmationModal({
                       cursor: 'pointer'
                     }}
                   >
-                    Try Payment Again →
+                    Review Cart &amp; Try Again →
                   </button>
                 )}
                 <button

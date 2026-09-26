@@ -129,6 +129,148 @@ export default function Cafe() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Handle tab refocus / return from Paystack checkout (e.g. user cancelled or pressed Back)
+  useEffect(() => {
+    let checkInterval = null;
+    let isChecking = false;
+
+    const handleReturnToPage = () => {
+      const pendingRef = sessionStorage.getItem('ah_pending_order_ref');
+      const pendingOrderId = sessionStorage.getItem('ah_pending_order_id');
+      const startTimeStr = sessionStorage.getItem('ah_checkout_start_time');
+      const startTime = startTimeStr ? parseInt(startTimeStr, 10) : 0;
+
+      // Only trigger if we actually had a pending checkout session started recently (within 30 mins)
+      if (!pendingRef && !pendingOrderId && confirmationState !== 'redirecting') return;
+      if (startTime && (Date.now() - startTime) > 30 * 60 * 1000) {
+        sessionStorage.removeItem('ah_pending_order_ref');
+        sessionStorage.removeItem('ah_pending_order_id');
+        sessionStorage.removeItem('ah_checkout_start_time');
+        return;
+      }
+
+      // If user came back via URL query parameters (?reference=...), the URL searchParams effect handles it.
+      const urlRef = searchParams.get('reference') || searchParams.get('trxref');
+      if (urlRef) return;
+
+      if (isChecking) return;
+      isChecking = true;
+
+      // Switch modal to verifying state so customer sees active check instead of stuck "redirecting" spinner
+      setConfirmationState('verifying');
+      setShowConfirmation(true);
+
+      const targetRef = pendingRef;
+      const targetOrderId = pendingOrderId;
+      const startedAt = Date.now();
+      const MAX_WAIT_MS = 25000; // 25 seconds timeout
+
+      const cleanupAndFinish = (status, orderData, errData) => {
+        if (checkInterval) {
+          clearInterval(checkInterval);
+          checkInterval = null;
+        }
+        isChecking = false;
+
+        sessionStorage.removeItem('ah_pending_order_ref');
+        sessionStorage.removeItem('ah_pending_order_id');
+        sessionStorage.removeItem('ah_checkout_start_time');
+
+        if (status === 'success') {
+          if (orderData) setConfirmedOrder(orderData);
+          setConfirmationState('success');
+        } else {
+          // Restore cart from backup so user doesn't lose their selected items!
+          try {
+            const backupCartStr = sessionStorage.getItem('ah_backup_cart');
+            if (backupCartStr) {
+              const backupCart = JSON.parse(backupCartStr);
+              if (Array.isArray(backupCart) && backupCart.length > 0) {
+                setCart(backupCart);
+              }
+            }
+          } catch (e) {}
+
+          setConfirmationState('failed');
+          setOrderError(errData || {
+            message: 'Checkout was not completed or confirmation timed out. If you were debited, please wait a few moments before trying again to avoid duplicate charges.'
+          });
+        }
+      };
+
+      const checkPaymentStatus = async () => {
+        try {
+          if (targetRef) {
+            const res = await fetch(`/api/payments/verify/${encodeURIComponent(targetRef)}`);
+            const data = await res.json();
+            
+            if (data.success && (data.status === 'success' || data.order)) {
+              cleanupAndFinish('success', data.order, null);
+              return;
+            } else if (data.status === 'abandoned' || data.status === 'failed') {
+              // Paystack explicitly reported that the transaction was not completed / cancelled
+              cleanupAndFinish('failed', null, {
+                message: data.message || data.gateway_response || 'Payment was cancelled or closed on Paystack.',
+                gateway_response: data.gateway_response
+              });
+              return;
+            }
+          } else if (targetOrderId) {
+            const res = await fetch(`/api/orders/${targetOrderId}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.order?.paymentStatus === 'PAID') {
+                cleanupAndFinish('success', data.order, null);
+                return;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Refocus payment check error:', err);
+        }
+
+        // Check if 25 seconds elapsed
+        if (Date.now() - startedAt >= MAX_WAIT_MS) {
+          cleanupAndFinish('failed', null, {
+            message: 'Checkout was not completed. If you were debited by your bank, please wait a few moments before re-trying to avoid double payments — our system will automatically verify and process your order if funds were captured.'
+          });
+        }
+      };
+
+      // Perform initial check immediately
+      checkPaymentStatus();
+
+      // Poll every 3 seconds for up to 25 seconds
+      checkInterval = setInterval(checkPaymentStatus, 3000);
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handleReturnToPage();
+      }
+    };
+
+    const onWindowFocus = () => {
+      handleReturnToPage();
+    };
+
+    const onPageShow = (e) => {
+      // Handles mobile browser Back-Forward Cache (bfcache)
+      handleReturnToPage();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onWindowFocus);
+    window.addEventListener('pageshow', onPageShow);
+
+    return () => {
+      if (checkInterval) clearInterval(checkInterval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onWindowFocus);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, [confirmationState, searchParams]);
+
   useEffect(() => {
     if (user) {
       setCheckoutForm(prev => ({
@@ -206,6 +348,9 @@ export default function Cafe() {
       if (data.success) {
         if (data.authorizationUrl) {
           sessionStorage.setItem('ah_pending_order_id', data.order?._id || '');
+          sessionStorage.setItem('ah_pending_order_ref', data.order?.paymentReference || '');
+          sessionStorage.setItem('ah_checkout_start_time', Date.now().toString());
+          sessionStorage.setItem('ah_backup_cart', JSON.stringify(cart));
           localStorage.removeItem('aora_cart');
           setCart([]);
           // Give smooth visual feedback with "Redirecting to checkout..." before navigating
@@ -675,6 +820,15 @@ export default function Cafe() {
         onRetry={() => {
           setShowConfirmation(false);
           setIsSubmitting(false);
+          try {
+            const bStr = sessionStorage.getItem('ah_backup_cart');
+            if (bStr) {
+              const bCart = JSON.parse(bStr);
+              if (Array.isArray(bCart) && bCart.length > 0) {
+                setCart(bCart);
+              }
+            }
+          } catch (e) {}
           setShowCart(true);
         }}
       />
