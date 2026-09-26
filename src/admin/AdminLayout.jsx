@@ -167,6 +167,9 @@ export default function AdminLayout() {
               <Link to="/admin/users?tab=staff" className={isLinkActive('/admin/users', 'staff') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
                 <Icon name="classes" size={16} className={styles.navIcon} /> Staff Management
               </Link>
+              <Link to="/admin/users?tab=waiting-list" className={isLinkActive('/admin/users', 'waiting-list') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+                <Icon name="site-content" size={16} className={styles.navIcon} /> Waiting List
+              </Link>
               <Link to="/admin/users?tab=access" className={isLinkActive('/admin/users', 'access') ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
                 <Icon name="settings" size={16} className={styles.navIcon} /> Access Matrix
               </Link>
@@ -185,6 +188,9 @@ export default function AdminLayout() {
               </span>
               <NavLink to="/admin/credit-packs" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
                 <Icon name="credit-packs" size={16} className={styles.navIcon} /> Credit Packs
+              </NavLink>
+              <NavLink to="/admin/export" className={({isActive}) => isActive ? styles.active : ''} onClick={() => setIsMobileMenuOpen(false)}>
+                <Icon name="site-content" size={16} className={styles.navIcon} /> Export Inventory
               </NavLink>
               {isAdmin && (
                 <>

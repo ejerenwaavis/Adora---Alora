@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 // Add timestamps to all console outputs (stdout and stderr)
 ['log', 'error', 'warn', 'info'].forEach((method) => {
   const original = console[method];
@@ -44,8 +44,31 @@ app.use(helmet({
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
+const allowedOrigins = [
+  'https://aorahouse.com',
+  'https://www.aorahouse.com',
+  'https://stage.aorahouse.com',
+  'https://hq.stage.aorahouse.com',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+];
+
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(process.env.CLIENT_URL);
+}
+if (process.env.APP_URL) {
+  allowedOrigins.push(process.env.APP_URL);
+}
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5175',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || (typeof origin === 'string' && (origin.endsWith('.aorahouse.com') || origin.includes('localhost')))) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Form-Token'],

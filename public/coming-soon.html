@@ -26,6 +26,9 @@
 <div class="anim-text relative z-30 mt-12 w-full max-w-sm text-center" style="animation-delay:1.3s">
 <div id="done" class="hidden flex-col items-center gap-3"><span class="flex size-9 items-center justify-center rounded-full bg-rust/10 ring-1 ring-rust/20"><span class="text-rust">✓</span></span><p id="doneMsg" class="font-display text-lg italic text-cocoa"></p></div>
 <form id="form">
+<div style="position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+<input type="text" name="hp_website" id="hp_website" tabindex="-1" autocomplete="off">
+</div>
 <div class="group relative flex items-center rounded-full bg-sand/20 p-1.5 ring-1 ring-black/5 backdrop-blur-md transition-all focus-within:ring-rust/30">
 <input id="email" type="email" required placeholder="Join the private view" aria-label="Email address" class="w-full bg-transparent px-5 py-2.5 text-sm text-cocoa placeholder:text-cocoa/40 focus:outline-none">
 <button id="btn" type="submit" class="shrink-0 rounded-full bg-cocoa px-6 py-2.5 text-[13px] font-medium text-cream ring-1 ring-cocoa transition-all hover:bg-rust hover:ring-rust disabled:opacity-60">Notify me</button>
@@ -42,13 +45,59 @@
 </div>
 </div>
 <script>
-const URL_="https://jnzdcpcwwajqhruxjhoa.supabase.co/rest/v1/waitlist",KEY="sb_publishable_FFWNh67LatOWJcOifiWANQ_41pRdpR7";
-const f=document.getElementById('form'),b=document.getElementById('btn'),n=document.getElementById('note'),e=document.getElementById('email');
+const formLoadTime = Date.now();
+const f=document.getElementById('form'),b=document.getElementById('btn'),n=document.getElementById('note'),e=document.getElementById('email'),hp=document.getElementById('hp_website');
 function done(m){f.style.display='none';const d=document.getElementById('done');d.style.display='flex';document.getElementById('doneMsg').textContent=m;}
-f.addEventListener('submit',async ev=>{ev.preventDefault();const v=e.value.trim().toLowerCase();if(!v)return;b.disabled=true;b.textContent='Sending…';
-try{const r=await fetch(URL_,{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({email:v})});
-if(r.ok)return done("You're on the list. We'll write when the doors open.");
-const j=await r.json().catch(()=>({}));if(j.code==='23505')return done("You're already on the list — we'll be in touch.");throw 0;}
-catch(_){n.textContent='Something went wrong. Please try again.';n.className='mt-4 text-[11px] font-medium uppercase tracking-[0.1em] text-rust';b.disabled=false;b.textContent='Notify me';}});
+f.addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const v=e.value.trim().toLowerCase();
+  if(!v)return;
+  b.disabled=true;
+  b.textContent='Sending…';
+
+  const payload = {
+    email: v,
+    hp_website: hp ? hp.value : '',
+    _ts: formLoadTime,
+    source: 'coming_soon_page'
+  };
+
+  const endpoints = ['/api/waitlist', 'https://stage.aorahouse.com/api/waitlist'];
+  let success = false;
+  let responseMsg = "You're on the list. We'll write when the doors open.";
+
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.success) {
+        success = true;
+        if (data.message) responseMsg = data.message;
+        break;
+      } else if (data.error) {
+        n.textContent = data.error;
+        n.className = 'mt-4 text-[11px] font-medium uppercase tracking-[0.1em] text-rust';
+        b.disabled = false;
+        b.textContent = 'Notify me';
+        return;
+      }
+    } catch (_) {
+      // try next endpoint
+    }
+  }
+
+  if (success) {
+    done(responseMsg);
+  } else {
+    n.textContent = 'Something went wrong. Please try again.';
+    n.className = 'mt-4 text-[11px] font-medium uppercase tracking-[0.1em] text-rust';
+    b.disabled = false;
+    b.textContent = 'Notify me';
+  }
+});
 </script>
 </body></html>

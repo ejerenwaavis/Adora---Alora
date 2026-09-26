@@ -239,4 +239,79 @@ router.get('/search', async (req, res) => {
   }
 });
 
+// ── Waitlist Submission (with Anti-Bot Protection) ──────────────────────
+const Waitlist = require('../models/Waitlist');
+
+router.post('/waitlist', async (req, res) => {
+  try {
+    const { email, hp_website, _ts, source } = req.body;
+
+    // 1. Anti-Bot: Honeypot check (hidden field should always remain blank)
+    if (hp_website && String(hp_website).trim() !== '') {
+      console.warn('[Waitlist Bot Blocked] Honeypot triggered:', { ip: req.ip, hp_website });
+      // Return 200 OK so bot thinks it succeeded
+      return res.status(200).json({
+        success: true,
+        message: "You're on the list. We'll write when the doors open."
+      });
+    }
+
+    // 2. Anti-Bot: Fast-submission check (humans take at least 1.2s to fill form)
+    if (_ts && Number(_ts) > 0) {
+      const elapsedMs = Date.now() - Number(_ts);
+      if (elapsedMs < 1200) {
+        console.warn('[Waitlist Bot Blocked] Submission too fast (<1.2s):', { ip: req.ip, elapsedMs });
+        return res.status(200).json({
+          success: true,
+          message: "You're on the list. We'll write when the doors open."
+        });
+      }
+    }
+
+    // 3. Email validation & normalization
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail) || cleanEmail.length > 100) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    // 4. Duplicate check
+    const existing = await Waitlist.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        message: "You're already on the list — we'll be in touch."
+      });
+    }
+
+    // 5. Save to database
+    await Waitlist.create({
+      email: cleanEmail,
+      source: source || 'coming_soon_page',
+      ipAddress: req.ip || '',
+      userAgent: req.headers['user-agent'] || '',
+      joinedAt: new Date()
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "You're on the list. We'll write when the doors open."
+    });
+  } catch (err) {
+    console.error('[Waitlist Error]', err);
+    if (err.code === 11000) {
+      return res.status(200).json({
+        success: true,
+        message: "You're already on the list — we'll be in touch."
+      });
+    }
+    return res.status(500).json({ error: 'Unable to join waitlist. Please try again later.' });
+  }
+});
+
 module.exports = router;
+

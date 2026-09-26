@@ -108,6 +108,17 @@ export default function UsersCMS() {
     typedText: ''
   });
 
+  // Waitlist States
+  const [waitlistEntries, setWaitlistEntries] = useState([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [waitlistSearch, setWaitlistSearch] = useState('');
+  const [waitlistFilter, setWaitlistFilter] = useState('all');
+  const [waitlistCounts, setWaitlistCounts] = useState({ all: 0, pending: 0, perk_granted: 0, contacted: 0 });
+  const [editingPerkEntry, setEditingPerkEntry] = useState(null);
+  const [perkForm, setPerkForm] = useState({ perkStatus: 'pending', perkNotes: '' });
+  const [addWaitlistModal, setAddWaitlistModal] = useState(false);
+  const [newWaitlistForm, setNewWaitlistForm] = useState({ email: '', perkStatus: 'pending', perkNotes: '' });
+
   const [toastMessage, setToastMessage] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -148,6 +159,126 @@ export default function UsersCMS() {
       setLoading(false);
     }
   }, [authFetch, currentUser]);
+
+  const fetchWaitlist = async () => {
+    setWaitlistLoading(true);
+    try {
+      const q = new URLSearchParams();
+      if (waitlistSearch) q.append('search', waitlistSearch);
+      if (waitlistFilter !== 'all') q.append('perkStatus', waitlistFilter);
+      const res = await authFetch(`/api/admin/waitlist?${q.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWaitlistEntries(data.entries || []);
+        if (data.counts) setWaitlistCounts(data.counts);
+      }
+    } catch (err) {
+      console.error('Waitlist fetch error:', err);
+    } finally {
+      setWaitlistLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTabParam === 'waiting-list' && currentUser?.role === 'admin') {
+      fetchWaitlist();
+    }
+  }, [activeTabParam, waitlistFilter, currentUser]);
+
+  const handlePerkSubmit = async (e) => {
+    e.preventDefault();
+    if (!editingPerkEntry) return;
+    setActionLoading(true);
+    try {
+      const res = await authFetch(`/api/admin/waitlist/${editingPerkEntry._id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(perkForm)
+      });
+      if (res.ok) {
+        showToast('Waitlist perk updated successfully.');
+        setEditingPerkEntry(null);
+        fetchWaitlist();
+      } else {
+        const d = await res.json();
+        showToast(d.error || 'Failed to update perk.', true);
+      }
+    } catch (err) {
+      showToast('Error updating perk.', true);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteWaitlist = async (entry) => {
+    if (!window.confirm(`Remove ${entry.email} from the waiting list?`)) return;
+    try {
+      const res = await authFetch(`/api/admin/waitlist/${entry._id}`, { method: 'DELETE' });
+      if (res.ok) {
+        showToast('Entry removed from waiting list.');
+        fetchWaitlist();
+      } else {
+        const d = await res.json();
+        showToast(d.error || 'Failed to delete entry.', true);
+      }
+    } catch (err) {
+      showToast('Error removing entry.', true);
+    }
+  };
+
+  const handleAddWaitlistSubmit = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const res = await authFetch('/api/admin/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newWaitlistForm)
+      });
+      if (res.ok) {
+        showToast('Subscriber added to waiting list.');
+        setAddWaitlistModal(false);
+        setNewWaitlistForm({ email: '', perkStatus: 'pending', perkNotes: '' });
+        fetchWaitlist();
+      } else {
+        const d = await res.json();
+        showToast(d.error || 'Failed to add subscriber.', true);
+      }
+    } catch (err) {
+      showToast('Error adding subscriber.', true);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const exportWaitlistCSV = async () => {
+    try {
+      const res = await authFetch('/api/admin/waitlist-export');
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aora_house_waiting_list_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        showToast('Waiting list exported to CSV.');
+      } else {
+        showToast('Failed to export waiting list.', true);
+      }
+    } catch (err) {
+      showToast('Error exporting waiting list.', true);
+    }
+  };
+
+  const filteredWaitlistEntries = useMemo(() => {
+    return waitlistEntries.filter(entry => {
+      const matchSearch = !waitlistSearch || entry.email.toLowerCase().includes(waitlistSearch.toLowerCase());
+      const matchFilter = waitlistFilter === 'all' || entry.perkStatus === waitlistFilter;
+      return matchSearch && matchFilter;
+    });
+  }, [waitlistEntries, waitlistSearch, waitlistFilter]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -425,6 +556,10 @@ export default function UsersCMS() {
   };
 
   const exportCSV = () => {
+    if (activeTabParam === 'waiting-list') {
+      exportWaitlistCSV();
+      return;
+    }
     const activeData = activeTabParam === 'staff' ? staffList : filteredMembers;
     if (!activeData || activeData.length === 0) {
       showToast('No user data to export.', true);
@@ -610,6 +745,31 @@ export default function UsersCMS() {
           }}
         >
           Access Control Matrix
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSearchParams({ tab: 'waiting-list' })}
+          style={{
+            background: 'none',
+            border: 'none',
+            borderBottom: activeTabParam === 'waiting-list' ? '2px solid var(--rust)' : '2px solid transparent',
+            color: activeTabParam === 'waiting-list' ? 'var(--rust)' : 'var(--taupe)',
+            fontWeight: activeTabParam === 'waiting-list' ? 600 : 400,
+            fontSize: '0.85rem',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+            padding: '12px 18px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <span>Waiting List</span>
+          <span style={{ fontSize: '0.72rem', background: activeTabParam === 'waiting-list' ? 'rgba(164,69,31,0.12)' : 'var(--line)', color: activeTabParam === 'waiting-list' ? 'var(--rust)' : 'var(--taupe)', padding: '2px 7px', borderRadius: '10px' }}>
+            {waitlistCounts.all || waitlistEntries.length}
+          </span>
         </button>
       </div>
 
@@ -1111,6 +1271,186 @@ export default function UsersCMS() {
         </div>
       )}
 
+      {/* ── TAB 4: WAITING LIST ── */}
+      {activeTabParam === 'waiting-list' && (
+        <div>
+          {/* Waiting List Stats Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ background: '#FFFDF9', border: '1px solid var(--line)', borderRadius: '6px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '4px' }}>Total Subscribers</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 600, color: 'var(--cocoa-deep)', fontFamily: 'var(--f-display)' }}>{waitlistCounts.all}</div>
+            </div>
+            <div style={{ background: '#FFFDF9', border: '1px solid var(--line)', borderRadius: '6px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '4px' }}>Pending Perks</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 600, color: '#C89B4A', fontFamily: 'var(--f-display)' }}>{waitlistCounts.pending}</div>
+            </div>
+            <div style={{ background: '#FFFDF9', border: '1px solid var(--line)', borderRadius: '6px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '4px' }}>Perks Granted</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 600, color: '#2E6B3E', fontFamily: 'var(--f-display)' }}>{waitlistCounts.perk_granted}</div>
+            </div>
+            <div style={{ background: '#FFFDF9', border: '1px solid var(--line)', borderRadius: '6px', padding: '16px 20px' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '4px' }}>Contacted</div>
+              <div style={{ fontSize: '1.8rem', fontWeight: 600, color: 'var(--rust)', fontFamily: 'var(--f-display)' }}>{waitlistCounts.contacted}</div>
+            </div>
+          </div>
+
+          {/* Filters Bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '12px 16px', background: '#F7EFE1', border: '1px solid var(--line)', borderRadius: '4px 4px 0 0', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#FCF8F0', border: '1px solid var(--line)', borderRadius: '3px', padding: '7px 12px', flex: 1, minWidth: '220px' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--taupe)', flexShrink: 0 }}>
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search waitlist by email address..."
+                value={waitlistSearch}
+                onChange={e => setWaitlistSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.85rem', color: 'var(--cocoa-deep)' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '4px', background: '#FCF8F0', padding: '3px', borderRadius: '4px', border: '1px solid var(--line)' }}>
+              {['all', 'pending', 'perk_granted', 'contacted'].map(status => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setWaitlistFilter(status)}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '0.75rem',
+                    textTransform: 'capitalize',
+                    border: 'none',
+                    borderRadius: '3px',
+                    background: waitlistFilter === status ? 'var(--cocoa-deep)' : 'transparent',
+                    color: waitlistFilter === status ? '#FCF8F0' : 'var(--taupe)',
+                    cursor: 'pointer',
+                    fontWeight: waitlistFilter === status ? 600 : 400
+                  }}
+                >
+                  {status.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setAddWaitlistModal(true)}
+              style={{
+                background: 'var(--gold)',
+                color: '#2B2015',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 14px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              + Add Subscriber
+            </button>
+          </div>
+
+          {/* Table */}
+          <div style={{ background: '#FFFDF9', border: '1px solid var(--line)', borderTop: 'none', borderRadius: '0 0 4px 4px', overflowX: 'auto' }}>
+            {waitlistLoading ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--taupe)' }}>Loading waiting list...</div>
+            ) : filteredWaitlistEntries.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--taupe)' }}>No waitlist entries found.</div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.84rem' }}>
+                <thead>
+                  <tr style={{ background: '#FCF8F0', borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--cocoa-deep)' }}>
+                    <th style={{ padding: '12px 16px' }}>Subscriber Email</th>
+                    <th style={{ padding: '12px 16px' }}>Joined Date</th>
+                    <th style={{ padding: '12px 16px' }}>Perk Status</th>
+                    <th style={{ padding: '12px 16px' }}>Perk / Thank-You Notes</th>
+                    <th style={{ padding: '12px 16px' }}>Source</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredWaitlistEntries.map(entry => (
+                    <tr key={entry._id} style={{ borderBottom: '1px solid rgba(227, 211, 184, 0.4)' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
+                        {entry.email}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'var(--taupe)' }}>
+                        {new Date(entry.joinedAt || entry.createdAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </td>
+                      <td style={{ padding: '12px 16px' }}>
+                        <span style={{
+                          padding: '3px 9px',
+                          borderRadius: '12px',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          background: entry.perkStatus === 'perk_granted' ? '#EAF3ED' : entry.perkStatus === 'contacted' ? '#E8EEF8' : '#FAF3D8',
+                          color: entry.perkStatus === 'perk_granted' ? '#2E6B3E' : entry.perkStatus === 'contacted' ? '#1E4A8A' : '#8A6A1E'
+                        }}>
+                          {entry.perkStatus ? entry.perkStatus.replace('_', ' ') : 'pending'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 16px', color: entry.perkNotes ? 'var(--cocoa-deep)' : 'var(--taupe)', fontStyle: entry.perkNotes ? 'normal' : 'italic' }}>
+                        {entry.perkNotes || 'No notes added'}
+                      </td>
+                      <td style={{ padding: '12px 16px', color: 'var(--taupe)', fontSize: '0.78rem' }}>
+                        {entry.source || 'coming_soon_page'}
+                      </td>
+                      <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPerkEntry(entry);
+                              setPerkForm({ perkStatus: entry.perkStatus || 'pending', perkNotes: entry.perkNotes || '' });
+                            }}
+                            style={{
+                              padding: '4px 10px',
+                              background: '#FAF5EC',
+                              border: '1px solid #E8DEC8',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              color: 'var(--cocoa-deep)'
+                            }}
+                          >
+                            Update Perk
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWaitlist(entry)}
+                            style={{
+                              padding: '4px 8px',
+                              background: '#FDF0ED',
+                              border: '1px solid #F5C6BC',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              color: 'var(--rust)'
+                            }}
+                            title="Delete entry"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── MODAL 1: PROVISION STAFF MEMBER ── */}
       {provisionModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(20, 10, 4, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
@@ -1482,6 +1822,127 @@ export default function UsersCMS() {
                   }}
                 >
                   {actionLoading ? 'Executing...' : confirmModal.type === 'delete' ? 'Permanently Delete' : confirmModal.type === 'suspend' ? 'Suspend Account' : 'Reactivate Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ── MODAL: EDIT WAITLIST PERK & NOTES ── */}
+      {editingPerkEntry && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(20, 10, 4, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+          <div style={{ background: '#FFFDF9', borderRadius: '8px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', border: '1px solid rgba(227, 211, 184, 0.8)', overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper)' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--f-display)', fontSize: '1.3rem', color: 'var(--cocoa-deep)', margin: 0 }}>Update Waitlist Perk</h3>
+                <p style={{ color: 'var(--taupe)', fontSize: '0.78rem', margin: '2px 0 0 0' }}>{editingPerkEntry.email}</p>
+              </div>
+              <button type="button" onClick={() => setEditingPerkEntry(null)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--taupe)' }}>✕</button>
+            </div>
+
+            <form onSubmit={handlePerkSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                  Perk Status
+                </label>
+                <select
+                  value={perkForm.perkStatus}
+                  onChange={e => setPerkForm({ ...perkForm, perkStatus: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FCF8F0', fontSize: '0.88rem', color: 'var(--cocoa-deep)' }}
+                >
+                  <option value="pending">Pending (Not yet granted)</option>
+                  <option value="perk_granted">Perk Granted (Founding bonus assigned)</option>
+                  <option value="contacted">Contacted (Email/Invited)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                  Thank-You / Perk Notes
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="e.g. Sent 15% VIP founding voucher via email on Sep 26"
+                  value={perkForm.perkNotes}
+                  onChange={e => setPerkForm({ ...perkForm, perkNotes: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FCF8F0', fontSize: '0.88rem', color: 'var(--cocoa-deep)', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setEditingPerkEntry(null)} className="btn btn-outline" style={{ fontSize: '0.82rem' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.82rem' }}>
+                  {actionLoading ? 'Saving...' : 'Save Perk Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: MANUALLY ADD WAITLIST SUBSCRIBER ── */}
+      {addWaitlistModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(20, 10, 4, 0.65)', backdropFilter: 'blur(4px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+          <div style={{ background: '#FFFDF9', borderRadius: '8px', width: '100%', maxWidth: '480px', boxShadow: '0 20px 40px rgba(0,0,0,0.25)', border: '1px solid rgba(227, 211, 184, 0.8)', overflow: 'hidden' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--line)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper)' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--f-display)', fontSize: '1.3rem', color: 'var(--cocoa-deep)', margin: 0 }}>Add Waitlist Subscriber</h3>
+                <p style={{ color: 'var(--taupe)', fontSize: '0.78rem', margin: '2px 0 0 0' }}>Manually register a founding subscriber</p>
+              </div>
+              <button type="button" onClick={() => setAddWaitlistModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--taupe)' }}>✕</button>
+            </div>
+
+            <form onSubmit={handleAddWaitlistSubmit} style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                  Email Address *
+                </label>
+                <input
+                  required
+                  type="email"
+                  placeholder="subscriber@example.com"
+                  value={newWaitlistForm.email}
+                  onChange={e => setNewWaitlistForm({ ...newWaitlistForm, email: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FCF8F0', fontSize: '0.88rem', color: 'var(--cocoa-deep)' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                  Perk Status
+                </label>
+                <select
+                  value={newWaitlistForm.perkStatus}
+                  onChange={e => setNewWaitlistForm({ ...newWaitlistForm, perkStatus: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FCF8F0', fontSize: '0.88rem', color: 'var(--cocoa-deep)' }}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="perk_granted">Perk Granted</option>
+                  <option value="contacted">Contacted</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe)', marginBottom: '0.4rem', fontWeight: 600 }}>
+                  Initial Perk / Thank-You Note
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="e.g. Registered in person at preview mixer"
+                  value={newWaitlistForm.perkNotes}
+                  onChange={e => setNewWaitlistForm({ ...newWaitlistForm, perkNotes: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid var(--line)', background: '#FCF8F0', fontSize: '0.88rem', color: 'var(--cocoa-deep)', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingTop: '1rem', borderTop: '1px solid var(--line)' }}>
+                <button type="button" onClick={() => setAddWaitlistModal(false)} className="btn btn-outline" style={{ fontSize: '0.82rem' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={actionLoading} className="btn btn-primary" style={{ fontSize: '0.82rem' }}>
+                  {actionLoading ? 'Adding...' : 'Add to Waitlist'}
                 </button>
               </div>
             </form>

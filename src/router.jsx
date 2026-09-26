@@ -44,6 +44,7 @@ import UsersCMS        from './admin/UsersCMS.jsx';
 import WaiversCMS      from './admin/WaiversCMS.jsx';
 import GuestConciergeCMS from './admin/GuestConciergeCMS.jsx';
 import AdminActivityLogs from './admin/ActivityLogs.jsx';
+import ExportCMS         from './admin/ExportCMS.jsx';
 
 // Clerk Dashboard
 import ClerkLayout     from './clerk/ClerkLayout.jsx';
@@ -197,6 +198,7 @@ const internalRouter = createBrowserRouter([
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
       { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
+      { path: 'export', element: <RequireRole roles={['admin', 'content_editor', 'finance']}><ExportCMS /></RequireRole> },
       { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
       { path: 'waivers', element: <RequireRole roles={['admin']}><WaiversCMS /></RequireRole> },
       { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },

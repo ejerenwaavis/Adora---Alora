@@ -531,5 +531,150 @@ router.delete('/users/:id', async (req, res) => {
   }
 });
 
+// ── 9. Waiting List Management ──────────────────────────────────────────
+const Waitlist = require('../models/Waitlist');
+
+// List waitlist entries
+router.get('/waitlist', async (req, res) => {
+  try {
+    const { search, perkStatus, page = 1, limit = 50 } = req.query;
+    const query = {};
+
+    if (search && search.trim()) {
+      query.email = { $regex: search.trim(), $options: 'i' };
+    }
+
+    if (perkStatus && ['pending', 'perk_granted', 'contacted'].includes(perkStatus)) {
+      query.perkStatus = perkStatus;
+    }
+
+    const total = await Waitlist.countDocuments(query);
+    const entries = await Waitlist.find(query)
+      .sort({ joinedAt: -1 })
+      .skip((Number(page) - 1) * Number(limit))
+      .limit(Number(limit));
+
+    const counts = {
+      all: await Waitlist.countDocuments(),
+      pending: await Waitlist.countDocuments({ perkStatus: 'pending' }),
+      perk_granted: await Waitlist.countDocuments({ perkStatus: 'perk_granted' }),
+      contacted: await Waitlist.countDocuments({ perkStatus: 'contacted' }),
+    };
+
+    res.json({
+      entries,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+      counts,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update perk status & notes
+router.patch('/waitlist/:id', async (req, res) => {
+  try {
+    const { perkStatus, perkNotes } = req.body;
+    const updates = {};
+    if (perkStatus && ['pending', 'perk_granted', 'contacted'].includes(perkStatus)) {
+      updates.perkStatus = perkStatus;
+    }
+    if (typeof perkNotes === 'string') {
+      updates.perkNotes = perkNotes.trim();
+    }
+
+    const updated = await Waitlist.findByIdAndUpdate(req.params.id, updates, { new: true });
+    if (!updated) return res.status(404).json({ error: 'Waitlist entry not found.' });
+
+    await ActivityLog.create({
+      user: req.user._id,
+      action: 'waitlist_updated',
+      entityModel: 'Waitlist',
+      entityId: updated._id,
+      description: `Updated waitlist status for ${updated.email} to ${updated.perkStatus}`
+    });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete entry
+router.delete('/waitlist/:id', async (req, res) => {
+  try {
+    const entry = await Waitlist.findByIdAndDelete(req.params.id);
+    if (!entry) return res.status(404).json({ error: 'Waitlist entry not found.' });
+
+    await ActivityLog.create({
+      user: req.user._id,
+      action: 'waitlist_deleted',
+      entityModel: 'Waitlist',
+      entityId: entry._id,
+      description: `Removed ${entry.email} from the waiting list`
+    });
+
+    res.json({ message: 'Entry removed successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Manually add entry
+router.post('/waitlist', async (req, res) => {
+  try {
+    const { email, perkStatus, perkNotes } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email required.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const existing = await Waitlist.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(400).json({ error: 'Email already exists in waiting list.' });
+    }
+
+    const entry = await Waitlist.create({
+      email: cleanEmail,
+      perkStatus: perkStatus || 'pending',
+      perkNotes: perkNotes || '',
+      source: 'admin_manual',
+      joinedAt: new Date()
+    });
+
+    res.status(201).json(entry);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Export waitlist as CSV
+router.get('/waitlist-export', async (req, res) => {
+  try {
+    const entries = await Waitlist.find().sort({ joinedAt: -1 });
+    const rows = [
+      ['Email', 'Joined Date', 'Perk Status', 'Perk Notes', 'Source', 'IP Address'],
+      ...entries.map(e => [
+        `"${e.email}"`,
+        `"${new Date(e.joinedAt).toISOString()}"`,
+        `"${e.perkStatus}"`,
+        `"${(e.perkNotes || '').replace(/"/g, '""')}"`,
+        `"${e.source || ''}"`,
+        `"${e.ipAddress || ''}"`
+      ])
+    ];
+
+    const csvContent = rows.map(r => r.join(',')).join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="aora-house-waitlist-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.status(200).send(csvContent);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
+
 
