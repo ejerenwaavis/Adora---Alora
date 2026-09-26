@@ -121,7 +121,19 @@ export default function ExportCMS() {
 
   const isAllSelected = currentFilteredItems.length > 0 && currentFilteredItems.every(i => currentSelectedSet.has(i._id));
 
-  // CSV Export Logic
+  const downloadFile = (filename, content, mimeType) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  // 1. CSV Export Logic
   const handleExportCSV = () => {
     const selectedItems = currentFilteredItems.filter(item => currentSelectedSet.has(item._id));
     if (selectedItems.length === 0) {
@@ -129,14 +141,15 @@ export default function ExportCMS() {
       return;
     }
 
+    const dateStr = new Date().toISOString().split('T')[0];
+
     if (activeTab === 'cafe') {
       const headers = [
         'ID',
         'Name',
         'Slug',
         'Category',
-        'Price (NGN)',
-        'Price (Kobo)',
+        'Unit Price (NGN)',
         'Glovo / 3rd Party Price (15% Markup NGN)',
         'Available',
         'Dietary Tags',
@@ -160,7 +173,6 @@ export default function ExportCMS() {
           `"${(item.slug || '').replace(/"/g, '""')}"`,
           `"${categoryName.replace(/"/g, '""')}"`,
           naira,
-          kobo,
           glovoMarkupNaira,
           item.isAvailable !== false ? 'YES' : 'NO',
           `"${dietary.replace(/"/g, '""')}"`,
@@ -171,9 +183,10 @@ export default function ExportCMS() {
         ];
       });
 
-      downloadCSV(
-        `aora_house_cafe_products_${new Date().toISOString().split('T')[0]}.csv`,
-        [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+      downloadFile(
+        `aora_house_cafe_products_${dateStr}.csv`,
+        [headers.join(','), ...rows.map(r => r.join(','))].join('\n'),
+        'text/csv;charset=utf-8;'
       );
     } else {
       const headers = [
@@ -183,8 +196,7 @@ export default function ExportCMS() {
         'Fashion Layer',
         'Brand / Designer',
         'Seller Name',
-        'Display Price (NGN)',
-        'Display Price (Kobo)',
+        'Unit Price (NGN)',
         'Third-Party Price (15% Markup NGN)',
         'Available In Store',
         'Availability Note',
@@ -211,7 +223,6 @@ export default function ExportCMS() {
           `"${(item.brand || '').replace(/"/g, '""')}"`,
           `"${(item.sellerName || '').replace(/"/g, '""')}"`,
           naira,
-          kobo,
           markupNaira,
           item.isAvailableInStore !== false ? 'YES' : 'NO',
           `"${(item.availabilityNote || '').replace(/"/g, '""')}"`,
@@ -223,25 +234,174 @@ export default function ExportCMS() {
         ];
       });
 
-      downloadCSV(
-        `aora_house_fashion_inventory_${new Date().toISOString().split('T')[0]}.csv`,
-        [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+      downloadFile(
+        `aora_house_fashion_inventory_${dateStr}.csv`,
+        [headers.join(','), ...rows.map(r => r.join(','))].join('\n'),
+        'text/csv;charset=utf-8;'
       );
     }
 
-    showToast(`Exported ${selectedItems.length} items to CSV successfully.`);
+    showToast(`Exported ${selectedItems.length} items to CSV.`);
   };
 
-  const downloadCSV = (filename, content) => {
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // 2. JSON Export Logic
+  const handleExportJSON = () => {
+    const selectedItems = currentFilteredItems.filter(item => currentSelectedSet.has(item._id));
+    if (selectedItems.length === 0) {
+      showToast('Please select at least one item to export.', true);
+      return;
+    }
+
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    if (activeTab === 'cafe') {
+      const exportData = selectedItems.map(item => {
+        const kobo = Number(item.priceKobo) || 0;
+        const priceNaira = Number((kobo / 100).toFixed(2));
+        const glovoPriceNaira = Number((Math.round(kobo * 1.15) / 100).toFixed(2));
+
+        return {
+          id: item._id,
+          name: item.name,
+          slug: item.slug || '',
+          category: item.category?.name || 'Uncategorized',
+          priceNaira,
+          glovoPriceNaira,
+          isAvailable: item.isAvailable !== false,
+          dietaryTags: item.dietaryTags || [],
+          allergens: item.allergens || [],
+          badge: item.badge || '',
+          description: item.description || '',
+          imageUrl: item.image || ''
+        };
+      });
+
+      downloadFile(
+        `aora_house_cafe_products_${dateStr}.json`,
+        JSON.stringify(exportData, null, 2),
+        'application/json;charset=utf-8;'
+      );
+    } else {
+      const exportData = selectedItems.map(item => {
+        const kobo = Number(item.displayPriceKobo) || 0;
+        const priceNaira = Number((kobo / 100).toFixed(2));
+        const thirdPartyPriceNaira = Number((Math.round(kobo * 1.15) / 100).toFixed(2));
+
+        return {
+          id: item._id,
+          name: item.name,
+          slug: item.slug || '',
+          layer: item.layer?.name || 'Standard',
+          brand: item.brand || '',
+          sellerName: item.sellerName || '',
+          priceNaira,
+          thirdPartyPriceNaira,
+          isAvailableInStore: item.isAvailableInStore !== false,
+          availabilityNote: item.availabilityNote || '',
+          sizes: item.sizes || [],
+          colors: item.colors || [],
+          collectionName: item.collectionName || '',
+          raireListingUrl: item.raireListingUrl || '',
+          description: item.description || '',
+          images: item.images || []
+        };
+      });
+
+      downloadFile(
+        `aora_house_fashion_inventory_${dateStr}.json`,
+        JSON.stringify(exportData, null, 2),
+        'application/json;charset=utf-8;'
+      );
+    }
+
+    showToast(`Exported ${selectedItems.length} items to JSON.`);
   };
+
+  // 3. Plain Text Export Logic
+  const handleExportTXT = () => {
+    const selectedItems = currentFilteredItems.filter(item => currentSelectedSet.has(item._id));
+    if (selectedItems.length === 0) {
+      showToast('Please select at least one item to export.', true);
+      return;
+    }
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    let text = '';
+
+    if (activeTab === 'cafe') {
+      text += `================================================================================\n`;
+      text += `AORA HOUSE — CAFÉ PRODUCTS CATALOG\n`;
+      text += `Export Date: ${dateStr} | Selected Items: ${selectedItems.length}\n`;
+      text += `Third-Party Delivery Pricing: Glovo / Chowdeck (includes +15% markup)\n`;
+      text += `================================================================================\n\n`;
+
+      selectedItems.forEach((item, idx) => {
+        const kobo = Number(item.priceKobo) || 0;
+        const naira = (kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+        const glovoMarkup = (Math.round(kobo * 1.15) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+        const cat = item.category?.name || 'Uncategorized';
+        const dietary = (item.dietaryTags || []).length > 0 ? item.dietaryTags.join(', ') : 'None';
+        const allergens = (item.allergens || []).length > 0 ? item.allergens.join(', ') : 'None';
+
+        text += `${idx + 1}. ${(item.name || '').toUpperCase()}\n`;
+        text += `   Category: ${cat}\n`;
+        text += `   Direct Price: ₦${naira}\n`;
+        text += `   Glovo / 3rd Party (15% Markup): ₦${glovoMarkup}\n`;
+        text += `   Availability: ${item.isAvailable !== false ? 'Available' : 'Unavailable'}\n`;
+        if (item.badge) text += `   Badge: ${item.badge}\n`;
+        text += `   Dietary: ${dietary}\n`;
+        text += `   Allergens: ${allergens}\n`;
+        if (item.description) text += `   Description: ${item.description}\n`;
+        if (item.image) text += `   Image: ${item.image}\n`;
+        text += `\n--------------------------------------------------------------------------------\n\n`;
+      });
+
+      downloadFile(
+        `aora_house_cafe_products_${dateStr}.txt`,
+        text,
+        'text/plain;charset=utf-8;'
+      );
+    } else {
+      text += `================================================================================\n`;
+      text += `AORA HOUSE — FASHION INVENTORY CATALOG\n`;
+      text += `Export Date: ${dateStr} | Selected Items: ${selectedItems.length}\n`;
+      text += `Third-Party Retail Pricing: Raire / Wholesale (includes +15% markup)\n`;
+      text += `================================================================================\n\n`;
+
+      selectedItems.forEach((item, idx) => {
+        const kobo = Number(item.displayPriceKobo) || 0;
+        const naira = (kobo / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+        const markup = (Math.round(kobo * 1.15) / 100).toLocaleString('en-NG', { minimumFractionDigits: 2 });
+        const layer = item.layer?.name || 'Standard';
+        const sizes = (item.sizes || []).length > 0 ? item.sizes.join(', ') : 'Free Size';
+        const colors = (item.colors || []).length > 0 ? item.colors.join(', ') : 'Standard';
+
+        text += `${idx + 1}. ${(item.name || '').toUpperCase()}\n`;
+        text += `   Fashion Layer: ${layer}\n`;
+        if (item.brand) text += `   Brand: ${item.brand}\n`;
+        if (item.sellerName) text += `   Featured Seller: ${item.sellerName}\n`;
+        text += `   Direct Price: ₦${naira}\n`;
+        text += `   Third-Party Retail (+15%): ₦${markup}\n`;
+        text += `   In-Store Availability: ${item.isAvailableInStore !== false ? 'YES' : 'Out of Stock'}${item.availabilityNote ? ` (${item.availabilityNote})` : ''}\n`;
+        text += `   Sizes: ${sizes}\n`;
+        text += `   Colors: ${colors}\n`;
+        if (item.collectionName) text += `   Collection: ${item.collectionName}\n`;
+        if (item.raireListingUrl) text += `   Raire Link: ${item.raireListingUrl}\n`;
+        if (item.description) text += `   Description: ${item.description}\n`;
+        text += `\n--------------------------------------------------------------------------------\n\n`;
+      });
+
+      downloadFile(
+        `aora_house_fashion_inventory_${dateStr}.txt`,
+        text,
+        'text/plain;charset=utf-8;'
+      );
+    }
+
+    showToast(`Exported ${selectedItems.length} items to Plain Text.`);
+  };
+
+  const selectedCount = currentFilteredItems.filter(i => currentSelectedSet.has(i._id)).length;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', paddingBottom: '3rem' }}>
@@ -259,27 +419,94 @@ export default function ExportCMS() {
           </p>
         </div>
 
-        <button
-          onClick={handleExportCSV}
-          disabled={loading || currentFilteredItems.filter(i => currentSelectedSet.has(i._id)).length === 0}
-          style={{
-            background: 'var(--cocoa-deep)',
-            color: '#FCF8F0',
-            border: 'none',
-            padding: '11px 22px',
-            borderRadius: '6px',
-            fontSize: '0.88rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-          }}
-        >
-          <Icon name="site-content" size={16} />
-          Export Selected ({currentFilteredItems.filter(i => currentSelectedSet.has(i._id)).length}) to CSV
-        </button>
+        {/* Multi-Format Export Buttons */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* CSV */}
+          <button
+            onClick={handleExportCSV}
+            disabled={loading || selectedCount === 0}
+            title="Download spreadsheet in CSV format"
+            style={{
+              background: 'var(--cocoa-deep)',
+              color: '#FCF8F0',
+              border: 'none',
+              padding: '10px 18px',
+              borderRadius: '6px',
+              fontSize: '0.86rem',
+              fontWeight: 600,
+              cursor: (loading || selectedCount === 0) ? 'not-allowed' : 'pointer',
+              opacity: (loading || selectedCount === 0) ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="8" y1="13" x2="16" y2="13" />
+              <line x1="8" y1="17" x2="16" y2="17" />
+            </svg>
+            Export CSV ({selectedCount})
+          </button>
+
+          {/* JSON */}
+          <button
+            onClick={handleExportJSON}
+            disabled={loading || selectedCount === 0}
+            title="Download structured data in JSON format"
+            style={{
+              background: '#FFFDF9',
+              color: 'var(--cocoa-deep)',
+              border: '1px solid rgba(227, 211, 184, 0.9)',
+              padding: '10px 16px',
+              borderRadius: '6px',
+              fontSize: '0.86rem',
+              fontWeight: 600,
+              cursor: (loading || selectedCount === 0) ? 'not-allowed' : 'pointer',
+              opacity: (loading || selectedCount === 0) ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px'
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>
+            JSON
+          </button>
+
+          {/* Plain Text */}
+          <button
+            onClick={handleExportTXT}
+            disabled={loading || selectedCount === 0}
+            title="Download human-readable plain text catalog"
+            style={{
+              background: '#FFFDF9',
+              color: 'var(--cocoa-deep)',
+              border: '1px solid rgba(227, 211, 184, 0.9)',
+              padding: '10px 16px',
+              borderRadius: '6px',
+              fontSize: '0.86rem',
+              fontWeight: 600,
+              cursor: (loading || selectedCount === 0) ? 'not-allowed' : 'pointer',
+              opacity: (loading || selectedCount === 0) ? 0.6 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px'
+            }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="17" y1="10" x2="3" y2="10" />
+              <line x1="21" y1="6" x2="3" y2="6" />
+              <line x1="21" y1="14" x2="3" y2="14" />
+              <line x1="17" y1="18" x2="3" y2="18" />
+            </svg>
+            Plain Text
+          </button>
+        </div>
       </div>
 
       {/* Pricing Conversion Notice Banner */}
@@ -293,10 +520,15 @@ export default function ExportCMS() {
         alignItems: 'flex-start',
         gap: '12px'
       }}>
-        <div style={{ color: 'var(--rust)', fontSize: '18px', lineHeight: 1 }}>ℹ</div>
+        <div style={{ color: 'var(--rust)', display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+        </div>
         <div style={{ fontSize: '0.85rem', color: '#5A4636', lineHeight: 1.55 }}>
-          <strong>Currency Precision Guard:</strong> All prices are stored natively in <strong>Kobo integers</strong> (smallest unit) in MongoDB.
-          Exported spreadsheets automatically compute both exact <strong>Naira (₦)</strong> amounts (<code>Kobo ÷ 100</code>) and third-party delivery markups (e.g. <code>Glovo +15%</code>) so external partner sync has zero pricing discrepancy.
+          <strong>Direct Naira Pricing:</strong> All catalog prices are unified directly in <strong>Naira (₦)</strong> alongside calculated <strong>third-party delivery/partner markups (+15%)</strong> for seamless export to external delivery and retail platforms (Glovo, Chowdeck, Raire).
         </div>
       </div>
 
@@ -437,8 +669,7 @@ export default function ExportCMS() {
                   </th>
                   <th style={{ padding: '12px 14px' }}>Item</th>
                   <th style={{ padding: '12px 14px' }}>{activeTab === 'cafe' ? 'Category' : 'Layer'}</th>
-                  <th style={{ padding: '12px 14px' }}>Display Price (₦)</th>
-                  <th style={{ padding: '12px 14px' }}>Raw Kobo</th>
+                  <th style={{ padding: '12px 14px' }}>Unit Price (₦)</th>
                   <th style={{ padding: '12px 14px' }}>Glovo / 3rd Party (₦)</th>
                   <th style={{ padding: '12px 14px' }}>Status</th>
                 </tr>
@@ -498,10 +729,6 @@ export default function ExportCMS() {
 
                       <td style={{ padding: '12px 14px', fontWeight: 600, color: 'var(--cocoa-deep)' }}>
                         ₦{naira}
-                      </td>
-
-                      <td style={{ padding: '12px 14px', color: 'var(--taupe)', fontFamily: 'monospace' }}>
-                        {kobo.toLocaleString()}
                       </td>
 
                       <td style={{ padding: '12px 14px', color: '#2E6B3E', fontWeight: 500 }}>

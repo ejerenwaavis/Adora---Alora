@@ -223,7 +223,22 @@ export default function AdminDashboard() {
                 {metrics.highlights.pendingTakeoutOrders} Pending
               </div>
             </div>
-            <span style={{ fontSize: '1.4rem' }}>🛍️</span>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: (metrics.highlights.pendingTakeoutOrders > 0) ? 'rgba(184, 95, 60, 0.12)' : 'rgba(155, 129, 111, 0.08)',
+              color: (metrics.highlights.pendingTakeoutOrders > 0) ? 'var(--rust, #B85F3C)' : 'var(--taupe)'
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                <path d="M3 6h18" />
+                <path d="M16 10a4 4 0 0 1-8 0" />
+              </svg>
+            </div>
           </Link>
 
           {/* Highlight 2: Unread Enquiries */}
@@ -247,7 +262,21 @@ export default function AdminDashboard() {
                 {metrics.highlights.unreadEnquiries} Unread
               </div>
             </div>
-            <span style={{ fontSize: '1.4rem' }}>✉️</span>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: (metrics.highlights.unreadEnquiries > 0) ? 'rgba(200, 155, 74, 0.14)' : 'rgba(155, 129, 111, 0.08)',
+              color: (metrics.highlights.unreadEnquiries > 0) ? 'var(--gold, #C89B4A)' : 'var(--taupe)'
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+            </div>
           </Link>
 
           {/* Highlight 3: Failed Payments */}
@@ -271,7 +300,21 @@ export default function AdminDashboard() {
                 {metrics.highlights.failedPayments > 0 ? `${metrics.highlights.failedPayments} Action Needed` : 'All Clear ✓'}
               </div>
             </div>
-            <span style={{ fontSize: '1.4rem' }}>💳</span>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: (metrics.highlights.failedPayments > 0) ? 'rgba(139, 32, 32, 0.12)' : 'rgba(46, 107, 62, 0.1)',
+              color: (metrics.highlights.failedPayments > 0) ? '#8B2020' : '#2E6B3E'
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="20" height="14" x="2" y="5" rx="2" />
+                <line x1="2" x2="22" y1="10" y2="10" />
+              </svg>
+            </div>
           </Link>
 
           {/* Highlight 4: Upcoming Classes */}
@@ -295,7 +338,24 @@ export default function AdminDashboard() {
                 {metrics.highlights.upcomingClasses} Scheduled
               </div>
             </div>
-            <span style={{ fontSize: '1.4rem' }}>🧘</span>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(65, 79, 54, 0.1)',
+              color: 'var(--forest, #414F36)'
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="18" height="18" x="3" y="4" rx="2" />
+                <line x1="16" x2="16" y1="2" y2="6" />
+                <line x1="8" x2="8" y1="2" y2="6" />
+                <line x1="3" x2="21" y1="10" y2="10" />
+                <path d="m9 16 2 2 4-4" />
+              </svg>
+            </div>
           </Link>
         </div>
       )}
