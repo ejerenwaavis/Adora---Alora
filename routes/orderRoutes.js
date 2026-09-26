@@ -42,7 +42,7 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
 
     if (paystackKey && !paystackKey.includes('replace') && paystackKey.length > 20) {
       try {
-        const callbackUrl = `${req.protocol}://${req.get('host')}/payment/verify`;
+        const callbackUrl = `${req.protocol}://${req.get('host')}/cafe?reference=${orderRef}`;
         const reference = `aora_order_${newOrder._id}_${Date.now()}`;
 
         const paystackRes = await fetch('https://api.paystack.co/transaction/initialize', {

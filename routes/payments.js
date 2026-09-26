@@ -68,6 +68,7 @@ async function fulfillPayment(data, app) {
         amountNaira: order.totalAmountKobo / 100,
         customerName: order.customerName,
         orderId: order._id,
+        order,
         orderNumber: order.orderNumber || order._id.toString().slice(-6).toUpperCase(),
         redirectUrl: `/cafe?orderSuccess=true&orderId=${order._id}`
       };

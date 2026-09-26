@@ -32,9 +32,14 @@ export default function PaymentVerify() {
         if (!isMounted) return;
 
         if (data.success && data.status === 'success') {
+          if (refreshUser) refreshUser();
+          if (data.redirectUrl) {
+            // Forward immediately to destination so user doesn't see a duplicate receipt page!
+            navigate(data.redirectUrl, { replace: true });
+            return;
+          }
           setStatus('success');
           setResult(data);
-          if (refreshUser) refreshUser();
         } else {
           setStatus('failed');
           setResult(data);
@@ -137,7 +142,10 @@ export default function PaymentVerify() {
                 background: 'rgba(244, 234, 224, 0.5)',
                 padding: '4px 10px',
                 borderRadius: '4px',
-                display: 'inline-block'
+                display: 'inline-block',
+                wordBreak: 'break-all',
+                overflowWrap: 'anywhere',
+                maxWidth: '92%'
               }}>
                 Ref: {reference}
               </div>
@@ -199,9 +207,23 @@ export default function PaymentVerify() {
               marginBottom: '1.5rem',
               fontSize: '0.88rem'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: 'var(--taupe, #9B816F)' }}>Transaction Ref:</span>
-                <span style={{ fontWeight: 600, color: 'var(--cocoa-deep, #2C221E)', fontFamily: 'monospace' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'flex-start',
+                gap: '12px',
+                marginBottom: '0.5rem' 
+              }}>
+                <span style={{ color: 'var(--taupe, #9B816F)', flexShrink: 0 }}>Transaction Ref:</span>
+                <span style={{ 
+                  fontWeight: 600, 
+                  color: 'var(--cocoa-deep, #2C221E)', 
+                  fontFamily: 'monospace',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'anywhere',
+                  textAlign: 'right',
+                  maxWidth: '65%'
+                }}>
                   {result?.reference || reference}
                 </span>
               </div>
@@ -340,7 +362,15 @@ export default function PaymentVerify() {
             </div>
 
             {reference && (
-              <p style={{ fontSize: '0.8rem', color: 'var(--taupe, #9B816F)', marginBottom: '1.5rem', fontFamily: 'monospace' }}>
+              <p style={{ 
+                fontSize: '0.8rem', 
+                color: 'var(--taupe, #9B816F)', 
+                marginBottom: '1.5rem', 
+                fontFamily: 'monospace',
+                wordBreak: 'break-all',
+                overflowWrap: 'anywhere',
+                padding: '0 1rem'
+              }}>
                 Reference ID: {reference}
               </p>
             )}

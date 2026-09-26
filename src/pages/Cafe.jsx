@@ -29,6 +29,8 @@ export default function Cafe() {
   const [showCart, setShowCart] = useState(false);
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationState, setConfirmationState] = useState('success');
+  const [orderError, setOrderError] = useState(null);
   const [honeypot, setHoneypot] = useState({});
   
   const { user } = useAuth();
@@ -41,26 +43,89 @@ export default function Cafe() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Check if redirected from Paystack verification with orderSuccess=true
+  // Check if redirected from Paystack or verify callback
   useEffect(() => {
+    const ref = searchParams.get('reference') || searchParams.get('trxref');
     const isSuccess = searchParams.get('orderSuccess') === 'true';
     const orderIdParam = searchParams.get('orderId');
+
+    if (ref) {
+      localStorage.removeItem('aora_cart');
+      setCart([]);
+      setConfirmationState('verifying');
+      setShowConfirmation(true);
+
+      fetch(`/api/payments/verify/${encodeURIComponent(ref)}`)
+        .then(res => res.json())
+        .then(async (data) => {
+          if (data.success && (data.status === 'success' || data.order)) {
+            let orderData = data.order;
+            if (!orderData && data.orderId) {
+              try {
+                const ordRes = await fetch(`/api/orders/${data.orderId}`);
+                if (ordRes.ok) {
+                  const ordJson = await ordRes.json();
+                  orderData = ordJson.order;
+                }
+              } catch (e) {
+                console.warn('Could not fetch full order details:', e);
+              }
+            }
+            if (orderData) {
+              setConfirmedOrder(orderData);
+            } else {
+              setConfirmedOrder({
+                orderNumber: data.orderNumber || `#AH-${ref.slice(-6).toUpperCase()}`,
+                customerName: data.customerName || user?.firstName || 'Aora Guest',
+                totalAmountKobo: (data.amountNaira || 0) * 100,
+                items: []
+              });
+            }
+            setConfirmationState('success');
+          } else {
+            setConfirmationState('failed');
+            setOrderError({
+              message: data.message || data.gateway_response || 'Payment was not completed by the bank.',
+              gateway_response: data.gateway_response
+            });
+          }
+        })
+        .catch(err => {
+          console.error('Verification error on cafe page:', err);
+          setConfirmationState('failed');
+          setOrderError({ message: 'Unable to verify payment with the server. Please check your account or contact concierge.' });
+        })
+        .finally(() => {
+          setSearchParams({}, { replace: true });
+        });
+      return;
+    }
 
     if (isSuccess && orderIdParam) {
       localStorage.removeItem('aora_cart');
       setCart([]);
+      setConfirmationState('verifying');
+      setShowConfirmation(true);
 
       fetch(`/api/orders/${orderIdParam}`)
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data && data.order) {
             setConfirmedOrder(data.order);
-            setShowConfirmation(true);
+            setConfirmationState('success');
+          } else {
+            setConfirmationState('failed');
+            setOrderError({ message: 'Order was placed but receipt details could not be retrieved.' });
           }
         })
-        .catch(err => console.warn('Could not load confirmed order:', err));
-
-      setSearchParams({}, { replace: true });
+        .catch(err => {
+          console.warn('Could not load confirmed order:', err);
+          setConfirmationState('failed');
+          setOrderError({ message: 'Could not load order details.' });
+        })
+        .finally(() => {
+          setSearchParams({}, { replace: true });
+        });
     }
   }, [searchParams, setSearchParams]);
 
@@ -101,6 +166,16 @@ export default function Cafe() {
     e.preventDefault();
     if (cart.length === 0) return;
     setIsSubmitting(true);
+    setOrderError(null);
+    setConfirmationState('redirecting');
+    setConfirmedOrder({
+      totalAmountKobo: cartTotal,
+      customerName: checkoutForm.name,
+      customerPhone: checkoutForm.phone,
+      items: [...cart]
+    });
+    setShowCart(false);
+    setShowConfirmation(true);
     
     try {
       const token = localStorage.getItem('aa_access_token');
@@ -133,9 +208,10 @@ export default function Cafe() {
           sessionStorage.setItem('ah_pending_order_id', data.order?._id || '');
           localStorage.removeItem('aora_cart');
           setCart([]);
-          setShowCart(false);
-          // Redirect directly to Paystack secure checkout
-          window.location.href = data.authorizationUrl;
+          // Give smooth visual feedback with "Redirecting to checkout..." before navigating
+          setTimeout(() => {
+            window.location.href = data.authorizationUrl;
+          }, 600);
           return;
         }
 
@@ -148,19 +224,21 @@ export default function Cafe() {
           totalAmountKobo: cartTotal
         });
         setCart([]);
-        setShowCart(false);
-        setShowConfirmation(true);
+        setConfirmationState('success');
+        setIsSubmitting(false);
         setCheckoutForm({ 
           name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '', 
           phone: user?.phone || '', 
           email: user?.email || '' 
         });
       } else {
-        toast.error(data.error || 'Failed to place order.');
+        setConfirmationState('failed');
+        setOrderError({ message: data.error || 'Failed to place order.' });
+        setIsSubmitting(false);
       }
     } catch (err) {
-      toast.error('Network error placing order. Please check your connection.');
-    } finally {
+      setConfirmationState('failed');
+      setOrderError({ message: 'Network error placing order. Please check your connection.' });
       setIsSubmitting(false);
     }
   };
@@ -587,8 +665,18 @@ export default function Cafe() {
       {/* 9. Order Confirmation Modal */}
       <OrderConfirmationModal
         isOpen={showConfirmation}
-        onClose={() => setShowConfirmation(false)}
-        order={confirmedOrder}
+        onClose={() => {
+          setShowConfirmation(false);
+          setIsSubmitting(false);
+        }}
+        order={confirmedOrder || { totalAmountKobo: cartTotal }}
+        state={confirmationState}
+        error={orderError}
+        onRetry={() => {
+          setShowConfirmation(false);
+          setIsSubmitting(false);
+          setShowCart(true);
+        }}
       />
     </div>
   );
