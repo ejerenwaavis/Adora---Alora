@@ -1,4 +1,4 @@
-﻿const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 
 const supportTicketSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -16,7 +16,7 @@ const supportTicketSchema = new mongoose.Schema({
   messages: [{
     senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     senderName: { type: String, required: true },
-    senderRole: { type: String, enum: ['user', 'admin', 'concierge'], default: 'user' },
+    senderRole: { type: String, enum: ['user', 'admin', 'concierge', 'clerk'], default: 'user' },
     text: { type: String, required: true },
     createdAt: { type: Date, default: Date.now },
     isRead: { type: Boolean, default: false }

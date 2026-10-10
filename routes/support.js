@@ -15,11 +15,11 @@ router.get('/my-tickets', requireAuth, async (req, res) => {
         _id: v._id,
         isVenue: true,
         type: 'Venue Enquiry',
-        subject: `Venue: ${v.space || 'General'} (${v.eventType || 'Event'})`,
+        subject: `Venue: ${v.spacePreference || 'General'} (${v.eventType || 'Event'})`,
         status: v.status,
         updatedAt: v.updatedAt,
         createdAt: v.createdAt,
-        messages: v.messages
+        messages: v.messages || []
       })),
       ...tickets.map(t => ({
         _id: t._id,
@@ -29,19 +29,90 @@ router.get('/my-tickets', requireAuth, async (req, res) => {
         status: t.status,
         updatedAt: t.updatedAt,
         createdAt: t.createdAt,
-        messages: t.messages
+        messages: t.messages || []
       }))
     ];
 
-    merged.sort((a, b) => b.updatedAt - a.updatedAt);
+    merged.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
     res.json(merged);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Admin: Get ALL tickets and enquiries
-router.get('/admin', requireAuth, requireRole(['admin', 'clerk']), async (req, res) => {
+// Concierge CMS: Get ALL tickets and enquiries with optional status filter
+router.get('/concierge-requests', requireAuth, requireRole('admin', 'concierge', 'clerk'), async (req, res) => {
+  try {
+    const { status } = req.query;
+    let venueFilter = {};
+    let ticketFilter = {};
+
+    if (status && status !== 'all') {
+      if (status === 'new') {
+        venueFilter.status = 'new';
+        ticketFilter.status = '__none__';
+      } else if (status === 'open') {
+        ticketFilter.status = 'open';
+        venueFilter.status = '__none__';
+      } else if (status === 'in_progress') {
+        venueFilter.status = { $in: ['awaiting_reply', 'quoted'] };
+        ticketFilter.status = 'in_progress';
+      } else if (status === 'resolved') {
+        venueFilter.status = { $in: ['resolved', 'confirmed'] };
+        ticketFilter.status = 'resolved';
+      } else if (status === 'closed') {
+        venueFilter.status = { $in: ['closed', 'declined'] };
+        ticketFilter.status = 'closed';
+      } else {
+        venueFilter.status = status;
+        ticketFilter.status = status;
+      }
+    }
+
+    const venues = venueFilter.status === '__none__' 
+      ? [] 
+      : await VenueEnquiry.find(venueFilter).sort({ updatedAt: -1 }).lean();
+
+    const tickets = ticketFilter.status === '__none__'
+      ? []
+      : await SupportTicket.find(ticketFilter).populate('user', 'firstName lastName email').sort({ updatedAt: -1 }).lean();
+
+    const merged = [
+      ...venues.map(v => ({
+        _id: v._id,
+        isVenue: true,
+        type: 'Venue Enquiry',
+        subject: `Venue: ${v.spacePreference || 'General'} (${v.eventType || 'Event'})`,
+        user: { firstName: v.firstName, lastName: v.lastName, email: v.email, phone: v.phone },
+        status: v.status,
+        createdAt: v.createdAt,
+        updatedAt: v.updatedAt,
+        messages: v.messages || [],
+        originalData: v
+      })),
+      ...tickets.map(t => ({
+        _id: t._id,
+        isVenue: false,
+        type: t.type || 'Support Ticket',
+        subject: t.subject,
+        user: t.user ? { firstName: t.user.firstName, lastName: t.user.lastName, email: t.user.email } : { firstName: 'Guest', lastName: '', email: '' },
+        status: t.status,
+        createdAt: t.createdAt,
+        updatedAt: t.updatedAt,
+        messages: t.messages || [],
+        originalData: t
+      }))
+    ];
+
+    merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json(merged);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Admin: Legacy merged endpoint
+router.get('/admin', requireAuth, requireRole('admin', 'concierge', 'clerk'), async (req, res) => {
   try {
     const venues = await VenueEnquiry.find().sort({ updatedAt: -1 }).lean();
     const tickets = await SupportTicket.find().populate('user', 'firstName lastName email').sort({ updatedAt: -1 }).lean();
@@ -51,11 +122,13 @@ router.get('/admin', requireAuth, requireRole(['admin', 'clerk']), async (req, r
         _id: v._id,
         isVenue: true,
         type: 'Venue Enquiry',
-        subject: `Venue: ${v.space || 'General'} (${v.eventType || 'Event'})`,
+        subject: `Venue: ${v.spacePreference || 'General'} (${v.eventType || 'Event'})`,
         user: { firstName: v.firstName, lastName: v.lastName, email: v.email },
         status: v.status,
         createdAt: v.createdAt,
         updatedAt: v.updatedAt,
+        messages: v.messages || [],
+        originalData: v
       })),
       ...tickets.map(t => ({
         _id: t._id,
@@ -66,10 +139,12 @@ router.get('/admin', requireAuth, requireRole(['admin', 'clerk']), async (req, r
         status: t.status,
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
+        messages: t.messages || [],
+        originalData: t
       }))
     ];
 
-    merged.sort((a, b) => b.updatedAt - a.updatedAt);
+    merged.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
     res.json(merged);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -79,8 +154,9 @@ router.get('/admin', requireAuth, requireRole(['admin', 'clerk']), async (req, r
 // Create new Support Ticket
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { subject, type, message } = req.body;
-    if (!subject || !message) return res.status(400).json({ error: 'Subject and message are required' });
+    const { subject, type, message, text } = req.body;
+    const messageText = (message || text || '').trim();
+    if (!subject || !messageText) return res.status(400).json({ error: 'Subject and message are required' });
 
     const ticket = new SupportTicket({
       user: req.user._id,
@@ -88,9 +164,12 @@ router.post('/', requireAuth, async (req, res) => {
       type: type || 'General Message',
       status: 'open',
       messages: [{
-        sender: 'user',
-        senderName: `${req.user.firstName} ${req.user.lastName}`,
-        message
+        senderId: req.user._id,
+        senderName: `${req.user.firstName} ${req.user.lastName}`.trim(),
+        senderRole: 'user',
+        text: messageText,
+        createdAt: new Date(),
+        isRead: false
       }]
     });
     
@@ -101,51 +180,60 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// Reply to Ticket (User or Admin)
+// Reply to Ticket (User or Admin/Concierge)
 router.post('/:id/message', requireAuth, async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message) return res.status(400).json({ error: 'Message cannot be empty' });
+    const text = (req.body.text || req.body.message || '').trim();
+    if (!text) return res.status(400).json({ error: 'Message cannot be empty' });
 
     const ticket = await SupportTicket.findById(req.params.id);
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-    const isAdmin = ['admin', 'clerk'].includes(req.user.role);
+    const isStaff = ['admin', 'clerk', 'concierge'].includes(req.user.role);
     
     // Auth check
-    if (!isAdmin && ticket.user.toString() !== req.user.id) {
+    if (!isStaff && ticket.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
     ticket.messages.push({
-      sender: isAdmin ? 'admin' : 'user',
-      senderName: isAdmin ? `Aora House (${req.user.firstName})` : `${req.user.firstName} ${req.user.lastName}`,
-      message
+      senderId: req.user._id,
+      senderName: isStaff ? `Aora House (${req.user.firstName})` : `${req.user.firstName} ${req.user.lastName}`.trim(),
+      senderRole: isStaff ? (req.user.role === 'admin' ? 'admin' : 'concierge') : 'user',
+      text,
+      createdAt: new Date(),
+      isRead: false
     });
 
-    if (isAdmin && ticket.status === 'open') {
-      ticket.status = 'in-progress';
-    } else if (!isAdmin && ticket.status === 'closed') {
+    if (isStaff && ticket.status === 'open') {
+      ticket.status = 'in_progress';
+    } else if (!isStaff && ticket.status === 'closed') {
       ticket.status = 'open'; // Reopen on user reply
     }
 
     await ticket.save();
-    res.json(ticket);
+    res.json({ success: true, ticket });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Admin: Change ticket status
-router.patch('/:id/status', requireAuth, requireRole(['admin', 'clerk']), async (req, res) => {
+// Admin / Concierge: Change ticket status (supports both PATCH and PUT)
+const updateStatusHandler = async (req, res) => {
   try {
     const { status } = req.body;
+    if (!status) return res.status(400).json({ error: 'Status is required' });
+
     const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-    res.json(ticket);
+    res.json({ success: true, ticket });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+
+router.route('/:id/status')
+  .patch(requireAuth, requireRole('admin', 'clerk', 'concierge'), updateStatusHandler)
+  .put(requireAuth, requireRole('admin', 'clerk', 'concierge'), updateStatusHandler);
 
 module.exports = router;

@@ -86,6 +86,12 @@ export default function ClerkLayout() {
         </div>
         
         <nav className="sb-nav">
+          <Link to="/admin" className="sb-item" style={{ marginBottom: '12px', color: 'var(--gold, #C89B4A)', fontWeight: 600, border: '1px solid rgba(200, 155, 74, 0.3)', borderRadius: '6px' }} onClick={closeDrawer}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Admin Center
+          </Link>
           <div className="sb-section">Today</div>
           <NavLink to="/clerk" end className={({ isActive }) => `sb-item ${isActive ? 'active' : ''}`} onClick={closeDrawer}>
             <i className="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IconCreditCard, IconGraph, IconLogout } from '../components/ui/LineIcons';
 
@@ -23,9 +23,29 @@ export default function FinanceLayout() {
         flexDirection: 'column',
         padding: '24px 0'
       }}>
-        <div style={{ padding: '0 24px', marginBottom: '32px' }}>
+        <div style={{ padding: '0 24px', marginBottom: '20px' }}>
           <div style={{ fontFamily: 'var(--f-display)', fontSize: '20px', fontWeight: 600, color: 'var(--gold-light, #E3D3B8)' }}>Aora House</div>
           <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'rgba(247,239,225,0.6)', marginTop: '4px' }}>Financial Operations</div>
+        </div>
+
+        {/* Back to HQ Admin */}
+        <div style={{ padding: '0 12px', marginBottom: '16px' }}>
+          <Link
+            to="/admin"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px',
+              borderRadius: '6px', textDecoration: 'none',
+              background: 'rgba(227, 211, 184, 0.1)',
+              color: 'var(--gold-light, #E3D3B8)',
+              border: '1px solid rgba(227, 211, 184, 0.25)',
+              fontSize: '12px', fontWeight: 600, transition: 'all 0.2s'
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back to Admin Center
+          </Link>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 12px', flex: 1 }}>

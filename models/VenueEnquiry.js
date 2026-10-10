@@ -27,7 +27,7 @@ const venueEnquirySchema = new mongoose.Schema({
   // ── Admin pipeline ──
   status: {
     type: String,
-    enum: ['new', 'viewed', 'quoted', 'confirmed', 'declined', 'awaiting_reply'],
+    enum: ['new', 'viewed', 'quoted', 'confirmed', 'declined', 'awaiting_reply', 'resolved', 'closed'],
     default: 'new',
   },
   adminNotes:  { type: String },

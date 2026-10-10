@@ -47,14 +47,27 @@ async function send({ to, subject, html, text, attachments, bcc }) {
   const t = getTransport();
   const fromAddress = process.env.FROM_EMAIL || '"Aora House" <hello@adoraalora.com>';
   const replyToAddress = process.env.REPLY_TO || 'hello@adoraalora.com';
+
+  // Generate unique RFC 5322 Message-ID aligned with sending domain
+  const domainMatch = fromAddress.match(/@([a-zA-Z0-9.-]+)/);
+  const sendingDomain = domainMatch ? domainMatch[1] : 'aorahouse.com';
+  const messageId = `<${Date.now()}.${Math.random().toString(36).substring(2, 11)}@${sendingDomain}>`;
+
   return t.sendMail({
-    from:    fromAddress,
-    replyTo: replyToAddress,
+    from:        fromAddress,
+    replyTo:     replyToAddress,
     to,
-    bcc:     bccList.length > 0 ? bccList : undefined,
+    bcc:         bccList.length > 0 ? bccList : undefined,
     subject,
     html,
-    text: text || html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
+    text:        text || html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim(),
+    messageId,
+    date:        new Date(),
+    headers: {
+      'Auto-Submitted': 'auto-generated',
+      'X-Auto-Response-Suppress': 'All',
+      'X-Entity-Ref-ID': messageId
+    },
     attachments: attachments || []
   });
 }
@@ -74,7 +87,8 @@ function shell(content) {
   .eyebrow { color:#C89B4A; font-size:11px; text-transform:uppercase; letter-spacing:0.18em; font-weight:600; margin-bottom:6px; }
   .header h1 { color:#F7EFE1; font-size:26px; font-weight:400; margin:0; letter-spacing:0.06em; }
   .body { padding:36px 32px; }
-  .footer { background:#2A1D14; padding:24px 32px; text-align:center; color:#9C8770; font-size:12px; }
+  .footer { background:#FAF6EF; border-top:1px solid #E3D3B8; padding:24px 32px; text-align:center; color:#2A1D14; font-size:12px; }
+  .footer p { color:#2A1D14; }
   .btn { display:inline-block; padding:14px 28px; background:#2A1D14; color:#F7EFE1 !important; text-decoration:none; border-radius:4px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; margin-top:20px; }
   .btn-outline { display:inline-block; padding:12px 24px; background:transparent; color:#2A1D14 !important; border:1px solid #E3D3B8; text-decoration:none; border-radius:4px; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; margin-top:10px; margin-right:10px; }
   .card { background:#FAF6EF; border:1px solid #E3D3B8; border-radius:6px; padding:20px; margin:20px 0; }
@@ -92,9 +106,9 @@ function shell(content) {
     <h1>Aora House</h1>
   </div>
   <div class="body">${content}</div>
-  <div class="footer">
-    <p style="color:#F7EFE1; margin:0 0 6px; font-weight:500;">Aora House &bull; Victoria Island, Lagos</p>
-    <p style="margin:0; opacity:0.8;">Movement Studio &bull; Coastal Café &bull; The Loft &bull; Concept Fashion</p>
+  <div class="footer" style="background:#FAF6EF; border-top:1px solid #E3D3B8; padding:24px 32px; text-align:center; color:#2A1D14; font-size:12px;">
+    <p style="color:#2A1D14; margin:0 0 6px; font-weight:600; font-size:13px; letter-spacing:0.02em;">Aora House &bull; Victoria Island, Lagos</p>
+    <p style="color:#2A1D14; margin:0; opacity:0.85; font-size:12px;">Movement Studio &bull; Coastal Café &bull; The Loft &bull; Concept Fashion</p>
   </div>
 </div>
 </body>
