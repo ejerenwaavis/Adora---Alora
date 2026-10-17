@@ -13,6 +13,8 @@ import Fashion      from './pages/Fashion.jsx';
 import VenueHire    from './pages/VenueHire.jsx';
 import Events       from './pages/Events.jsx';
 import Visit        from './pages/Visit.jsx';
+import KioskCheckIn from './pages/KioskCheckIn.jsx';
+import PaymentVerify from './pages/PaymentVerify.jsx';
 
 // Auth Pages
 import Login           from './pages/Login.jsx';
@@ -23,7 +25,9 @@ import ResetPassword   from './pages/ResetPassword.jsx';
 // Account Dashboard
 import AccountLayout   from './pages/account/AccountLayout.jsx';
 import Dashboard       from './pages/account/Dashboard.jsx';
+import OrdersPage      from './pages/account/OrdersPage.jsx';
 import ProfileSettings from './pages/account/ProfileSettings.jsx';
+import WaiverPage      from './pages/account/WaiverPage.jsx';
 
 // Admin CMS
 import AdminLayout     from './admin/AdminLayout.jsx';
@@ -37,27 +41,79 @@ import FashionCMS      from './admin/FashionCMS.jsx';
 import EventsCMS       from './admin/EventsCMS.jsx';
 import CreditPacksCMS  from './admin/CreditPacksCMS.jsx';
 import SettingsCMS     from './admin/SettingsCMS.jsx';
+import UsersCMS        from './admin/UsersCMS.jsx';
+import WaiversCMS      from './admin/WaiversCMS.jsx';
+import GuestConciergeCMS from './admin/GuestConciergeCMS.jsx';
+import AdminActivityLogs from './admin/ActivityLogs.jsx';
+import ExportCMS         from './admin/ExportCMS.jsx';
 
-// ── Route Guards ──────────────────────────────────────────────────────────────
+// Clerk Dashboard
+import ClerkLayout     from './clerk/ClerkLayout.jsx';
+import ClerkDashboard  from './clerk/DashboardHome.jsx';
+import ClassManagement from './clerk/ClassManagement.jsx';
+import CafeManagement  from './clerk/CafeManagement.jsx';
+import EventManagement from './clerk/EventManagement.jsx';
+import ActivityLogs    from './clerk/ActivityLogs.jsx';
+
+// Kitchen KDS
+import KitchenKDS from './kitchen/KitchenKDS.jsx';
+
+// â”€â”€ Route Guards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <div style={{ display:'flex', justifyContent:'center', padding:'8rem', color:'var(--taupe)', fontFamily:'var(--f-body)' }}>Loading…</div>;
-  if (!user)   return <Navigate to="/" replace />;
+  if (loading) return <div style={{ display:'flex', justifyContent:'center', padding:'8rem', color:'var(--taupe)', fontFamily:'var(--f-body)' }}>Loadingâ€¦</div>;
+  if (!user)   return <Navigate to="/login" replace />;
   return children;
 }
 
 function RequireRole({ roles, children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
-  if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!roles.includes(user.role)) return <Navigate to="/" replace />;
   return children;
 }
 
-// ── Router ────────────────────────────────────────────────────────────────────
-export const router = createBrowserRouter([
-  // ── Public marketing site ──
+// Finance Dashboard
+import FinanceLayout   from './finance/FinanceLayout.jsx';
+import FinanceDashboard from './finance/FinanceDashboard.jsx';
+import FinancePayouts   from './finance/FinancePayouts.jsx';
+
+// Concierge Dashboard
+import ConciergeLayout from './concierge/ConciergeLayout.jsx';
+import ConciergeDashboard from './concierge/ConciergeDashboard.jsx';
+import WhatsAppInbox from './concierge/WhatsAppInbox.jsx';
+
+// â”€â”€ Role-Based Home Redirect â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function StaffHomeRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  
+  if (['admin', 'content_editor'].includes(user.role)) return <Navigate to="/admin" replace />;
+  if (user.role === 'finance') return <Navigate to="/finance" replace />;
+  if (user.role === 'concierge') return <Navigate to="/concierge" replace />;
+  if (user.role === 'clerk') return <Navigate to="/clerk" replace />;
+  if (user.role === 'kitchen' || user.role === 'chef') return <Navigate to="/kitchen" replace />;
+  if (user.role === 'instructor') return <Navigate to="/instructor" replace />;
+  
+  // Fallback for normal users who accidentally hit the internal domain
+  return <Navigate to="/login" replace />;
+}
+
+// â”€â”€ Hostname Detection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const host = window.location.hostname;
+
+// Enable testing HQ mode on devices via IP address by using ?hq=true
+if (window.location.search.includes('hq=true')) localStorage.setItem('hq_override', 'true');
+if (window.location.search.includes('hq=false')) localStorage.removeItem('hq_override');
+
+const isInternal = host.startsWith('hq.') || host.startsWith('staff.') || host.startsWith('portal.') || host.startsWith('admin.') || localStorage.getItem('hq_override') === 'true';
+
+// â”€â”€ Public Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const publicRouter = createBrowserRouter([
   {
-    path:    '/',
+    path: '/',
     element: <PageShell />,
     children: [
       { index: true,                    element: <Home /> },
@@ -70,30 +126,79 @@ export const router = createBrowserRouter([
       { path: 'events',                 element: <Events /> },
       { path: 'events/:slug',           element: <Events detail /> },
       { path: 'visit',                  element: <Visit /> },
+      { path: 'check-in',               element: <KioskCheckIn /> },
       
-      // Public Auth routes inside PageShell so they get the main nav/footer
       { path: 'login',                  element: <Login /> },
       { path: 'register',               element: <Register /> },
       { path: 'forgot-password',        element: <ForgotPassword /> },
       { path: 'reset-password',         element: <ResetPassword /> },
+      { path: 'member/waiver',          element: <RequireAuth><WaiverPage /></RequireAuth> },
+      { path: 'payment/verify',         element: <PaymentVerify /> },
+      { path: 'cafe/verify',            element: <PaymentVerify /> },
     ],
   },
-
-  // ── Protected: member account ──
   {
     path: '/account',
     element: <RequireAuth><AccountLayout /></RequireAuth>,
     children: [
       { index: true, element: <Dashboard /> },
+      { path: 'orders', element: <OrdersPage /> },
       { path: 'profile', element: <ProfileSettings /> },
+      { path: 'waiver', element: <WaiverPage /> },
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
     ]
   },
+  { path: '*', element: <Navigate to="/" replace /> },
+]);
 
-  // ── Protected: admin panel ──
+import InstructorLayout from './instructor/InstructorLayout.jsx';
+import InstructorDashboard from './instructor/InstructorDashboard.jsx';
+
+// â”€â”€ Internal Staff Router â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+const internalRouter = createBrowserRouter([
   {
-    path:    '/admin',
-    element: <RequireRole roles={['admin','content_editor','finance','instructor']}><AdminLayout /></RequireRole>,
+    path: '/',
+    element: <StaffHomeRedirect />
+  },
+  {
+    path: '/login',
+    element: <Login /> // You might want a custom StaffLogin later
+  },
+  {
+    path: '/payment/verify',
+    element: <PaymentVerify />
+  },
+  {
+    path: '/cafe/verify',
+    element: <PaymentVerify />
+  },
+  {
+    path: '/finance',
+    element: <RequireRole roles={['admin','finance']}><FinanceLayout /></RequireRole>,
+    children: [
+      { index: true, element: <FinanceDashboard /> },
+      { path: 'payouts', element: <FinancePayouts /> }
+    ]
+  },
+  {
+    path: '/concierge',
+    element: <RequireRole roles={['admin','concierge']}><ConciergeLayout /></RequireRole>,
+    children: [
+      { index: true, element: <ConciergeDashboard /> },
+      { path: 'whatsapp', element: <WhatsAppInbox /> },
+      { path: 'requests', element: <GuestConciergeCMS /> }
+    ]
+  },
+  {
+    path: '/instructor',
+    element: <InstructorLayout />,
+    children: [
+      { index: true, element: <InstructorDashboard /> }
+    ]
+  },
+  {
+    path: '/admin',
+    element: <RequireRole roles={['admin','content_editor','finance']}><AdminLayout /></RequireRole>,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: 'announcements', element: <AnnouncementCMS /> },
@@ -103,18 +208,32 @@ export const router = createBrowserRouter([
       { path: 'timetable', element: <ScheduleCMS /> },
       { path: 'fashion', element: <FashionCMS /> },
       { path: 'events', element: <EventsCMS /> },
-      { path: 'credit-packs', element: <CreditPacksCMS /> },
-      { path: 'settings', element: <SettingsCMS /> },
+      { path: 'credit-packs', element: <RequireRole roles={['admin', 'finance']}><CreditPacksCMS /></RequireRole> },
+      { path: 'export', element: <RequireRole roles={['admin', 'content_editor', 'finance']}><ExportCMS /></RequireRole> },
+      { path: 'users', element: <RequireRole roles={['admin']}><UsersCMS /></RequireRole> },
+      { path: 'waivers', element: <RequireRole roles={['admin']}><WaiversCMS /></RequireRole> },
+      { path: 'settings', element: <RequireRole roles={['admin']}><SettingsCMS /></RequireRole> },
+      { path: 'activity-logs', element: <RequireRole roles={['admin']}><AdminActivityLogs /></RequireRole> },
       { path: '*', element: <AdminDashboard /> }
     ]
   },
-
-  // ── Protected: clerk front desk (Stubs) ──
   {
-    path:    '/clerk',
-    element: <RequireRole roles={['admin','clerk']}><div style={{padding:'2rem'}}>Clerk Dashboard coming soon</div></RequireRole>,
+    path: '/clerk',
+    element: <RequireRole roles={['admin','clerk']}><ClerkLayout /></RequireRole>,
+    children: [
+      { index: true, element: <ClerkDashboard /> },
+      { path: 'classes', element: <ClassManagement /> },
+      { path: 'cafe', element: <CafeManagement /> },
+      { path: 'events', element: <EventManagement /> },
+      { path: 'logs', element: <ActivityLogs /> },
+    ]
   },
-
-  // ── 404 fallback ──
+  {
+    path: '/kitchen',
+    element: <RequireRole roles={['admin','kitchen','chef']}><KitchenKDS /></RequireRole>
+  },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
+
+// Export the active router based on the domain
+export const router = isInternal ? internalRouter : publicRouter;

@@ -1,11 +1,11 @@
 {
-  "name": "adora-alora",
+  "name": "aora-house",
   "version": "1.0.0",
-  "description": "Adora & Alora — curated lifestyle house. Full-stack enterprise website.",
+  "description": "Aora House — curated lifestyle house. Full-stack enterprise website.",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"node --watch app.js\" \"node node_modules/vite/bin/vite.js --port 5175\"",
+    "dev": "node node_modules/concurrently/dist/bin/concurrently.js \"node --watch-path=app.js --watch-path=routes --watch-path=models --watch-path=middleware app.js\" \"node node_modules/vite/bin/vite.js --port 5175 --host\"",
     "build": "node node_modules/vite/bin/vite.js build",
     "preview": "node node_modules/vite/bin/vite.js preview"
   },
@@ -17,9 +17,13 @@
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.21.1",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^8.6.2",
     "express-validator": "^7.2.1",
     "helmet": "^8.0.0",
+    "html5-qrcode": "^2.3.8",
     "ics": "^3.8.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.8.4",
@@ -27,6 +31,8 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^9.0.3",
     "qrcode": "^1.5.4",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {

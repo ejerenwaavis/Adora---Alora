@@ -33,9 +33,9 @@
 .logo { 
   font-family: var(--f-display); 
   font-size: 22px; 
-  font-weight: 500; 
+  font-weight: 600; 
   letter-spacing: .01em; 
-  color: var(--cocoa); 
+  color: var(--cocoa-deep); 
 }
 .logo em { 
   font-style: italic; 
@@ -256,7 +256,7 @@
 .announceClose:hover { opacity: 1; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────── */
-@media (max-width: 900px) {
+@media (max-width: 995px) {
   .navLinks { display: none; }
   .hamburger { display: flex; }
 }

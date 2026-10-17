@@ -10,7 +10,7 @@ const LAYERS = [
   {
     tag: 'Layer Two',
     title: 'Brand Partners',
-    desc: 'Established and independent labels collaborating directly with Adora & Alora.'
+    desc: 'Established and independent labels collaborating directly with Aora House.'
   },
   {
     tag: 'Layer Three',

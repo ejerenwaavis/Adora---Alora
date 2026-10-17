@@ -10,10 +10,10 @@ export default defineConfig({
 
   // Vite root is /src — index.html lives there
   root: './src',
-  publicDir: 'public',
+  publicDir: '../public',
 
   build: {
-    outDir: '../public',
+    outDir: '../public_html',
     emptyOutDir: true,
     sourcemap: false,
   },
@@ -35,6 +35,17 @@ export default defineConfig({
 
   server: {
     port: 5175,
+    watch: {
+      ignored: [
+        '**/public_html/**',
+        '**/public/assets/**',
+        '**/*.mp4',
+        '**/*.mov',
+        '**/*.webm',
+        '**/tmp/**',
+        '**/.git/**'
+      ],
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3005',
@@ -42,6 +53,11 @@ export default defineConfig({
       },
       '/health': {
         target: 'http://localhost:3005',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:3005',
+        ws: true,
         changeOrigin: true,
       },
     },

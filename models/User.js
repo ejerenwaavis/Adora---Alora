@@ -14,24 +14,43 @@ const userSchema = new mongoose.Schema({
   // content_editor: CMS-only (menu, classes, events, FAQs, announcements)
   // instructor    : read-only attendance/class view
   // finance       : read-only payments & reports
+  // concierge     : guest communications & whatsapp live chat
   // member        : standard customer account
   role: {
     type: String,
-    enum: ['admin', 'clerk', 'content_editor', 'instructor', 'finance', 'member'],
+    enum: ['admin', 'clerk', 'content_editor', 'instructor', 'finance', 'concierge', 'member'],
     default: 'member',
   },
 
-  // ── Two-Factor Auth (TOTP) ──
-  twoFactorSecret:  { type: String },
-  twoFactorEnabled: { type: Boolean, default: false },
+  // ── Two-Factor Auth (Email OTP / TOTP) ──
+  twoFactorSecret:    { type: String },
+  twoFactorEnabled:   { type: Boolean, default: false },
+  twoFactorCode:      { type: String },
+  twoFactorExpiresAt: { type: Date },
+  tempAuthToken:      { type: String },
+
+  // ── Security & Brute-force Lockout ──
+  failedLoginAttempts: { type: Number, default: 0 },
+  lockUntil:           { type: Date },
 
   // ── Profile ──
   avatar:      { type: String },
   dateOfBirth: { type: Date },
 
-  // ── Waiver & Emergency Contact — required at first booking ──
+  // ── Waiver & Emergency Contact — required for movement bookings ──
+  waiver: {
+    signed:      { type: Boolean, default: false },
+    signedAt:    { type: Date },
+    version:     { type: String },        // e.g. "2026-09" — matches current waiver version
+    ipAddress:   { type: String },
+    userAgent:   { type: String },
+    method:      { type: String, default: 'electronic' },
+  },
+  waiverSigned:             { type: Boolean, default: false },
+  waiverDate:               { type: Date },
   waiverSignedAt:           { type: Date },
-  waiverVersion:            { type: String },
+  waiverSignature:          { type: String },
+  waiverVersion:            { type: String, default: '2026-09' },
   emergencyContactName:     { type: String },
   emergencyContactPhone:    { type: String },
   emergencyContactRelation: { type: String },
@@ -75,6 +94,8 @@ userSchema.methods.toJSON = function () {
   const obj = this.toObject({ virtuals: true });
   delete obj.passwordHash;
   delete obj.twoFactorSecret;
+  delete obj.twoFactorCode;
+  delete obj.tempAuthToken;
   delete obj.emailVerifyToken;
   delete obj.passwordResetToken;
   return obj;

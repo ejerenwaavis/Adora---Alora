@@ -4,12 +4,12 @@ const mongoose = require('mongoose');
 // CRITICAL RULE (non-negotiable, enforced at schema level):
 //
 //   Every event record MUST have:
-//     - organiser:           who is running the event (e.g. "Adora & Alora",
+//     - organiser:           who is running the event (e.g. "Aora House",
 //                            "The Becoming Network", or any partner name)
-//     - bookingDestination:  'internal'     → Adora & Alora handles checkout
+//     - bookingDestination:  'internal'     → Aora House handles checkout
 //                            'external_url' → user is sent to partner's own site
 //
-//   TBN events MUST use external_url. They never touch Adora & Alora checkout
+//   TBN events MUST use external_url. They never touch Aora House checkout
 //   or branding. This is enforced in the pre-save hook below.
 // ──────────────────────────────────────────────────────────────────────────────
 const eventRecordSchema = new mongoose.Schema({
@@ -46,6 +46,18 @@ const eventRecordSchema = new mongoose.Schema({
   isFeatured:  { type: Boolean, default: false },
   tags:        [{ type: String }],
   publishedAt: { type: Date },
+  isRecurring: { type: Boolean, default: false },
+  seriesId:    { type: String }, // Grouping ID for recurring event instances
+  recurrence: {
+    frequency:   { type: String, enum: ['daily', 'weekly', 'biweekly', 'monthly'] },
+    daysOfWeek:  [{ type: Number }],
+    repeatCount: { type: Number },
+    repeatUntil: { type: Date }
+  },
+  customFields: [{
+    label: { type: String, trim: true },
+    value: { type: String, trim: true }
+  }]
 }, { timestamps: true });
 
 // Enforce: externalUrl required when bookingDestination = 'external_url'
@@ -60,5 +72,6 @@ eventRecordSchema.pre('save', function (next) {
 });
 
 eventRecordSchema.index({ startDate: 1, status: 1 });
+eventRecordSchema.index({ seriesId: 1 });
 
 module.exports = mongoose.model('EventRecord', eventRecordSchema);

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
@@ -12,7 +13,7 @@ async function seedAdmin() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('✅ Connected to MongoDB');
 
-    const adminEmail = 'hello@adora-alora.com';
+    const adminEmail = 'hello@aora-house.com';
     const existingAdmin = await User.findOne({ email: adminEmail });
 
     if (existingAdmin) {
@@ -21,7 +22,7 @@ async function seedAdmin() {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('AdoraAlora2026!', salt);
+    const hashedPassword = await bcrypt.hash('Aora House2026!', salt);
 
     const adminUser = new User({
       email: adminEmail,
@@ -35,7 +36,7 @@ async function seedAdmin() {
     await adminUser.save();
     console.log('🎉 Initial admin user created successfully!');
     console.log(`Email: ${adminEmail}`);
-    console.log('Password: AdoraAlora2026!');
+    console.log('Password: Aora House2026!');
 
   } catch (err) {
     console.error('❌ Error seeding admin user:', err);

@@ -60,9 +60,55 @@ const INITIAL_MENU = [
   }
 ];
 
+const AnnouncementBar = require('../models/AnnouncementBar');
+const FAQ             = require('../models/FAQ');
+const EventRecord     = require('../models/EventRecord');
+const VenueSpace      = require('../models/VenueSpace');
+const ClassType       = require('../models/ClassType');
+const Instructor      = require('../models/Instructor');
+
 // Public read-only data for the React frontend
-router.get('/site/announcements', (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
-router.get('/site/faqs',          (req, res) => res.json({ status: 'Phase 3 — pending implementation' }));
+router.get('/site/announcements', async (req, res) => {
+  try {
+    const announcements = await AnnouncementBar.find({ isActive: true }).sort('sortOrder');
+    res.json(announcements);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch announcements' });
+  }
+});
+
+router.get('/site/faqs', async (req, res) => {
+  try {
+    const faqs = await FAQ.find({ isActive: true }).sort('sortOrder');
+    res.json(faqs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch FAQs' });
+  }
+});
+
+const Setting = require('../models/Setting');
+
+router.get('/site/settings/contact', async (req, res) => {
+  try {
+    const settings = await Setting.find({
+      key: { $in: [
+        'contact_email', 'contact_phone', 'location_address',
+        'location_map_url', 'location_map_query', 'opening_hours_weekday',
+        'opening_hours_weekend', 'open_today_text',
+        'whatsapp_number', 'instagram_url', 'raire_app_url'
+      ]}
+    });
+    
+    const settingsMap = settings.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {});
+    
+    res.json(settingsMap);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
 
 router.get('/menu', async (req, res) => {
   try {
@@ -82,6 +128,7 @@ router.get('/menu', async (req, res) => {
 
 const FashionLayer = require('../models/FashionLayer');
 const FashionItem  = require('../models/FashionItem');
+const FashionOrder = require('../models/FashionOrder');
 
 router.get('/fashion', async (req, res) => {
   try {
@@ -98,9 +145,173 @@ router.get('/fashion', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch fashion data' });
   }
 });
-router.get('/venue/spaces',       (req, res) => res.json({ status: 'Phase 9 — pending implementation' }));
-router.get('/events',             (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
-router.get('/events/:slug',       (req, res) => res.json({ status: 'Phase 10 — pending implementation' }));
+
+router.post('/fashion/order', async (req, res) => {
+  try {
+    const { itemId, customerName, customerEmail, customerPhone, selectedSize, orderType } = req.body;
+    if (!itemId || !customerName || !customerEmail || !customerPhone) {
+      return res.status(400).json({ error: 'Missing required customer or item information.' });
+    }
+
+    const item = await FashionItem.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ error: 'Fashion item not found.' });
+    }
+
+    const order = new FashionOrder({
+      fashionItem: item._id,
+      itemName: item.name,
+      selectedSize: selectedSize || (item.sizes && item.sizes[0]) || 'Standard',
+      priceKobo: item.displayPriceKobo || 0,
+      customerName,
+      customerEmail,
+      customerPhone,
+      orderType: orderType === 'RESERVATION' ? 'RESERVATION' : 'PURCHASE',
+      status: 'CONFIRMED'
+    });
+
+    await order.save();
+    res.status(201).json({
+      message: 'Fashion order successfully created.',
+      order
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Failed to place order.' });
+  }
+});
+
+router.get('/venue/spaces', async (req, res) => {
+  try {
+    const spaces = await VenueSpace.find({
+      isActive: true,
+      $or: [
+        { isHireableVenue: true },
+        { spaceType: 'venue_hire' },
+        { spaceType: { $exists: false } }
+      ]
+    }).sort('sortOrder');
+    res.json(spaces);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch venue spaces' });
+  }
+});
+
+router.get('/events', async (req, res) => {
+  try {
+    const events = await EventRecord.find({ status: 'published' }).sort('startDate');
+    res.json(events);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch events' });
+  }
+});
+
+router.get('/events/:slug', async (req, res) => {
+  try {
+    const event = await EventRecord.findOne({ slug: req.params.slug, status: 'published' });
+    if (!event) return res.status(404).json({ error: 'Event not found' });
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch event details' });
+  }
+});
+
 router.get('/classes/timetable',  (req, res) => res.json({ status: 'Phase 5 — pending implementation' }));
 
+router.get('/search', async (req, res) => {
+  try {
+    const q = req.query.q || '';
+    if (!q || q.length < 2) return res.json({ events: [], venues: [], classes: [], instructors: [], fashion: [] });
+
+    const regex = new RegExp(q, 'i');
+
+    const [events, venues, classes, instructors, fashion, cafe] = await Promise.all([
+      EventRecord.find({ status: 'published', $or: [{ title: regex }, { description: regex }] }).limit(5),
+      VenueSpace.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      ClassType.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      Instructor.find({ isActive: true, $or: [{ firstName: regex }, { lastName: regex }, { bio: regex }] }).limit(5),
+      FashionItem.find({ isActive: true, $or: [{ name: regex }, { description: regex }] }).limit(5),
+      MenuItem.find({ isAvailable: true, $or: [{ name: regex }, { description: regex }] }).limit(5)
+    ]);
+
+    res.json({ events, venues, classes, instructors, fashion, cafe });
+  } catch (err) {
+    res.status(500).json({ error: 'Search failed' });
+  }
+});
+
+// ── Waitlist Submission (with Anti-Bot Protection) ──────────────────────
+const Waitlist = require('../models/Waitlist');
+
+router.post('/waitlist', async (req, res) => {
+  try {
+    const { email, hp_website, _ts, source } = req.body;
+
+    // 1. Anti-Bot: Honeypot check (hidden field should always remain blank)
+    if (hp_website && String(hp_website).trim() !== '') {
+      console.warn('[Waitlist Bot Blocked] Honeypot triggered:', { ip: req.ip, hp_website });
+      // Return 200 OK so bot thinks it succeeded
+      return res.status(200).json({
+        success: true,
+        message: "You're on the list. We'll write when the doors open."
+      });
+    }
+
+    // 2. Anti-Bot: Fast-submission check (humans take at least 1.2s to fill form)
+    if (_ts && Number(_ts) > 0) {
+      const elapsedMs = Date.now() - Number(_ts);
+      if (elapsedMs < 1200) {
+        console.warn('[Waitlist Bot Blocked] Submission too fast (<1.2s):', { ip: req.ip, elapsedMs });
+        return res.status(200).json({
+          success: true,
+          message: "You're on the list. We'll write when the doors open."
+        });
+      }
+    }
+
+    // 3. Email validation & normalization
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail) || cleanEmail.length > 100) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    }
+
+    // 4. Duplicate check
+    const existing = await Waitlist.findOne({ email: cleanEmail });
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        message: "You're already on the list — we'll be in touch."
+      });
+    }
+
+    // 5. Save to database
+    await Waitlist.create({
+      email: cleanEmail,
+      source: source || 'coming_soon_page',
+      ipAddress: req.ip || '',
+      userAgent: req.headers['user-agent'] || '',
+      joinedAt: new Date()
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "You're on the list. We'll write when the doors open."
+    });
+  } catch (err) {
+    console.error('[Waitlist Error]', err);
+    if (err.code === 11000) {
+      return res.status(200).json({
+        success: true,
+        message: "You're already on the list — we'll be in touch."
+      });
+    }
+    return res.status(500).json({ error: 'Unable to join waitlist. Please try again later.' });
+  }
+});
+
 module.exports = router;
+

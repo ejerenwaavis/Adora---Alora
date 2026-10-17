@@ -18,6 +18,8 @@ export default function ProfileSettings() {
     smsReminders: user.smsReminders === true,
   });
   
+  const [avatarFile, setAvatarFile] = useState(null);
+  
   const [waiverSigned, setWaiverSigned] = useState(!!user.waiverSignedAt);
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,12 +32,13 @@ export default function ProfileSettings() {
     setLoading(true);
     
     try {
-      const payload = { ...formData };
+      const payload = new FormData();
+      Object.keys(formData).forEach(key => payload.append(key, formData[key]));
+      if (avatarFile) payload.append('avatar', avatarFile);
       
       const res = await authFetch('/api/auth/me', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: payload
       });
       
       if (!res.ok) throw new Error('Failed to update profile');
@@ -83,6 +86,20 @@ export default function ProfileSettings() {
       <form onSubmit={handleSubmit}>
         <div className={styles.card}>
           <h2 style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>Personal Information</h2>
+
+          <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {avatarFile ? (
+              <img src={URL.createObjectURL(avatarFile)} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : user.avatar ? (
+              <img src={user.avatar} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No Image</div>
+            )}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--taupe)', marginBottom: '0.25rem' }}>Profile Picture</label>
+              <input type="file" accept="image/*" onChange={e => setAvatarFile(e.target.files[0])} />
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--taupe)', marginBottom: '0.25rem' }}>First Name</label>
@@ -134,7 +151,7 @@ export default function ProfileSettings() {
             <>
               <div style={{ padding: '1rem', background: '#f9f9f9', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '4px', height: '150px', overflowY: 'auto', marginBottom: '1rem', fontSize: '0.8rem', lineHeight: 1.6 }}>
                 <strong>Liability Waiver & Release</strong><br/><br/>
-                By signing this document, you acknowledge that participation in physical exercise and movement classes involves inherent risks... [Full waiver text would go here]. I hereby release Adora & Alora from any claims of injury...
+                By signing this document, you acknowledge that participation in physical exercise and movement classes involves inherent risks... [Full waiver text would go here]. I hereby release Aora House from any claims of injury...
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

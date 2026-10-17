@@ -14,7 +14,7 @@ export default function Spotlight({
 }) {
   return (
     <section className={`${styles.spotlight} ${reverse ? styles.reverse : ''}`} id={id}>
-      <div className={styles.spotVisual} data-caption={caption}>
+      <div className={`${styles.spotVisual} reveal`} data-caption={caption}>
         {imageSrc ? (
           <img src={imageSrc} alt={title} className={styles.spotImg} />
         ) : (
@@ -22,11 +22,13 @@ export default function Spotlight({
         )}
       </div>
       <div className={styles.spotCopy}>
-        <span className={styles.eyebrow}>{eyebrow}</span>
-        <h3>{title}</h3>
-        <p>{desc}</p>
+        <span className={`${styles.eyebrow} reveal`}>{eyebrow}</span>
+        <h3 className="reveal reveal-delay-1">{title}</h3>
+        <p className="reveal reveal-delay-2">{desc}</p>
         {ctaTo && (
-          <Link to={ctaTo} className={`${styles.btn} ${styles.btnOutline}`}>{ctaText}</Link>
+          <div className="reveal reveal-delay-3" style={{ display: 'inline-block' }}>
+            <Link to={ctaTo} className={`${styles.btn} ${styles.btnOutline}`}>{ctaText}</Link>
+          </div>
         )}
       </div>
     </section>

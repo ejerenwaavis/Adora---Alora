@@ -7,7 +7,7 @@ export default function HouseSection() {
         <div className={styles.houseHead}>
           <span className={styles.eyebrow}>One house, five rooms</span>
           <h2>Everything under one roof</h2>
-          <p>Adora & Alora is one lifestyle house, not a collection of separate businesses — each room connects to the next.</p>
+          <p>Aora House is one lifestyle house, not a collection of separate businesses — each room connects to the next.</p>
         </div>
 
         <div className={styles.houseGrid}>

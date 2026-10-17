@@ -22,10 +22,19 @@ const classSessionSchema = new mongoose.Schema({
   overridePriceKobo: { type: Number },   // overrides ClassType.singleClassPriceKobo if set
   notes:             { type: String },   // internal admin notes only
   isPublic:          { type: Boolean, default: true },
+  isRecurring:       { type: Boolean, default: false },
+  seriesId:          { type: String }, // Grouping ID for all occurrences in a series
+  recurrence: {
+    frequency:       { type: String, enum: ['daily', 'weekly', 'biweekly', 'monthly'] },
+    daysOfWeek:      [{ type: Number }], // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+    repeatCount:     { type: Number },
+    repeatUntil:     { type: Date }
+  }
 }, { timestamps: true });
 
 // Compound index for timetable queries
 classSessionSchema.index({ startTime: 1, status: 1 });
 classSessionSchema.index({ instructor: 1, startTime: 1 });
+classSessionSchema.index({ seriesId: 1 });
 
 module.exports = mongoose.model('ClassSession', classSessionSchema);

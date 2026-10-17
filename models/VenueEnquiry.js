@@ -17,7 +17,6 @@ const venueEnquirySchema = new mongoose.Schema({
   guestCount:        { type: Number, required: true },
   spacePreference: {
     type: String,
-    enum: ['loft', 'cafe', 'not_sure'],
     required: true,
   },
   seatingStyle:     { type: String },
@@ -28,13 +27,27 @@ const venueEnquirySchema = new mongoose.Schema({
   // ── Admin pipeline ──
   status: {
     type: String,
-    enum: ['new', 'viewed', 'quoted', 'confirmed', 'declined'],
+    enum: ['new', 'viewed', 'quoted', 'confirmed', 'declined', 'awaiting_reply', 'resolved', 'closed'],
     default: 'new',
   },
   adminNotes:  { type: String },
   assignedTo:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   quotedAt:    { type: Date },
   confirmedAt: { type: Date },
+  quotedAmountKobo: { type: Number, default: 0 },
+  depositPaid:      { type: Boolean, default: false },
+  paymentReference: { type: String, index: true },
+  paidAt:           { type: Date },
+
+  // ── Messaging & Comms ──
+  messages: [{
+    senderId:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    senderName: { type: String, required: true },
+    senderRole: { type: String, enum: ['user', 'admin', 'concierge'], default: 'user' },
+    text:       { type: String, required: true },
+    createdAt:  { type: Date, default: Date.now },
+    isRead:     { type: Boolean, default: false }
+  }],
 
   // ── Source tracking ──
   source: { type: String, default: 'website' },

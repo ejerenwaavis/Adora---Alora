@@ -25,7 +25,13 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ firstName, lastName, email, password }),
     });
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection failed. Please try again.`);
+    }
     if (!res.ok) throw new Error(data.error || (data.errors && data.errors[0]?.msg) || 'Registration failed');
     return data;
   }, []);
@@ -36,12 +42,43 @@ export function AuthProvider({ children }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, totpCode }),
     });
-    const data = await res.json();
+    const contentType = res.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection failed. Please try again.`);
+    }
     if (!res.ok) throw new Error(data.error || 'Login failed');
-    if (data.requires2FA) return { requires2FA: true };
+    if (data.requires2FA) return data;
     localStorage.setItem('aa_access_token',  data.accessToken);
     localStorage.setItem('aa_refresh_token', data.refreshToken);
     setUser(data.user);
+    return data;
+  }, []);
+
+  const verify2FA = useCallback(async ({ tempToken, code }) => {
+    const res = await fetch('/api/auth/verify-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken, code }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Verification failed');
+    localStorage.setItem('aa_access_token',  data.accessToken);
+    localStorage.setItem('aa_refresh_token', data.refreshToken);
+    setUser(data.user);
+    return data;
+  }, []);
+
+  const resend2FA = useCallback(async ({ tempToken }) => {
+    const res = await fetch('/api/auth/resend-2fa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tempToken }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to resend code');
     return data;
   }, []);
 
@@ -71,6 +108,10 @@ export function AuthProvider({ children }) {
       body: JSON.stringify({ refreshToken: refresh }),
     });
     if (!res.ok) { logout(); return null; }
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      logout(); return null;
+    }
     const { accessToken, refreshToken: newRefresh } = await res.json();
     localStorage.setItem('aa_access_token',  accessToken);
     localStorage.setItem('aa_refresh_token', newRefresh);
@@ -90,7 +131,7 @@ export function AuthProvider({ children }) {
       headers['Content-Type'] = 'application/json';
     }
 
-    const res = await fetch(url, { ...options, headers });
+    const res = await fetch(url, { cache: 'no-store', ...options, headers });
     if (res.status === 401) {
       const newToken = await refreshToken();
       if (!newToken) throw new Error('Session expired');
@@ -103,10 +144,30 @@ export function AuthProvider({ children }) {
         retryHeaders['Content-Type'] = 'application/json';
       }
 
-      return fetch(url, { ...options, headers: retryHeaders });
+      return fetch(url, { cache: 'no-store', ...options, headers: retryHeaders });
     }
     return res;
   }, [refreshToken]);
+
+  const refreshUser = useCallback(async () => {
+    const token = localStorage.getItem('aa_access_token');
+    if (!token) return null;
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.user) {
+          setUser(data.user);
+          return data.user;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to refresh user profile:', e);
+    }
+    return null;
+  }, []);
 
   const isAdmin          = user?.role === 'admin';
   const isClerk          = user?.role === 'clerk';
@@ -118,8 +179,8 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading,
-      login, logout, register, authFetch,
+      user, loading, refreshUser,
+      login, logout, register, authFetch, verify2FA, resend2FA,
       isAdmin, isClerk, isContentEditor, isInstructor, isFinance, isMember, isStaff,
     }}>
       {children}

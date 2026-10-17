@@ -1,55 +1,101 @@
 .accountContainer {
   display: flex;
   min-height: 100vh;
-  background-color: var(--sand);
+  background-color: var(--sand, #FAF6EF);
+  position: relative;
+  font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 }
 
-.sidebar {
-  width: 260px;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
-  display: flex;
-  flex-direction: column;
+.mobileHeader {
+  display: none;
+  background: #FFFDF9;
+  border-bottom: 1px solid rgba(227, 211, 184, 0.8);
+  padding: 1rem 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.brand {
-  padding: 2rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+.mobileBrand {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
 }
 
+.mobileToggle {
+  background: none;
+  border: 1px solid rgba(227, 211, 184, 0.8);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--cocoa-deep, #2B2015);
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 105;
+}
+
+.sidebar {
+  width: 270px;
+  background: #FFFDF9;
+  border-right: 1px solid rgba(227, 211, 184, 0.8);
+  display: flex;
+  flex-direction: column;
+  z-index: 110;
+}
+
+.brand {
+  padding: 2rem 2.25rem;
+  border-bottom: 1px solid rgba(227, 211, 184, 0.6);
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
 .badge {
   font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--taupe);
-  background: rgba(0, 0, 0, 0.05);
-  padding: 0.2rem 0.5rem;
+  letter-spacing: 0.14em;
+  color: var(--taupe, #9C8770);
+  background: rgba(200, 155, 74, 0.12);
+  padding: 0.2rem 0.6rem;
   border-radius: 4px;
+  font-weight: 600;
 }
 
 .nav {
   flex: 1;
-  padding: 2rem 0;
+  padding: 1.75rem 0;
 }
 
 .navLink, .navLinkActive {
-  display: block;
-  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 2.25rem;
   text-decoration: none;
-  color: var(--black);
-  font-size: 0.95rem;
+  color: var(--cocoa-deep, #2B2015);
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
   transition: all 0.2s ease;
 }
 
 .navLink:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(200, 155, 74, 0.06);
+  color: var(--rust, #A4451F);
 }
 
 .navLinkActive {
-  background-color: rgba(0, 0, 0, 0.04);
-  font-weight: 500;
+  background-color: rgba(200, 155, 74, 0.09);
+  font-weight: 600;
+  color: var(--rust, #A4451F);
   position: relative;
 }
 
@@ -60,51 +106,57 @@
   top: 0;
   bottom: 0;
   width: 3px;
-  background-color: var(--gold);
+  background-color: var(--rust, #A4451F);
 }
 
 .userBox {
-  padding: 1.5rem 2rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 1.75rem 2.25rem;
+  border-top: 1px solid rgba(227, 211, 184, 0.6);
 }
 
 .userInfo {
   display: flex;
   flex-direction: column;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .userInfo strong {
   font-size: 0.95rem;
+  color: var(--cocoa-deep, #2B2015);
 }
 
 .userInfo span {
   font-size: 0.8rem;
-  color: var(--taupe);
+  color: var(--taupe, #9C8770);
+  margin-top: 2px;
 }
 
 .logoutBtn {
   background: none;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 1rem;
+  border: 1px solid rgba(227, 211, 184, 0.9);
+  padding: 0.55rem 1rem;
   width: 100%;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--cocoa-deep, #2B2015);
   transition: all 0.2s ease;
 }
 
 .logoutBtn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(164, 69, 31, 0.08);
+  border-color: var(--rust, #A4451F);
+  color: var(--rust, #A4451F);
 }
 
 .main {
   flex: 1;
-  padding: 3rem 4rem;
+  padding: 3.5rem 4rem;
   overflow-y: auto;
-  background-color: var(--white);
+  background-color: var(--sand, #FAF6EF);
 }
 
 .contentWrapper {
@@ -114,30 +166,142 @@
 }
 
 .pageTitle {
-  font-family: var(--font-heading);
-  font-size: 2.5rem;
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 2.35rem;
   font-weight: 400;
-  margin-bottom: 2rem;
-  color: var(--black);
+  margin-bottom: 1.75rem;
+  color: var(--cocoa-deep, #2B2015);
+  letter-spacing: -0.01em;
 }
 
 .card {
-  background: var(--white);
+  background: #FFFDF9;
+  border: 1px solid rgba(227, 211, 184, 0.7);
   border-radius: 8px;
-  padding: 2rem;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 2.25rem;
+  box-shadow: 0 4px 24px rgba(43, 32, 21, 0.03);
   margin-bottom: 2rem;
 }
 
 .emptyState {
   text-align: center;
-  padding: 4rem 2rem;
-  background: rgba(0,0,0,0.02);
+  padding: 3.5rem 2rem;
+  background: #FFFDF9;
   border-radius: 8px;
-  border: 1px dashed rgba(0,0,0,0.1);
+  border: 1px dashed rgba(227, 211, 184, 0.85);
+}
+
+.emptyState h3 {
+  font-family: var(--font-heading, 'Fraunces', serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--cocoa-deep, #2B2015);
+  margin-bottom: 0.5rem;
 }
 
 .emptyState p {
-  color: var(--taupe);
-  margin-bottom: 1.5rem;
+  color: var(--taupe, #9C8770);
+  margin-bottom: 1.75rem;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+/* Tabs Scroller */
+.tabBar {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 2rem;
+  border-bottom: 1px solid rgba(227, 211, 184, 0.75);
+  margin-bottom: 2.5rem;
+  padding-bottom: 0;
+}
+
+.tabBar::-webkit-scrollbar {
+  display: none;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  padding: 0.85rem 0.2rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--taupe, #9C8770);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.tabBtnActive {
+  color: var(--rust, #A4451F);
+  font-weight: 600;
+  border-bottom: 2px solid var(--rust, #A4451F);
+}
+
+/* Action Buttons Container */
+.actionGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .accountContainer {
+    flex-direction: column;
+  }
+
+  .mobileHeader {
+    display: flex;
+  }
+
+  .overlay {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: -290px;
+    width: 270px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.25);
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .sidebarOpen {
+    left: 0;
+  }
+
+  .main {
+    padding: 2rem 1.25rem;
+  }
+
+  .card {
+    padding: 1.5rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .tabBar {
+    gap: 1.25rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .actionGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .actionGroup button, .actionGroup a {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
 }

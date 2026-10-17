@@ -85,7 +85,7 @@ export default function ExploreDoors() {
       <div className="wrap">
         <SectionHead 
           eyebrow="Explore the House" 
-          title="Five doors. One rhythm." 
+          title="One house. Five doors. One rhythm." 
         />
         <div className={`reveal ${styles.doorGrid}`}>
           {DOORS.map((door) => (

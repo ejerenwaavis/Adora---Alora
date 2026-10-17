@@ -1,6 +1,7 @@
-import { useState }    from 'react';
-import { Link }        from 'react-router-dom';
-import styles          from './Footer.module.css';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
+import styles from './Footer.module.css';
 
 const EXPLORE = [
   { to: '/movement',   label: 'Movement'   },
@@ -9,21 +10,27 @@ const EXPLORE = [
   { to: '/events',     label: 'Events'     },
 ];
 const HOUSE = [
-  { to: '/our-house',  label: 'Our House'  },
   { to: '/venue-hire', label: 'Venue Hire' },
   { to: '/visit',      label: 'Visit'      },
   { to: '/account',    label: 'Account'    },
-];
-const CONNECT = [
-  { href: 'https://instagram.com', label: 'Instagram' },
-  { href: 'https://wa.me/',        label: 'WhatsApp'  },
-  { href: 'https://raire.app',     label: 'Raire App' },
 ];
 
 export default function Footer() {
   const [email,     setEmail]     = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [loading,   setLoading]   = useState(false);
+  const [settings,  setSettings]  = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await axios.get('/api/site/settings/contact');
+        setSettings(res.data);
+      } catch (err) {
+        console.error('Failed to load contact settings:', err);
+      }
+    })();
+  }, []);
 
   const handleNewsletter = async (e) => {
     e.preventDefault();
@@ -34,13 +41,27 @@ export default function Footer() {
     setLoading(false);
   };
 
+  // Determine WhatsApp link from DB setting, then VITE env, then fallback
+  let whatsappHref = 'https://wa.me/17372324091';
+  if (settings?.whatsapp_number) {
+    whatsappHref = `https://wa.me/${settings.whatsapp_number.replace(/\D/g, '')}`;
+  } else if (import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER) {
+    whatsappHref = `https://wa.me/${import.meta.env.VITE_TWILIO_WHATSAPP_NUMBER.replace(/\D/g, '')}`;
+  }
+
+  const CONNECT = [
+    { href: settings?.instagram_url || 'https://instagram.com', label: 'Instagram' },
+    { href: whatsappHref,                                       label: 'WhatsApp'  },
+    { href: settings?.raire_app_url || 'https://raire.app',     label: 'Raire App' },
+  ];
+
   return (
     <footer className={styles.footer}>
       <div className="wrap">
 
         {/* Newsletter */}
         <div className={`${styles.newsletter} reveal`}>
-          <span className="script">Notes from the House</span>
+          <h3 className={styles.newsletterTitle}>Notes from the House</h3>
           <p>New classes, menu drops, seller features and upcoming events — straight to your inbox, roughly twice a month.</p>
           {submitted ? (
             <p className={styles.successMsg}>You're on the list. Welcome to the House.</p>
@@ -65,7 +86,7 @@ export default function Footer() {
         {/* Footer grid */}
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
+            <div className={styles.logo}>Aora House</div>
             <p>A Lagos lifestyle house for movement, food, fashion and community. Curating style, creating community.</p>
           </div>
           <div className={styles.col}>
@@ -95,7 +116,7 @@ export default function Footer() {
         </div>
 
         <div className={styles.bottom}>
-          <span>© {new Date().getFullYear()} Adora &amp; Alora. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} Aora House. All rights reserved.</span>
           <div className={styles.legal}>
             <Link to="/terms">Terms</Link>
             <Link to="/privacy">Privacy</Link>

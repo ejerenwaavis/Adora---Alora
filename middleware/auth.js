@@ -30,14 +30,15 @@ async function requireAuth(req, res, next) {
 // Factory — returns middleware that checks if req.user.role is in the allowed list
 // Usage: requireRole('admin', 'clerk')
 function requireRole(...allowedRoles) {
+  const roles = allowedRoles.flat();
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
-    if (!allowedRoles.includes(req.user.role)) {
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         error:    'Insufficient permissions',
-        required: allowedRoles,
+        required: roles,
         current:  req.user.role,
       });
     }

@@ -2,15 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, NavLink, useNavigate }       from 'react-router-dom';
 import { useAuth }                           from '../../contexts/AuthContext.jsx';
 import styles                                from './Nav.module.css';
+import SearchOverlay                         from '../ui/SearchOverlay';
 
 /* ─── Monogram Seal (from mockup) ─────────────────────────────────────────── */
 
 
 /* ─── Nav Links ─────────────────────────────────────────────────────────────── */
 const NAV_LINKS = [
-  { to: '/our-house',   label: 'Our House'   },
-  { to: '/cafe',        label: 'Café'        },
   { to: '/movement',    label: 'Movement'    },
+  { to: '/cafe',        label: 'Café'        },
   { to: '/fashion',     label: 'Fashion'     },
   { to: '/venue-hire',  label: 'Venue Hire'  },
   { to: '/events',      label: 'Events'      },
@@ -23,6 +23,7 @@ export default function Nav() {
   const [open, setOpen]             = useState(false);
   const [scrolled, setScrolled]     = useState(false);
   const [userMenu, setUserMenu]     = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Scroll shadow
   useEffect(() => {
@@ -52,15 +53,12 @@ export default function Nav() {
 
   return (
     <>
-      {/* ─── Announcement Bar ─── */}
-      <AnnouncementBar />
-
       {/* ─── Main Header ─── */}
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
         <nav className={styles.nav}>
           {/* Brand */}
-          <Link to="/" className={styles.brand} aria-label="Adora & Alora — Home">
-            <div className={styles.logo}>Adora <em>&amp;</em> Alora</div>
+          <Link to="/" className={styles.brand} aria-label="Aora House — Home">
+            <div className={styles.logo}>Aora House</div>
           </Link>
 
           {/* Desktop nav links */}
@@ -81,6 +79,20 @@ export default function Nav() {
 
           {/* Right side */}
           <div className={styles.navRight}>
+            
+            {/* Search Icon */}
+            <button 
+              className={styles.searchToggleBtn} 
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--cocoa-deep)', display: 'flex', alignItems: 'center' }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </button>
+
             <Link to="/movement" className="btn btn-primary hide-mobile">
               Book a Class <span className="btn-arrow">→</span>
             </Link>
@@ -102,17 +114,25 @@ export default function Nav() {
                       <strong>{user.firstName} {user.lastName}</strong>
                       <span>{user.email}</span>
                     </div>
-                    <Link to="/account"   onClick={() => setUserMenu(false)}>My Account</Link>
+                    <Link to="/account" onClick={() => setUserMenu(false)}>Dashboard Overview</Link>
+                    <Link to="/account?tab=bookings" onClick={() => setUserMenu(false)}>My Classes &amp; Events</Link>
+                    <Link to="/account/orders" onClick={() => setUserMenu(false)}>My Orders</Link>
+                    <Link to="/account?tab=passes" onClick={() => setUserMenu(false)}>Digital QR Passes</Link>
+                    {!(user.waiverSigned || user.waiver?.signed || user.waiverSignedAt) && (
+                      <Link to="/account/waiver" onClick={() => setUserMenu(false)}>Liability Waiver</Link>
+                    )}
                     {isStaff && (
                       <>
+                        <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0' }} />
                         {['admin','content_editor','finance','instructor'].includes(user.role) && (
-                          <Link to="/admin"  onClick={() => setUserMenu(false)}>Admin Panel</Link>
+                          <Link to="/admin" onClick={() => setUserMenu(false)}>Admin Panel</Link>
                         )}
                         {['admin','clerk'].includes(user.role) && (
                           <Link to="/clerk" onClick={() => setUserMenu(false)}>Clerk Desk</Link>
                         )}
                       </>
                     )}
+                    <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0' }} />
                     <button onClick={handleLogout} className={styles.logoutBtn}>Sign Out</button>
                   </div>
                 )}
@@ -159,6 +179,8 @@ export default function Nav() {
           </Link>
         </div>
       </div>
+
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
 }
@@ -167,7 +189,7 @@ export default function Nav() {
 function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(false);
   // TODO Phase 3: fetch active announcements from /api/site/announcements
-  const message = 'Adora & Alora — Opening soon in Lagos. Join the waitlist.';
+  const message = 'Aora House — Opening soon in Lagos. Join the waitlist.';
 
   if (dismissed) return null;
   return (
