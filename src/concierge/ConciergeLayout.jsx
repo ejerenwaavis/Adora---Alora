@@ -30,23 +30,25 @@ export default function ConciergeLayout() {
         {/* Navigation */}
         <nav style={{ padding: '24px 16px', flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {/* Back to HQ Admin */}
-          <Link
-            to="/admin"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px',
-              borderRadius: '6px', textDecoration: 'none',
-              background: 'rgba(42, 29, 20, 0.05)',
-              color: 'var(--cocoa-deep)',
-              border: '1px solid rgba(227, 211, 184, 0.8)',
-              fontSize: '12px', fontWeight: 600, transition: 'all 0.2s',
-              marginBottom: '8px'
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Back to Admin Center
-          </Link>
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px',
+                borderRadius: '6px', textDecoration: 'none',
+                background: 'rgba(42, 29, 20, 0.05)',
+                color: 'var(--cocoa-deep)',
+                border: '1px solid rgba(227, 211, 184, 0.8)',
+                fontSize: '12px', fontWeight: 600, transition: 'all 0.2s',
+                marginBottom: '8px'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              Back to Admin Center
+            </Link>
+          )}
 
           <NavLink 
             to="/concierge" 

@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import styles from './KitchenKDS.module.css';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function KitchenKDS() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(new Date());
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const fetchOrders = async () => {
@@ -148,6 +148,27 @@ export default function KitchenKDS() {
             <span className={styles.pulse}></span>
             Live Sync
           </div>
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.12)',
+                color: '#fff',
+                textDecoration: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                transition: 'all 0.2s'
+              }}
+            >
+              ← Back to Admin
+            </Link>
+          )}
           <button onClick={handleLogout} className={styles.logoutBtn}>Sign Out</button>
         </div>
       </header>

@@ -174,7 +174,7 @@ export default function AdminDashboard() {
             Welcome back, <strong>{user?.firstName || 'Admin'} {user?.lastName || ''}</strong>. {isContentEditor ? 'Manage café menus, movement classes, events, fashion catalogue, and house announcements.' : 'Real-time overview of house community, operations, and spaces.'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {isAdmin && (
             <>
               <Link to="/concierge" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
@@ -190,6 +190,9 @@ export default function AdminDashboard() {
           )}
           <Link to="/" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
             View Public Site <span className="btn-arrow">↗</span>
+          </Link>
+          <Link to="/kitchen" target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            <Icon name="cafe" size={14} /> Kitchen Display <span className="btn-arrow">↗</span>
           </Link>
         </div>
       </div>

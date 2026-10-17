@@ -29,24 +29,26 @@ export default function FinanceLayout() {
         </div>
 
         {/* Back to HQ Admin */}
-        <div style={{ padding: '0 12px', marginBottom: '16px' }}>
-          <Link
-            to="/admin"
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px',
-              borderRadius: '6px', textDecoration: 'none',
-              background: 'rgba(227, 211, 184, 0.1)',
-              color: 'var(--gold-light, #E3D3B8)',
-              border: '1px solid rgba(227, 211, 184, 0.25)',
-              fontSize: '12px', fontWeight: 600, transition: 'all 0.2s'
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-            Back to Admin Center
-          </Link>
-        </div>
+        {user?.role === 'admin' && (
+          <div style={{ padding: '0 12px', marginBottom: '16px' }}>
+            <Link
+              to="/admin"
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px',
+                borderRadius: '6px', textDecoration: 'none',
+                background: 'rgba(227, 211, 184, 0.1)',
+                color: 'var(--gold-light, #E3D3B8)',
+                border: '1px solid rgba(227, 211, 184, 0.25)',
+                fontSize: '12px', fontWeight: 600, transition: 'all 0.2s'
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              Back to Admin Center
+            </Link>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '0 12px', flex: 1 }}>
           <NavLink 
