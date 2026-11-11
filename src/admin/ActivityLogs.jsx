@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './ActivityLogs.module.css';
 
 export default function ActivityLogs() {
-  const { user } = useAuth();
+  const { authFetch } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
@@ -12,9 +11,11 @@ export default function ActivityLogs() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const url = filter ? `/api/admin/logs?category=${filter}` : '/api/admin/logs';
-      const res = await axios.get(url);
-      setLogs(res.data);
+      const url = filter ? `/api/admin/logs?category=${encodeURIComponent(filter)}` : '/api/admin/logs';
+      const res = await authFetch(url);
+      if (!res.ok) throw new Error('Failed to fetch logs');
+      const data = await res.json();
+      setLogs(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to fetch logs:', err);
     } finally {
@@ -26,16 +27,19 @@ export default function ActivityLogs() {
     fetchLogs();
   }, [filter]);
 
-  const getActionColor = (action) => {
-    switch(action) {
-      case 'CREATE': return '#2E6B3E';
-      case 'UPDATE': return '#B38136';
-      case 'DELETE': return '#8B3318';
-      case 'PUBLISH': return '#2E6B3E';
-      case 'ARCHIVE': return '#666';
-      case 'LOGIN': return '#0055ff';
-      default: return '#666';
+  const getActionColor = (action = '') => {
+    const upper = String(action).toUpperCase();
+    if (upper.includes('CREATE') || upper.includes('PUBLISH') || upper.includes('PROVISION') || upper.includes('CHECKIN') || upper.includes('WALKIN') || upper.includes('REACTIVATE') || upper.includes('SIGN')) {
+      return '#2E6B3E';
     }
+    if (upper.includes('UPDATE') || upper.includes('STATUS') || upper.includes('ADJUST') || upper.includes('TOGGLE') || upper.includes('RESET')) {
+      return '#B38136';
+    }
+    if (upper.includes('DELETE') || upper.includes('DEACTIVATE')) {
+      return '#8B3318';
+    }
+    if (upper === 'LOGIN') return '#0055ff';
+    return '#666';
   };
 
   return (
@@ -43,7 +47,7 @@ export default function ActivityLogs() {
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Activity Logs</h1>
-          <p className={styles.subtitle}>Track changes made to settings, content, and configurations across Aora House.</p>
+          <p className={styles.subtitle}>Track changes made to settings, staff, café operations, classes, and configurations across Aora House.</p>
         </div>
         
         <select 
@@ -52,13 +56,18 @@ export default function ActivityLogs() {
           onChange={(e) => setFilter(e.target.value)}
         >
           <option value="">All Categories</option>
-          <option value="SETTINGS">Settings & Config</option>
+          <option value="CAFE">Café &amp; Takeout</option>
+          <option value="CLASSES">Classes &amp; Check-ins</option>
           <option value="EVENTS">Events</option>
-          <option value="FASHION">Fashion & Retail</option>
-          <option value="MENU">Café Menu</option>
-          <option value="CLASSES">Classes</option>
-          <option value="USERS">User Management</option>
+          <option value="USERS">Staff &amp; Users</option>
+          <option value="CONCIERGE">Concierge</option>
           <option value="VENUE">Venue Hire</option>
+          <option value="WAITLIST">Waitlist</option>
+          <option value="WAIVER">Waivers</option>
+          <option value="SETTINGS">Settings &amp; Config</option>
+          <option value="FASHION">Fashion &amp; Retail</option>
+          <option value="MENU">Café Menu</option>
+          <option value="OPERATIONS">Operations</option>
         </select>
       </header>
 
@@ -75,7 +84,7 @@ export default function ActivityLogs() {
                 <th>Item Affected</th>
                 <th>Category</th>
                 <th>User</th>
-                <th>Date & Time</th>
+                <th>Date &amp; Time</th>
               </tr>
             </thead>
             <tbody>
@@ -93,13 +102,16 @@ export default function ActivityLogs() {
                     </span>
                   </td>
                   <td className={styles.itemCell}>
-                    {log.itemAffected}
+                    <div>{log.itemAffected || log.description || 'System Record'}</div>
+                    {log.description && log.itemAffected && log.description !== log.itemAffected && (
+                      <div className={styles.detailHint}>{log.description}</div>
+                    )}
                     {log.details && log.action === 'UPDATE' && log.details.value && (
                       <span className={styles.detailHint}> → {String(log.details.value)}</span>
                     )}
                   </td>
                   <td>
-                    <span className={styles.categoryPill}>{log.category}</span>
+                    <span className={styles.categoryPill}>{log.category || 'OPERATIONS'}</span>
                   </td>
                   <td>
                     <div className={styles.userCell}>

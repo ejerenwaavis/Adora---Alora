@@ -4,21 +4,42 @@ const activityLogSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false,
+    default: null
   },
   action: {
     type: String,
-    enum: ['CREATE', 'UPDATE', 'DELETE', 'PUBLISH', 'ARCHIVE', 'LOGIN'],
-    required: true
+    required: true,
+    trim: true
   },
   category: {
     type: String,
-    enum: ['SETTINGS', 'EVENTS', 'FASHION', 'MENU', 'CLASSES', 'USERS', 'VENUE', 'AUTH'],
-    required: true
+    required: false,
+    default: 'OPERATIONS',
+    trim: true
   },
   itemAffected: {
     type: String,
-    required: true
+    required: false,
+    default: 'System Record',
+    trim: true
+  },
+  description: {
+    type: String,
+    required: false,
+    default: '',
+    trim: true
+  },
+  entityModel: {
+    type: String,
+    required: false,
+    default: '',
+    trim: true
+  },
+  entityId: {
+    type: mongoose.Schema.Types.Mixed,
+    required: false,
+    default: null
   },
   details: {
     type: mongoose.Schema.Types.Mixed,
@@ -30,5 +51,8 @@ const activityLogSchema = new mongoose.Schema({
     expires: '90d' // Automatically delete after 90 days
   }
 });
+
+activityLogSchema.index({ createdAt: -1 });
+activityLogSchema.index({ category: 1, createdAt: -1 });
 
 module.exports = mongoose.model('ActivityLog', activityLogSchema);

@@ -10,6 +10,7 @@ const VenueEnquiry = require('../models/VenueEnquiry');
 const ActivityLog = require('../models/ActivityLog');
 const Order = require('../models/Order');
 const ClassSession = require('../models/ClassSession');
+const logActivity = require('../utils/activityLogger');
 
 // All admin routes require admin role
 router.use(requireAuth);
@@ -315,9 +316,11 @@ router.post('/users/provision', async (req, res) => {
       });
     }
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'staff_provisioned',
+      category: 'USERS',
+      itemAffected: `${newUser.firstName} ${newUser.lastName} (${userRole.toUpperCase()})`,
       entityModel: 'User',
       entityId: newUser._id,
       description: `Provisioned ${userRole.toUpperCase()} account for ${newUser.firstName} ${newUser.lastName} (${newUser.email})`
@@ -374,9 +377,11 @@ router.put('/users/:id', async (req, res) => {
       }
     }
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'user_updated',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${targetUser.role})`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `Updated profile & role for ${targetUser.firstName} ${targetUser.lastName} (Role: ${targetUser.role})`
@@ -402,9 +407,11 @@ router.post('/users/:id/reset-password', async (req, res) => {
     targetUser.passwordHash = await bcrypt.hash(password, 12);
     await targetUser.save();
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'password_reset_admin',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${targetUser.email})`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `Directly reset password for ${targetUser.firstName} ${targetUser.lastName} (${targetUser.email})`
@@ -429,9 +436,11 @@ router.patch('/users/:id/toggle-status', async (req, res) => {
     targetUser.isActive = !targetUser.isActive;
     await targetUser.save();
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: targetUser.isActive ? 'user_reactivated' : 'user_deactivated',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${targetUser.isActive ? 'Active' : 'Inactive'})`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `${targetUser.isActive ? 'Reactivated' : 'Deactivated'} account for ${targetUser.firstName} ${targetUser.lastName}`
@@ -455,9 +464,11 @@ router.patch('/users/:id/toggle-verify', async (req, res) => {
     targetUser.isEmailVerified = !targetUser.isEmailVerified;
     await targetUser.save();
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'email_verification_toggle',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${targetUser.isEmailVerified ? 'Verified' : 'Unverified'})`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `Marked email as ${targetUser.isEmailVerified ? 'Verified' : 'Unverified'} for ${targetUser.firstName} ${targetUser.lastName}`
@@ -488,9 +499,11 @@ router.post('/users/:id/adjust-credits', async (req, res) => {
     targetUser.classCredits = Math.max(0, prevCredits + delta);
     await targetUser.save();
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'credits_adjusted_admin',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${delta > 0 ? `+${delta}` : delta} credits)`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `Adjusted credits for ${targetUser.firstName} ${targetUser.lastName}: ${delta > 0 ? `+${delta}` : delta} (New Balance: ${targetUser.classCredits})${reason ? ` · Reason: ${reason}` : ''}`
@@ -517,9 +530,11 @@ router.delete('/users/:id', async (req, res) => {
 
     await User.findByIdAndDelete(req.params.id);
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'user_deleted',
+      category: 'USERS',
+      itemAffected: `${targetUser.firstName} ${targetUser.lastName} (${targetUser.email})`,
       entityModel: 'User',
       entityId: targetUser._id,
       description: `Permanently deleted user account for ${targetUser.firstName} ${targetUser.lastName} (${targetUser.email})`
@@ -588,9 +603,11 @@ router.patch('/waitlist/:id', async (req, res) => {
     const updated = await Waitlist.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!updated) return res.status(404).json({ error: 'Waitlist entry not found.' });
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'waitlist_updated',
+      category: 'WAITLIST',
+      itemAffected: `${updated.email} (${updated.perkStatus})`,
       entityModel: 'Waitlist',
       entityId: updated._id,
       description: `Updated waitlist status for ${updated.email} to ${updated.perkStatus}`
@@ -608,9 +625,11 @@ router.delete('/waitlist/:id', async (req, res) => {
     const entry = await Waitlist.findByIdAndDelete(req.params.id);
     if (!entry) return res.status(404).json({ error: 'Waitlist entry not found.' });
 
-    await ActivityLog.create({
+    await logActivity.entry({
       user: req.user._id,
       action: 'waitlist_deleted',
+      category: 'WAITLIST',
+      itemAffected: entry.email,
       entityModel: 'Waitlist',
       entityId: entry._id,
       description: `Removed ${entry.email} from the waiting list`

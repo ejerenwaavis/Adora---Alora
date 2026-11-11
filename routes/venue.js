@@ -7,6 +7,7 @@ const { sendVenueEnquiryAck } = require('../services/mailer');
 const { formLimiter } = require('../middleware/rateLimiter');
 const { antiBotShield } = require('../middleware/antiBot');
 const { validateName, validateEmail, validatePhone } = require('../utils/validation');
+const logActivity = require('../utils/activityLogger');
 
 // Public: Get all active spaces
 router.get('/spaces', async (req, res) => {
@@ -175,6 +176,17 @@ router.patch('/enquiries/:id', requireAuth, requireRole('super_admin', 'admin', 
     );
 
     if (!enquiry) return res.status(404).json({ error: 'Enquiry not found' });
+
+    await logActivity.entry({
+      user: req.user?._id,
+      action: 'venue_enquiry_updated',
+      category: 'VENUE',
+      itemAffected: `${enquiry.firstName} ${enquiry.lastName} · ${enquiry.eventType || 'Venue'} (${enquiry.status})`,
+      entityModel: 'VenueEnquiry',
+      entityId: enquiry._id,
+      description: `Updated venue enquiry for ${enquiry.firstName} ${enquiry.lastName} to ${enquiry.status}`
+    });
+
     res.json({ success: true, enquiry });
   } catch (err) {
     console.error('Error updating venue enquiry:', err);

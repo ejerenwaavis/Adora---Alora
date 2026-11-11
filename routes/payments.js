@@ -18,6 +18,7 @@ const {
   sendCafeOrderReceipt,
   sendEventTicketConfirmation
 } = require('../services/mailer');
+const { logError } = require('../utils/errorLogger');
 
 /**
  * Universal fulfillment logic executed on either Paystack Redirect Verification or Webhook confirmation.
@@ -330,6 +331,14 @@ router.get('/verify/:reference', async (req, res) => {
     });
   } catch (err) {
     console.error(`[Paystack Verification Error for ${reference}]:`, err.response?.data || err.message);
+    logError({
+      level: 'error',
+      source: 'paystack_verify',
+      error: err,
+      req,
+      statusCode: 502,
+      context: { reference, paystackResponse: err.response?.data }
+    });
     const apiError = err.response?.data?.message || err.message;
     return res.status(200).json({
       success: false,

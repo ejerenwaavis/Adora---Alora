@@ -15,6 +15,7 @@ import Events       from './pages/Events.jsx';
 import Visit        from './pages/Visit.jsx';
 import KioskCheckIn from './pages/KioskCheckIn.jsx';
 import PaymentVerify from './pages/PaymentVerify.jsx';
+import DeveloperLogs from './pages/DeveloperLogs.jsx';
 
 // Auth Pages
 import Login           from './pages/Login.jsx';
@@ -148,6 +149,7 @@ const publicRouter = createBrowserRouter([
       { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
     ]
   },
+  { path: '/developer/logs', element: <DeveloperLogs /> },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);
 
@@ -231,6 +233,10 @@ const internalRouter = createBrowserRouter([
   {
     path: '/kitchen',
     element: <RequireRole roles={['admin','kitchen','chef']}><KitchenKDS /></RequireRole>
+  },
+  {
+    path: '/developer/logs',
+    element: <DeveloperLogs />
   },
   { path: '*', element: <Navigate to="/" replace /> },
 ]);

@@ -15,8 +15,29 @@ const path      = require('path');
 const fs        = require('fs');
 const mongoSanitize = require('express-mongo-sanitize');
 const { apiLimiter } = require('./middleware/rateLimiter');
+const { logError } = require('./utils/errorLogger');
 
 const app = express();
+
+// Capture unhandled runtime rejections and uncaught exceptions in Developer Error Log
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED REJECTION]', reason);
+  logError({
+    level: 'fatal',
+    source: 'unhandledRejection',
+    error: reason instanceof Error ? reason : new Error(String(reason)),
+    statusCode: 500
+  });
+});
+
+process.on('uncaughtExceptionMonitor', (err) => {
+  logError({
+    level: 'fatal',
+    source: 'uncaughtException',
+    error: err,
+    statusCode: 500
+  });
+});
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 1. TRUST PROXY â€” ALWAYS. Namecheap Passenger sits behind a proxy layer.
@@ -71,7 +92,7 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Form-Token'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Form-Token', 'X-Dev-Token'],
 }));
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -134,7 +155,31 @@ app.get('/api/health', healthHandler);
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // 6. API ROUTES & SECURITY SHIELDS
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// Automatically record all API 5xx responses in Developer ErrorLog
+app.use('/api', (req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 500 && !res.__devErrorLogged && req.path !== '/developer/logs') {
+      res.__devErrorLogged = true;
+      const errMsg =
+        (body && (body.error || body.message)) ||
+        `HTTP ${res.statusCode} error on ${req.method} ${req.originalUrl}`;
+      logError({
+        level: 'error',
+        source: 'api_5xx_response',
+        message: errMsg,
+        req,
+        statusCode: res.statusCode,
+        context: body && typeof body === 'object' ? { responseBody: body } : undefined
+      });
+    }
+    return originalJson(body);
+  };
+  next();
+});
+
 app.use('/api', apiLimiter);
+app.use('/api/developer', require('./routes/developer'));
 app.use('/api/security', require('./routes/security'));
 app.use('/api/auth',     require('./routes/auth'));
 app.use('/api/bookings', require('./routes/bookings'));
@@ -177,6 +222,16 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('[ERROR]', err.stack || err.message);
   const status = err.status || err.statusCode || 500;
+  if (status >= 500 && !res.__devErrorLogged) {
+    res.__devErrorLogged = true;
+    logError({
+      level: 'error',
+      source: 'express_error_handler',
+      error: err,
+      req,
+      statusCode: status
+    });
+  }
   res.status(status).json({
     error:   status >= 500 ? 'Internal server error' : err.message,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

@@ -12,14 +12,32 @@ const EventBooking = require('../models/EventBooking');
 const ActivityLog = require('../models/ActivityLog');
 const Order = require('../models/Order');
 const { sendCafeOrderReady } = require('../services/mailer');
+const logActivityHelper = require('../utils/activityLogger');
 
 // Clerk routes — clerk or admin
 router.use(requireAuth);
 router.use(requireRole('admin', 'clerk'));
 
-// Helper for logging
-async function logActivity(userId, action, entityModel, entityId, description) {
-  await ActivityLog.create({ user: userId, action, entityModel, entityId, description });
+const MODEL_CATEGORY_MAP = {
+  Booking: 'CLASSES',
+  EventBooking: 'EVENTS',
+  CafeReservation: 'CAFE',
+  Order: 'CAFE',
+  User: 'USERS'
+};
+
+// Non-blocking helper preserving clerk call signature with meaningful category & itemAffected
+async function logActivity(userId, action, entityModel, entityId, description, itemAffected = '') {
+  const category = MODEL_CATEGORY_MAP[entityModel] || 'OPERATIONS';
+  return logActivityHelper.entry({
+    user: userId,
+    action,
+    category,
+    itemAffected: itemAffected || description || `${entityModel || 'Record'} #${entityId || ''}`,
+    description: description || itemAffected || '',
+    entityModel,
+    entityId
+  });
 }
 
 // ── QR Check-in ──
@@ -58,7 +76,8 @@ router.post('/qr-checkin', async (req, res) => {
         'qr_checkin_class', 
         'Booking', 
         booking._id, 
-        `QR Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`
+        `QR Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`,
+        `${booking.user.firstName} ${booking.user.lastName} · ${className}`
       );
       
       return res.json({ message: `Successfully checked in ${booking.user.firstName} ${booking.user.lastName}` });
@@ -79,7 +98,8 @@ router.post('/qr-checkin', async (req, res) => {
         'qr_checkin_event', 
         'EventBooking', 
         booking._id, 
-        `QR Checked in ${booking.customerName} for ${eventTitle}${timeStr}`
+        `QR Checked in ${booking.customerName} for ${eventTitle}${timeStr}`,
+        `${booking.customerName} · ${eventTitle}`
       );
       
       return res.json({ message: `Successfully checked in ${booking.customerName}` });
@@ -199,7 +219,8 @@ router.post('/classes/checkin', async (req, res) => {
       'class_checkin', 
       'Booking', 
       booking._id, 
-      `Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`
+      `Checked in ${booking.user.firstName} ${booking.user.lastName} for ${className}${timeStr}`,
+      `${booking.user.firstName} ${booking.user.lastName} · ${className}`
     );
 
     res.json({ message: 'Checked in successfully', booking });
@@ -249,7 +270,8 @@ router.post('/classes/walkin', async (req, res) => {
       'class_walkin', 
       'Booking', 
       booking._id, 
-      `Walk-in booked and checked in ${user.firstName} ${user.lastName} for ${className}${timeStr}`
+      `Walk-in booked and checked in ${user.firstName} ${user.lastName} for ${className}${timeStr}`,
+      `${user.firstName} ${user.lastName} · ${className}`
     );
 
     res.json({ message: 'Walk-in successful', booking });
@@ -286,7 +308,8 @@ router.post('/cafe/status', async (req, res) => {
       'cafe_status_update', 
       'CafeReservation', 
       reservation._id, 
-      `Updated cafe reservation for ${reservation.customerName} to ${status}`
+      `Updated cafe reservation for ${reservation.customerName} to ${status}`,
+      `Reservation: ${reservation.customerName} (${status})`
     );
 
     res.json({ message: 'Status updated', reservation });
@@ -307,7 +330,7 @@ router.post('/cafe/walkin', async (req, res) => {
       status: 'seated'
     });
     await reservation.save();
-    await logActivity(req.user.id, 'cafe_walkin', 'CafeReservation', reservation._id, `Seated cafe walk-in ${name}`);
+    await logActivity(req.user.id, 'cafe_walkin', 'CafeReservation', reservation._id, `Seated cafe walk-in ${name}`, `Cafe Walk-in: ${name}`);
     res.json({ message: 'Cafe walk-in seated', reservation });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -367,12 +390,14 @@ router.post('/cafe/orders/:id/status', async (req, res) => {
       sendCafeOrderReady({ order }).catch(e => console.warn('Cafe order ready email error:', e.message));
     }
 
+    const orderShortId = order.orderNumber || `#${order._id.toString().slice(-4).toUpperCase()}`;
     await logActivity(
       req.user.id,
       'takeout_order_status_update',
       'Order',
       order._id,
-      `Updated takeout order #${order._id.toString().slice(-4).toUpperCase()} (${order.customerName}) from ${prevStatus} to ${order.status}`
+      `Updated takeout order ${orderShortId} (${order.customerName}) from ${prevStatus} to ${order.status}`,
+      `Takeout ${orderShortId} (${order.customerName}) → ${order.status}`
     );
 
     res.json({ message: 'Order status updated', order });
@@ -422,7 +447,8 @@ router.post('/events/checkin', async (req, res) => {
       'event_checkin', 
       'EventBooking', 
       booking._id, 
-      `Checked in ${booking.customerName} for ${eventTitle}${timeStr}`
+      `Checked in ${booking.customerName} for ${eventTitle}${timeStr}`,
+      `${booking.customerName} · ${eventTitle}`
     );
 
     res.json({ message: 'Event check-in successful', booking });
@@ -454,7 +480,7 @@ router.post('/events/walkin', async (req, res) => {
       checkedInAt: new Date()
     });
     await booking.save();
-    await logActivity(req.user.id, 'event_walkin', 'EventBooking', booking._id, `Checked in event walk-in ${name}`);
+    await logActivity(req.user.id, 'event_walkin', 'EventBooking', booking._id, `Checked in event walk-in ${name}`, `Event Walk-in: ${name}`);
     res.json({ message: 'Event walk-in successful', booking });
   } catch (err) {
     res.status(500).json({ error: err.message });

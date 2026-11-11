@@ -3,6 +3,7 @@ const router = express.Router();
 const SupportTicket = require('../models/SupportTicket');
 const VenueEnquiry = require('../models/VenueEnquiry');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const logActivity = require('../utils/activityLogger');
 
 // Get user's support tickets and venue enquiries
 router.get('/my-tickets', requireAuth, async (req, res) => {
@@ -226,6 +227,17 @@ const updateStatusHandler = async (req, res) => {
 
     const ticket = await SupportTicket.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+    await logActivity.entry({
+      user: req.user._id,
+      action: 'concierge_ticket_status_update',
+      category: 'CONCIERGE',
+      itemAffected: `${ticket.subject || 'Ticket'} → ${status}`,
+      entityModel: 'SupportTicket',
+      entityId: ticket._id,
+      description: `Updated concierge request "${ticket.subject || ticket._id}" status to ${status}`
+    });
+
     res.json({ success: true, ticket });
   } catch (err) {
     res.status(500).json({ error: err.message });

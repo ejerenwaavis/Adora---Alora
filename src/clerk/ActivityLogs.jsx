@@ -78,7 +78,7 @@ export default function ActivityLogs() {
                 </span>
               </div>
               <div style={{ fontSize: '12px', color: 'var(--ink)', lineHeight: 1.4 }}>
-                {log.description}
+                {log.description || log.itemAffected || 'System event recorded'}
               </div>
             </div>
           ))}

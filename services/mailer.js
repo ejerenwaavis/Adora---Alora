@@ -72,6 +72,18 @@ async function send({ to, subject, html, text, attachments, bcc }) {
       'X-Entity-Ref-ID': messageId
     },
     attachments: attachments || []
+  }).catch((err) => {
+    try {
+      const { logError } = require('../utils/errorLogger');
+      logError({
+        level: 'error',
+        source: 'mailer',
+        message: `SMTP send failed to ${to} (${subject}): ${err.message}`,
+        error: err,
+        context: { to, subject }
+      });
+    } catch (_) {}
+    throw err;
   });
 }
 
