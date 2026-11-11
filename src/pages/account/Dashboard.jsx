@@ -315,10 +315,10 @@ export default function Dashboard({ defaultTab }) {
 
   const isWaiverSigned = dashboardData.waiverSigned || user?.waiverSigned || Boolean(user?.waiverSignedAt);
 
-  const cafeOrders = dashboardData.cafeOrders || [];
-  const fashionOrders = dashboardData.fashionOrders || [];
+  const cafeOrders = (dashboardData.cafeOrders || []).filter(o => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED');
+  const fashionOrders = (dashboardData.fashionOrders || []).filter(o => o.status !== 'CANCELLED');
 
-  const pendingCafeOrders = cafeOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+  const pendingCafeOrders = cafeOrders.filter(o => ['ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
   const pendingFashionOrders = fashionOrders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status));
   const totalPendingOrders = pendingCafeOrders.length + pendingFashionOrders.length;
 

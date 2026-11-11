@@ -9,6 +9,7 @@ export default function OrderConfirmationModal({
   state = 'success', // 'redirecting' | 'verifying' | 'success' | 'failed'
   error = null,
   onRetry = null,
+  onCancel = null,
   redirectingText = 'You are being redirected to checkout...'
 }) {
   if (!isOpen) return null;
@@ -21,6 +22,10 @@ export default function OrderConfirmationModal({
   const totalNaira = ((order?.totalAmountKobo || 0) / 100).toLocaleString();
 
   const isTransitioning = state === 'redirecting' || state === 'verifying';
+  const handleDismiss = () => {
+    if (onCancel) onCancel();
+    else if (onClose) onClose();
+  };
 
   return (
     <div 
@@ -36,7 +41,7 @@ export default function OrderConfirmationModal({
         padding: '16px'
       }} 
       onClick={(e) => { 
-        if (e.target === e.currentTarget && !isTransitioning) onClose(); 
+        if (e.target === e.currentTarget) handleDismiss(); 
       }}
     >
       <div style={{
@@ -73,27 +78,27 @@ export default function OrderConfirmationModal({
           color: '#F7EFE1',
           position: 'relative'
         }}>
-          {!isTransitioning && (
-            <button 
-              type="button" 
-              onClick={onClose}
-              style={{ 
-                position: 'absolute', 
-                top: '14px', 
-                right: '14px', 
-                background: 'none', 
-                border: 'none', 
-                color: '#F7EFE1', 
-                cursor: 'pointer', 
-                padding: '4px', 
-                display: 'flex', 
-                alignItems: 'center' 
-              }}
-              aria-label="Close modal"
-            >
-              <IconX size={18} color="#F7EFE1" />
-            </button>
-          )}
+          <button 
+            type="button" 
+            onClick={handleDismiss}
+            style={{ 
+              position: 'absolute', 
+              top: '14px', 
+              right: '14px', 
+              background: 'none', 
+              border: 'none', 
+              color: '#F7EFE1', 
+              cursor: 'pointer', 
+              padding: '4px', 
+              display: 'flex', 
+              alignItems: 'center',
+              opacity: 0.85,
+              transition: 'opacity 0.2s ease'
+            }}
+            aria-label="Close modal"
+          >
+            <IconX size={18} color="#F7EFE1" />
+          </button>
           
           {/* Top Badge Icon */}
           <div style={{
@@ -191,9 +196,27 @@ export default function OrderConfirmationModal({
               }}>
                 {redirectingText}
               </h4>
-              <p style={{ color: 'var(--taupe, #9C8770)', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 auto', maxWidth: '320px' }}>
+              <p style={{ color: 'var(--taupe, #9C8770)', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 auto 1.25rem', maxWidth: '320px' }}>
                 Connecting to Paystack gateway. Please keep this screen open while we transfer you to checkout.
               </p>
+              <button
+                type="button"
+                onClick={handleDismiss}
+                style={{
+                  background: 'none',
+                  border: '1px solid rgba(184, 95, 60, 0.4)',
+                  color: 'var(--rust, #B85F3C)',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel Checkout
+              </button>
             </div>
           )}
 
@@ -218,9 +241,35 @@ export default function OrderConfirmationModal({
               }}>
                 Verifying Your Payment…
               </h4>
-              <p style={{ color: 'var(--taupe, #9C8770)', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 auto', maxWidth: '320px' }}>
+              <p style={{ color: 'var(--taupe, #9C8770)', fontSize: '0.9rem', lineHeight: 1.6, margin: '0 auto 1.25rem', maxWidth: '320px' }}>
                 Synchronizing with Paystack and alerting the café kitchen. This will take just a few seconds.
               </p>
+
+              <div style={{ borderTop: '1px solid rgba(227, 211, 184, 0.6)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={handleDismiss}
+                  style={{
+                    background: 'var(--paper, #FAF6EF)',
+                    border: '1px solid rgba(184, 95, 60, 0.6)',
+                    color: 'var(--rust, #B85F3C)',
+                    padding: '10px 20px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(184, 95, 60, 0.1)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  ✕ Cancel &amp; Return to Menu
+                </button>
+                <span style={{ fontSize: '11.5px', color: 'var(--taupe, #9C8770)' }}>
+                  Abandoned checkout or closed Paystack? Click above to cancel.
+                </span>
+              </div>
             </div>
           )}
 

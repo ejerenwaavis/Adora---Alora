@@ -232,12 +232,16 @@ router.get('/bookings', async (req, res) => {
         .sort({ createdAt: -1 }),
 
       EventBooking.find({
+        paymentStatus: 'PAID',
+        status: { $ne: 'cancelled' },
         $or: [{ user: req.user._id }, { customerEmail: emailRegex }]
       })
         .populate('event')
         .sort({ createdAt: -1 }),
 
       Order.find({
+        paymentStatus: 'PAID',
+        status: { $ne: 'CANCELLED' },
         $or: [
           { user: req.user._id },
           { customerEmail: emailRegex }
@@ -245,7 +249,8 @@ router.get('/bookings', async (req, res) => {
       }).sort({ createdAt: -1 }),
 
       FashionOrder.find({
-        customerEmail: emailRegex
+        customerEmail: emailRegex,
+        status: { $ne: 'CANCELLED' }
       }).populate('fashionItem').sort({ createdAt: -1 })
     ]);
 
@@ -304,6 +309,8 @@ router.get('/orders', async (req, res) => {
 
     const [cafeOrders, fashionOrders] = await Promise.all([
       Order.find({
+        paymentStatus: 'PAID',
+        status: { $ne: 'CANCELLED' },
         $or: [
           { user: req.user._id },
           { customerEmail: emailRegex }
@@ -311,12 +318,13 @@ router.get('/orders', async (req, res) => {
       }).sort({ createdAt: -1 }),
 
       FashionOrder.find({
-        customerEmail: emailRegex
+        customerEmail: emailRegex,
+        status: { $ne: 'CANCELLED' }
       }).populate('fashionItem').sort({ createdAt: -1 })
     ]);
 
-    const pendingCafeOrders = cafeOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
-    const pastCafeOrders = cafeOrders.filter(o => !['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+    const pendingCafeOrders = cafeOrders.filter(o => ['ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+    const pastCafeOrders = cafeOrders.filter(o => !['ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
 
     const pendingFashionOrders = fashionOrders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status));
     const pastFashionOrders = fashionOrders.filter(o => !['PENDING', 'CONFIRMED'].includes(o.status));

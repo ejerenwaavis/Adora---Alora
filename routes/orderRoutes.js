@@ -120,6 +120,28 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
   }
 });
 
+// Cancel an unpaid pending order (e.g. user abandoned checkout on Paystack)
+router.post('/:id/cancel', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ success: false, error: 'Order not found' });
+
+    // Protect completed payments from accidental cancellation
+    if (order.paymentStatus === 'PAID') {
+      return res.status(400).json({ success: false, error: 'Cannot cancel an order that has already been paid.' });
+    }
+
+    order.status = 'CANCELLED';
+    order.paymentStatus = 'FAILED';
+    await order.save();
+
+    res.json({ success: true, message: 'Order marked as cancelled.', order });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    res.status(500).json({ success: false, error: 'Failed to cancel order' });
+  }
+});
+
 // Get all active orders (For the KDS and Admin)
 router.get('/active', async (req, res) => {
   try {

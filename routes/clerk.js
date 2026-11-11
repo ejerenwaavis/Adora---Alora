@@ -318,7 +318,12 @@ router.post('/cafe/walkin', async (req, res) => {
 router.get('/cafe/orders', async (req, res) => {
   try {
     const { status, period } = req.query;
-    const query = {};
+    const query = {
+      $or: [
+        { paymentStatus: 'PAID' },
+        { status: { $in: ['ACCEPTED', 'PREPARING', 'READY', 'COMPLETED'] } }
+      ]
+    };
     if (status && status !== 'all') {
       query.status = status.toUpperCase();
     }

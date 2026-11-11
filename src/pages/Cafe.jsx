@@ -142,9 +142,9 @@ export default function Cafe() {
       const startTimeStr = sessionStorage.getItem('ah_checkout_start_time');
       const startTime = startTimeStr ? parseInt(startTimeStr, 10) : 0;
 
-      // Only trigger if we actually had a pending checkout session started recently (within 30 mins)
+      // Only trigger if we actually had a pending checkout session started recently (within 3 mins)
       if (!pendingRef && !pendingOrderId && confirmationState !== 'redirecting') return;
-      if (startTime && (Date.now() - startTime) > 30 * 60 * 1000) {
+      if (startTime && (Date.now() - startTime) > 3 * 60 * 1000) {
         sessionStorage.removeItem('ah_pending_order_ref');
         sessionStorage.removeItem('ah_pending_order_id');
         sessionStorage.removeItem('ah_checkout_start_time');
@@ -301,6 +301,37 @@ export default function Cafe() {
 
   const removeFromCart = (itemId) => {
     setCart(prev => prev.filter(i => i._id !== itemId));
+  };
+
+  const handleCancelCheckout = () => {
+    const pendingOrderId = sessionStorage.getItem('ah_pending_order_id');
+
+    // 1. Immediately wipe pending checkout keys from sessionStorage so it NEVER pops up again
+    sessionStorage.removeItem('ah_pending_order_ref');
+    sessionStorage.removeItem('ah_pending_order_id');
+    sessionStorage.removeItem('ah_checkout_start_time');
+
+    // 2. Restore cart from backup so user retains their selected items
+    try {
+      const bStr = sessionStorage.getItem('ah_backup_cart');
+      if (bStr) {
+        const bCart = JSON.parse(bStr);
+        if (Array.isArray(bCart) && bCart.length > 0) {
+          setCart(bCart);
+        }
+      }
+    } catch (e) {}
+
+    // 3. Mark the unpaid order as cancelled on the backend
+    if (pendingOrderId) {
+      fetch(`/api/orders/${pendingOrderId}/cancel`, { method: 'POST' }).catch(() => {});
+    }
+
+    // 4. Reset modal states
+    setShowConfirmation(false);
+    setIsSubmitting(false);
+    setConfirmationState('redirecting');
+    setOrderError(null);
   };
 
   const cartTotal = cart.reduce((sum, item) => sum + ((item.priceKobo || 0) * item.quantity), 0);
@@ -859,25 +890,13 @@ export default function Cafe() {
       {/* 9. Order Confirmation Modal */}
       <OrderConfirmationModal
         isOpen={showConfirmation}
-        onClose={() => {
-          setShowConfirmation(false);
-          setIsSubmitting(false);
-        }}
+        onClose={handleCancelCheckout}
+        onCancel={handleCancelCheckout}
         order={confirmedOrder || { totalAmountKobo: cartTotal }}
         state={confirmationState}
         error={orderError}
         onRetry={() => {
-          setShowConfirmation(false);
-          setIsSubmitting(false);
-          try {
-            const bStr = sessionStorage.getItem('ah_backup_cart');
-            if (bStr) {
-              const bCart = JSON.parse(bStr);
-              if (Array.isArray(bCart) && bCart.length > 0) {
-                setCart(bCart);
-              }
-            }
-          } catch (e) {}
+          handleCancelCheckout();
           setShowCart(true);
         }}
       />

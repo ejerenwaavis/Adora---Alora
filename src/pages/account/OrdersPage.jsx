@@ -40,14 +40,16 @@ export default function OrdersPage() {
     }
   }
 
-  const pendingCafeOrders = cafeOrders.filter(o => ['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
-  const pastCafeOrders = cafeOrders.filter(o => !['PENDING', 'ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+  const paidCafeOrders = cafeOrders.filter(o => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED');
+  const pendingCafeOrders = paidCafeOrders.filter(o => ['ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
+  const pastCafeOrders = paidCafeOrders.filter(o => !['ACCEPTED', 'PREPARING', 'READY'].includes(o.status));
 
-  const pendingFashionOrders = fashionOrders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status));
-  const pastFashionOrders = fashionOrders.filter(o => !['PENDING', 'CONFIRMED'].includes(o.status));
+  const validFashionOrders = fashionOrders.filter(o => o.status !== 'CANCELLED');
+  const pendingFashionOrders = validFashionOrders.filter(o => ['PENDING', 'CONFIRMED'].includes(o.status));
+  const pastFashionOrders = validFashionOrders.filter(o => !['PENDING', 'CONFIRMED'].includes(o.status));
 
   const totalPendingOrders = pendingCafeOrders.length + pendingFashionOrders.length;
-  const totalOrdersCount = cafeOrders.length + fashionOrders.length;
+  const totalOrdersCount = paidCafeOrders.length + validFashionOrders.length;
 
   const allPendingOrders = [
     ...pendingCafeOrders.map(o => ({ ...o, _type: 'cafe' })),
