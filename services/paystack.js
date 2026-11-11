@@ -70,7 +70,7 @@ function generateReference(prefix = 'AH') {
 // ── Verify webhook signature ───────────────────────────────────────────────────
 const crypto = require('crypto');
 function verifyWebhookSignature(rawBody, signature) {
-  const secret = process.env.PAYSTACK_WEBHOOK_SECRET || process.env.PAYSTACK_SECRET_KEY;
+  const secret = process.env.PAYSTACK_SECRET_KEY || process.env.PAYSTACK_WEBHOOK_SECRET;
   if (!secret) return false;
   const hash = crypto
     .createHmac('sha512', secret)
