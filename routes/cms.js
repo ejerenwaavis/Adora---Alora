@@ -39,7 +39,15 @@ router.post('/announcements', async (req, res) => {
   try {
     const item = new AnnouncementBar(req.body);
     await item.save();
-    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Announcement Bar: ${item.message}`);
+    await logActivity({
+      req,
+      action: 'announcement_created',
+      category: 'CMS',
+      itemAffected: item.message,
+      entityModel: 'AnnouncementBar',
+      entityId: item._id,
+      details: `Created announcement: "${item.message}"`
+    });
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -48,7 +56,15 @@ router.patch('/announcements/:id', async (req, res) => {
   try {
     const item = await AnnouncementBar.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
-    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Announcement Bar: ${item.message}`);
+    await logActivity({
+      req,
+      action: 'announcement_updated',
+      category: 'CMS',
+      itemAffected: item.message,
+      entityModel: 'AnnouncementBar',
+      entityId: item._id,
+      details: `Updated announcement: "${item.message}"`
+    });
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -57,7 +73,15 @@ router.delete('/announcements/:id', async (req, res) => {
   try {
     const item = await AnnouncementBar.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
-    await logActivity(req.user._id, 'DELETE', 'SETTINGS', `Announcement Bar: ${item.message}`);
+    await logActivity({
+      req,
+      action: 'announcement_deleted',
+      category: 'CMS',
+      itemAffected: item.message,
+      entityModel: 'AnnouncementBar',
+      entityId: item._id,
+      details: `Deleted announcement: "${item.message}"`
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -76,7 +100,15 @@ router.post('/settings', async (req, res) => {
   try {
     const item = new Setting(req.body);
     await item.save();
-    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Global Setting: ${item.key}`);
+    await logActivity({
+      req,
+      action: 'setting_created',
+      category: 'SETTINGS',
+      itemAffected: `Global Setting: ${item.key}`,
+      entityModel: 'Setting',
+      entityId: item._id,
+      details: { value: item.value }
+    });
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -85,7 +117,15 @@ router.patch('/settings/:id', async (req, res) => {
   try {
     const item = await Setting.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
-    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Global Setting: ${item.key}`, { value: item.value });
+    await logActivity({
+      req,
+      action: 'setting_updated',
+      category: 'SETTINGS',
+      itemAffected: `Global Setting: ${item.key}`,
+      entityModel: 'Setting',
+      entityId: item._id,
+      details: { value: item.value }
+    });
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -94,6 +134,14 @@ router.delete('/settings/:id', async (req, res) => {
   try {
     const item = await Setting.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'setting_deleted',
+      category: 'SETTINGS',
+      itemAffected: `Global Setting: ${item.key}`,
+      entityModel: 'Setting',
+      entityId: item._id
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -112,6 +160,14 @@ router.post('/credit-packs', async (req, res) => {
   try {
     const item = new CreditPack(req.body);
     await item.save();
+    await logActivity({
+      req,
+      action: 'credit_pack_created',
+      category: 'CLASSES',
+      itemAffected: `${item.name} (${item.credits} credits)`,
+      entityModel: 'CreditPack',
+      entityId: item._id
+    });
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -120,6 +176,14 @@ router.patch('/credit-packs/:id', async (req, res) => {
   try {
     const item = await CreditPack.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'credit_pack_updated',
+      category: 'CLASSES',
+      itemAffected: `${item.name} (${item.credits} credits)`,
+      entityModel: 'CreditPack',
+      entityId: item._id
+    });
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -128,6 +192,14 @@ router.delete('/credit-packs/:id', async (req, res) => {
   try {
     const item = await CreditPack.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'credit_pack_deleted',
+      category: 'CLASSES',
+      itemAffected: `${item.name} (${item.credits} credits)`,
+      entityModel: 'CreditPack',
+      entityId: item._id
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -146,6 +218,15 @@ router.post('/faqs', async (req, res) => {
   try {
     const item = new FAQ(req.body);
     await item.save();
+    await logActivity({
+      req,
+      action: 'faq_created',
+      category: 'CMS',
+      itemAffected: item.question,
+      entityModel: 'FAQ',
+      entityId: item._id,
+      details: `Created FAQ: "${item.question}"`
+    });
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -154,6 +235,15 @@ router.patch('/faqs/:id', async (req, res) => {
   try {
     const item = await FAQ.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'faq_updated',
+      category: 'CMS',
+      itemAffected: item.question,
+      entityModel: 'FAQ',
+      entityId: item._id,
+      details: `Updated FAQ: "${item.question}"`
+    });
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -162,6 +252,15 @@ router.delete('/faqs/:id', async (req, res) => {
   try {
     const item = await FAQ.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'faq_deleted',
+      category: 'CMS',
+      itemAffected: item.question,
+      entityModel: 'FAQ',
+      entityId: item._id,
+      details: `Deleted FAQ: "${item.question}"`
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -178,19 +277,45 @@ router.post('/menu-categories', async (req, res) => {
   try {
     const item = new MenuCategory(req.body);
     await item.save();
+    await logActivity({
+      req,
+      action: 'menu_category_created',
+      category: 'MENU',
+      itemAffected: item.name,
+      entityModel: 'MenuCategory',
+      entityId: item._id
+    });
     res.status(201).json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/menu-categories/:id', async (req, res) => {
   try {
     const item = await MenuCategory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (item) {
+      await logActivity({
+        req,
+        action: 'menu_category_updated',
+        category: 'MENU',
+        itemAffected: item.name,
+        entityModel: 'MenuCategory',
+        entityId: item._id
+      });
+    }
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/menu-categories/:id', async (req, res) => {
   try {
-    await MenuCategory.findByIdAndDelete(req.params.id);
+    const cat = await MenuCategory.findByIdAndDelete(req.params.id);
     await MenuItem.deleteMany({ category: req.params.id });
+    await logActivity({
+      req,
+      action: 'menu_category_deleted',
+      category: 'MENU',
+      itemAffected: cat?.name || `Category #${req.params.id}`,
+      entityModel: 'MenuCategory',
+      entityId: req.params.id
+    });
     res.json({ message: 'Deleted' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -230,6 +355,15 @@ router.post('/menu-items', upload.single('image'), async (req, res) => {
 
     const item = new MenuItem(data);
     await item.save();
+    await logActivity({
+      req,
+      action: 'menu_item_created',
+      category: 'MENU',
+      itemAffected: item.name,
+      entityModel: 'MenuItem',
+      entityId: item._id,
+      details: `Added menu item: ${item.name}`
+    });
     res.status(201).json(await item.populate('category'));
   } catch (err) { 
     console.error('Menu Item Create Error:', err);
@@ -248,6 +382,15 @@ router.patch('/menu-items/:id', upload.single('image'), async (req, res) => {
 
     const item = await MenuItem.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true }).populate('category');
     if (!item) return res.status(404).json({ error: 'Menu item not found.' });
+    await logActivity({
+      req,
+      action: 'menu_item_updated',
+      category: 'MENU',
+      itemAffected: item.name,
+      entityModel: 'MenuItem',
+      entityId: item._id,
+      details: `Updated menu item: ${item.name}`
+    });
     res.json(item);
   } catch (err) { 
     console.error('Menu Item Update Error:', err);
@@ -259,6 +402,15 @@ router.delete('/menu-items/:id', async (req, res) => {
   try {
     const item = await MenuItem.findByIdAndDelete(req.params.id);
     if (!item) return res.status(404).json({ error: 'Menu item not found.' });
+    await logActivity({
+      req,
+      action: 'menu_item_deleted',
+      category: 'MENU',
+      itemAffected: item.name,
+      entityModel: 'MenuItem',
+      entityId: item._id,
+      details: `Removed menu item: ${item.name}`
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -271,17 +423,47 @@ router.get('/fashion-layers', async (req, res) => {
   catch (err) { res.status(500).json({ error: err.message }); }
 });
 router.post('/fashion-layers', async (req, res) => {
-  try { res.status(201).json(await new FashionLayer(req.body).save()); } 
-  catch (err) { res.status(400).json({ error: err.message }); }
+  try {
+    const layer = await new FashionLayer(req.body).save();
+    await logActivity({
+      req,
+      action: 'fashion_layer_created',
+      category: 'FASHION',
+      itemAffected: layer.name,
+      entityModel: 'FashionLayer',
+      entityId: layer._id
+    });
+    res.status(201).json(layer);
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/fashion-layers/:id', async (req, res) => {
-  try { res.json(await FashionLayer.findByIdAndUpdate(req.params.id, req.body, { new: true })); } 
-  catch (err) { res.status(400).json({ error: err.message }); }
+  try {
+    const layer = await FashionLayer.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (layer) {
+      await logActivity({
+        req,
+        action: 'fashion_layer_updated',
+        category: 'FASHION',
+        itemAffected: layer.name,
+        entityModel: 'FashionLayer',
+        entityId: layer._id
+      });
+    }
+    res.json(layer);
+  } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/fashion-layers/:id', async (req, res) => {
   try {
-    await FashionLayer.findByIdAndDelete(req.params.id);
+    const layer = await FashionLayer.findByIdAndDelete(req.params.id);
     await FashionItem.deleteMany({ layer: req.params.id });
+    await logActivity({
+      req,
+      action: 'fashion_layer_deleted',
+      category: 'FASHION',
+      itemAffected: layer?.name || `Layer #${req.params.id}`,
+      entityModel: 'FashionLayer',
+      entityId: req.params.id
+    });
     res.json({ message: 'Deleted' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -319,6 +501,14 @@ router.post('/fashion-items', upload.array('images', 10), async (req, res) => {
 
     const item = new FashionItem(data);
     await item.save();
+    await logActivity({
+      req,
+      action: 'fashion_item_created',
+      category: 'FASHION',
+      itemAffected: item.name,
+      entityModel: 'FashionItem',
+      entityId: item._id
+    });
     res.status(201).json(await item.populate('layer'));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -356,12 +546,32 @@ router.patch('/fashion-items/:id', upload.array('images', 10), async (req, res) 
     }
 
     const item = await FashionItem.findByIdAndUpdate(req.params.id, data, { new: true }).populate('layer');
+    if (item) {
+      await logActivity({
+        req,
+        action: 'fashion_item_updated',
+        category: 'FASHION',
+        itemAffected: item.name,
+        entityModel: 'FashionItem',
+        entityId: item._id
+      });
+    }
     res.json(item);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/fashion-items/:id', async (req, res) => {
-  try { await FashionItem.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const item = await FashionItem.findByIdAndDelete(req.params.id);
+    await logActivity({
+      req,
+      action: 'fashion_item_deleted',
+      category: 'FASHION',
+      itemAffected: item?.name || `Item #${req.params.id}`,
+      entityModel: 'FashionItem',
+      entityId: req.params.id
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 /* ==========================================================================
@@ -397,7 +607,16 @@ router.post('/instructors', upload.single('photo'), async (req, res) => {
     if (data.isActive !== undefined) {
       data.isActive = data.isActive === true || data.isActive === 'true';
     }
-    res.status(201).json(await new Instructor(data).save());
+    const inst = await new Instructor(data).save();
+    await logActivity({
+      req,
+      action: 'instructor_created',
+      category: 'CLASSES',
+      itemAffected: `${inst.firstName} ${inst.lastName}`,
+      entityModel: 'Instructor',
+      entityId: inst._id
+    });
+    res.status(201).json(inst);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/instructors/:id', upload.single('photo'), async (req, res) => {
@@ -413,12 +632,33 @@ router.patch('/instructors/:id', upload.single('photo'), async (req, res) => {
     if (data.isActive !== undefined) {
       data.isActive = data.isActive === true || data.isActive === 'true';
     }
-    res.json(await Instructor.findByIdAndUpdate(req.params.id, data, { new: true }));
+    const inst = await Instructor.findByIdAndUpdate(req.params.id, data, { new: true });
+    if (inst) {
+      await logActivity({
+        req,
+        action: 'instructor_updated',
+        category: 'CLASSES',
+        itemAffected: `${inst.firstName} ${inst.lastName}`,
+        entityModel: 'Instructor',
+        entityId: inst._id
+      });
+    }
+    res.json(inst);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/instructors/:id', async (req, res) => {
-  try { await Instructor.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const inst = await Instructor.findByIdAndDelete(req.params.id);
+    await logActivity({
+      req,
+      action: 'instructor_deleted',
+      category: 'CLASSES',
+      itemAffected: inst ? `${inst.firstName} ${inst.lastName}` : `Instructor #${req.params.id}`,
+      entityModel: 'Instructor',
+      entityId: req.params.id
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.get('/class-types', async (req, res) => {
@@ -429,19 +669,49 @@ router.post('/class-types', upload.single('coverImage'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.coverImage = req.file.path;
-    res.status(201).json(await new ClassType(data).save());
+    const ct = await new ClassType(data).save();
+    await logActivity({
+      req,
+      action: 'class_type_created',
+      category: 'CLASSES',
+      itemAffected: ct.name,
+      entityModel: 'ClassType',
+      entityId: ct._id
+    });
+    res.status(201).json(ct);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/class-types/:id', upload.single('coverImage'), async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) data.coverImage = req.file.path;
-    res.json(await ClassType.findByIdAndUpdate(req.params.id, data, { new: true }));
+    const ct = await ClassType.findByIdAndUpdate(req.params.id, data, { new: true });
+    if (ct) {
+      await logActivity({
+        req,
+        action: 'class_type_updated',
+        category: 'CLASSES',
+        itemAffected: ct.name,
+        entityModel: 'ClassType',
+        entityId: ct._id
+      });
+    }
+    res.json(ct);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/class-types/:id', async (req, res) => {
-  try { await ClassType.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const ct = await ClassType.findByIdAndDelete(req.params.id);
+    await logActivity({
+      req,
+      action: 'class_type_deleted',
+      category: 'CLASSES',
+      itemAffected: ct?.name || `ClassType #${req.params.id}`,
+      entityModel: 'ClassType',
+      entityId: req.params.id
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 /* ==========================================================================
@@ -487,7 +757,16 @@ router.post('/venue-spaces', upload.array('gallery', 5), async (req, res) => {
     if (data.price) data.priceKobo = Math.round(Number(data.price) * 100);
     if (data.sortOrder) data.sortOrder = Number(data.sortOrder);
     
-    res.status(201).json(await new VenueSpace(data).save());
+    const space = await new VenueSpace(data).save();
+    await logActivity({
+      req,
+      action: 'venue_space_created',
+      category: 'VENUE',
+      itemAffected: space.name,
+      entityModel: 'VenueSpace',
+      entityId: space._id
+    });
+    res.status(201).json(space);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.patch('/venue-spaces/:id', upload.array('gallery', 5), async (req, res) => {
@@ -520,12 +799,33 @@ router.patch('/venue-spaces/:id', upload.array('gallery', 5), async (req, res) =
     if (data.price !== undefined) data.priceKobo = Math.round(Number(data.price) * 100);
     if (data.sortOrder) data.sortOrder = Number(data.sortOrder);
 
-    res.json(await VenueSpace.findByIdAndUpdate(req.params.id, data, { new: true }));
+    const space = await VenueSpace.findByIdAndUpdate(req.params.id, data, { new: true });
+    if (space) {
+      await logActivity({
+        req,
+        action: 'venue_space_updated',
+        category: 'VENUE',
+        itemAffected: space.name,
+        entityModel: 'VenueSpace',
+        entityId: space._id
+      });
+    }
+    res.json(space);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 router.delete('/venue-spaces/:id', async (req, res) => {
-  try { await VenueSpace.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const space = await VenueSpace.findByIdAndDelete(req.params.id);
+    await logActivity({
+      req,
+      action: 'venue_space_deleted',
+      category: 'VENUE',
+      itemAffected: space?.name || `Space #${req.params.id}`,
+      entityModel: 'VenueSpace',
+      entityId: req.params.id
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Helper for recurring event dates
@@ -662,6 +962,15 @@ router.post('/events', upload.single('coverImage'), async (req, res) => {
       });
 
       const createdEvents = await EventRecord.insertMany(docsToInsert);
+      await logActivity({
+        req,
+        action: 'event_created',
+        category: 'EVENTS',
+        itemAffected: `${data.title || 'Recurring Event'} (${createdEvents.length} dates)`,
+        entityModel: 'EventRecord',
+        entityId: seriesId,
+        details: `Created recurring event series (${createdEvents.length} occurrences)`
+      });
       return res.status(201).json({
         message: `Created ${createdEvents.length} recurring event occurrences.`,
         count: createdEvents.length,
@@ -672,6 +981,15 @@ router.post('/events', upload.single('coverImage'), async (req, res) => {
 
     const evt = new EventRecord(data);
     await evt.save();
+    await logActivity({
+      req,
+      action: 'event_created',
+      category: 'EVENTS',
+      itemAffected: evt.title,
+      entityModel: 'EventRecord',
+      entityId: evt._id,
+      details: `Created event: ${evt.title}`
+    });
     res.status(201).json(await evt.populate('venueSpace'));
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
@@ -769,6 +1087,15 @@ router.patch('/events/:id', upload.single('coverImage'), async (req, res) => {
         await EventRecord.insertMany(remainingDocs);
       }
 
+      await logActivity({
+        req,
+        action: 'event_modified',
+        category: 'EVENTS',
+        itemAffected: `${updatedFirst?.title || existing.title} (Recurring Series · ${occurrences.length})`,
+        entityModel: 'EventRecord',
+        entityId: updatedFirst?._id || req.params.id
+      });
+
       return res.json({
         message: `Converted event to recurring series with ${occurrences.length} total occurrences.`,
         event: updatedFirst,
@@ -778,18 +1105,45 @@ router.patch('/events/:id', upload.single('coverImage'), async (req, res) => {
     }
 
     const updated = await EventRecord.findByIdAndUpdate(req.params.id, data, { new: true }).populate('venueSpace');
+    await logActivity({
+      req,
+      action: 'event_modified',
+      category: 'EVENTS',
+      itemAffected: updated?.title || existing.title,
+      entityModel: 'EventRecord',
+      entityId: req.params.id,
+      details: `Updated event: ${updated?.title || existing.title}`
+    });
     res.json(updated);
   } catch (err) { res.status(400).json({ error: err.message }); }
 });
 
 router.delete('/events/:id', async (req, res) => {
-  try { await EventRecord.findByIdAndDelete(req.params.id); res.json({ message: 'Deleted' }); } 
-  catch (err) { res.status(500).json({ error: err.message }); }
+  try {
+    const evt = await EventRecord.findByIdAndDelete(req.params.id);
+    await logActivity({
+      req,
+      action: 'event_deleted',
+      category: 'EVENTS',
+      itemAffected: evt?.title || `Event #${req.params.id}`,
+      entityModel: 'EventRecord',
+      entityId: req.params.id
+    });
+    res.json({ message: 'Deleted' });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.delete('/events/series/:seriesId', async (req, res) => {
   try {
     const result = await EventRecord.deleteMany({ seriesId: req.params.seriesId });
+    await logActivity({
+      req,
+      action: 'event_series_deleted',
+      category: 'EVENTS',
+      itemAffected: `Series ${req.params.seriesId} (${result.deletedCount} events)`,
+      entityModel: 'EventRecord',
+      entityId: req.params.seriesId
+    });
     res.json({ message: `Successfully deleted ${result.deletedCount} events in recurring series.`, count: result.deletedCount });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -831,7 +1185,15 @@ router.post('/waivers', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    await logActivity(req.user._id, 'CREATE', 'SETTINGS', `Published new liability waiver version: ${waiver.version}`);
+    await logActivity({
+      req,
+      action: 'waiver_published',
+      category: 'WAIVER',
+      itemAffected: `Liability Waiver ${waiver.version}`,
+      entityModel: 'WaiverVersion',
+      entityId: waiver._id,
+      details: `Published waiver "${waiver.title}" (v${waiver.version})`
+    });
     res.status(201).json(waiver);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -852,7 +1214,15 @@ router.patch('/waivers/:id/activate', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    await logActivity(req.user._id, 'UPDATE', 'SETTINGS', `Activated liability waiver version: ${waiver.version}`);
+    await logActivity({
+      req,
+      action: 'waiver_activated',
+      category: 'WAIVER',
+      itemAffected: `Liability Waiver ${waiver.version}`,
+      entityModel: 'WaiverVersion',
+      entityId: waiver._id,
+      details: `Activated waiver version ${waiver.version}`
+    });
     res.json(waiver);
   } catch (err) {
     res.status(400).json({ error: err.message });

@@ -7,6 +7,12 @@ const activityLogSchema = new mongoose.Schema({
     required: false,
     default: null
   },
+  performedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false,
+    default: null
+  },
   action: {
     type: String,
     required: true,
@@ -15,7 +21,7 @@ const activityLogSchema = new mongoose.Schema({
   category: {
     type: String,
     required: false,
-    default: 'OPERATIONS',
+    default: 'general',
     trim: true
   },
   itemAffected: {

@@ -7,6 +7,8 @@ const Booking = require('../models/Booking');
 const EventBooking = require('../models/EventBooking');
 const Order = require('../models/Order');
 const FashionOrder = require('../models/FashionOrder');
+const CreditGrant = require('../models/CreditGrant');
+const logActivity = require('../utils/activityLogger');
 
 // All user routes require authentication
 router.use(requireAuth);
@@ -48,6 +50,15 @@ router.patch('/profile', async (req, res) => {
       updates.avatar = '';
     }
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
+    await logActivity({
+      req,
+      action: 'guest_profile_updated',
+      category: 'USERS',
+      itemAffected: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+      entityModel: 'User',
+      entityId: user._id,
+      details: `Updated member profile fields: ${Object.keys(updates).join(', ') || 'none'}`
+    });
     res.json({ message: 'Profile updated successfully', user });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -73,7 +84,6 @@ router.patch('/preferences', async (req, res) => {
 const WaiverVersion = require('../models/WaiverVersion');
 const WaiverRecord  = require('../models/WaiverRecord');
 const Setting       = require('../models/Setting');
-const logActivity   = require('../utils/activityLogger');
 
 // ── GET /api/user/waiver/active ─────────────────────────────────────────────
 router.get('/waiver/active', async (req, res) => {
@@ -377,6 +387,158 @@ router.get('/credits', (req, res) => {
     credits: req.user.classCredits || 0,
     waiverSigned: Boolean(req.user.waiverSigned || req.user.waiverSignedAt)
   });
+});
+
+// ── GET /api/user/billing ────────────────────────────────────────────────────
+router.get('/billing', async (req, res) => {
+  try {
+    const escapedEmail = (req.user.email || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const emailRegex = escapedEmail ? new RegExp(`^${escapedEmail}$`, 'i') : null;
+
+    const orderOwnerFilter = emailRegex
+      ? { $or: [{ user: req.user._id }, { customerEmail: emailRegex }] }
+      : { user: req.user._id };
+
+    const [grants, paidOrders, paidEventBookings, paidClassDropIns] = await Promise.all([
+      CreditGrant.find({ user: req.user._id, status: { $ne: 'refunded' } })
+        .sort({ createdAt: -1 })
+        .lean(),
+      Order.find({
+        ...orderOwnerFilter,
+        paymentStatus: 'PAID',
+        status: { $ne: 'CANCELLED' }
+      }).sort({ createdAt: -1 }).lean(),
+      EventBooking.find({
+        ...orderOwnerFilter,
+        paymentStatus: 'PAID',
+        status: { $ne: 'cancelled' }
+      }).populate('event', 'title slug startDate venue').sort({ createdAt: -1 }).lean(),
+      Booking.find({
+        user: req.user._id,
+        paymentMethod: 'paystack',
+        paymentStatus: 'paid',
+        status: { $ne: 'cancelled' }
+      }).populate({
+        path: 'classSession',
+        populate: { path: 'classType', select: 'name' }
+      }).sort({ createdAt: -1 }).lean()
+    ]);
+
+    const now = new Date();
+    const activeGrants = grants.filter(
+      (g) => g.status === 'active' && g.creditsRemaining > 0 && (!g.expiresAt || new Date(g.expiresAt) > now)
+    );
+
+    const transactions = [
+      ...grants
+        .filter((g) => (g.pricePaidKobo && g.pricePaidKobo > 0) || Boolean(g.paymentReference))
+        .map((g) => ({
+          _id: `grant_${g._id}`,
+          sourceId: g._id,
+          type: 'CLASS_PACK',
+          typeLabel: 'Class Pack',
+          date: g.createdAt,
+          description: `${g.packName || 'Studio Class Pack'} (${g.creditsGranted} ${g.creditsGranted === 1 ? 'Credit' : 'Credits'})`,
+          amountKobo: g.pricePaidKobo || 0,
+          status: 'Paid',
+          reference: g.paymentReference || String(g._id).slice(-8).toUpperCase(),
+          expiresAt: g.expiresAt || null,
+          items: [
+            {
+              name: g.packName || 'Studio Class Pack',
+              quantity: g.creditsGranted,
+              unitLabel: 'credits',
+              priceKobo: g.pricePaidKobo || 0
+            }
+          ],
+          meta: {
+            creditsGranted: g.creditsGranted,
+            creditsRemaining: g.creditsRemaining,
+            expiresAt: g.expiresAt || null
+          }
+        })),
+      ...paidOrders.map((o) => {
+        const itemSummary = Array.isArray(o.items) && o.items.length > 0
+          ? o.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')
+          : 'Café Takeout Order';
+        return {
+          _id: `order_${o._id}`,
+          sourceId: o._id,
+          type: 'CAFE_ORDER',
+          typeLabel: 'Café Order',
+          date: o.createdAt,
+          description: `Café Order — ${itemSummary}`,
+          amountKobo: o.totalAmountKobo || 0,
+          status: 'Paid',
+          reference: o.paymentReference || String(o._id).slice(-8).toUpperCase(),
+          items: (o.items || []).map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            priceKobo: (i.priceKobo || 0) * (i.quantity || 1)
+          })),
+          meta: {
+            orderStatus: o.status,
+            orderType: o.orderType || 'TAKEOUT'
+          }
+        };
+      }),
+      ...paidEventBookings.map((eb) => ({
+        _id: `event_${eb._id}`,
+        sourceId: eb._id,
+        type: 'EVENT_TICKET',
+        typeLabel: 'Event Ticket',
+        date: eb.createdAt,
+        description: `Event Ticket — ${eb.event?.title || 'Aora House Event'} (${eb.ticketQuantity || 1}×)`,
+        amountKobo: eb.amountPaidKobo || 0,
+        status: 'Paid',
+        reference: eb.paymentReference || String(eb._id).slice(-8).toUpperCase(),
+        items: [
+          {
+            name: eb.event?.title || 'Aora House Event Pass',
+            quantity: eb.ticketQuantity || 1,
+            priceKobo: eb.amountPaidKobo || 0
+          }
+        ],
+        meta: {
+          eventDate: eb.event?.startDate || null,
+          venue: eb.event?.venue || null
+        }
+      })),
+      ...paidClassDropIns.map((b) => {
+        const className = b.classSession?.classType?.name || 'Movement Studio Class';
+        return {
+          _id: `booking_${b._id}`,
+          sourceId: b._id,
+          type: 'STUDIO_DROPIN',
+          typeLabel: 'Studio Class',
+          date: b.createdAt,
+          description: `Studio Drop-In — ${className}`,
+          amountKobo: b.amountPaidKobo || 0,
+          status: 'Paid',
+          reference: b.paystackReference || String(b._id).slice(-8).toUpperCase(),
+          items: [
+            {
+              name: className,
+              quantity: 1,
+              priceKobo: b.amountPaidKobo || 0
+            }
+          ],
+          meta: {
+            sessionDate: b.classSession?.startTime || null
+          }
+        };
+      })
+    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({
+      success: true,
+      classCredits: req.user.classCredits || 0,
+      activeGrants,
+      transactions
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // ── GET /api/user/membership ─────────────────────────────────────────────────

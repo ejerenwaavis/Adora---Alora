@@ -369,6 +369,16 @@ router.put('/me', requireAuth, upload.single('avatar'), async (req, res, next) =
     }
 
     await user.save();
+    const logActivity = require('../utils/activityLogger');
+    await logActivity({
+      user: user._id,
+      action: 'guest_profile_updated',
+      category: 'USERS',
+      itemAffected: `${user.firstName} ${user.lastName} (${user.email})`,
+      entityModel: 'User',
+      entityId: user._id,
+      description: `Updated guest profile & preferences for ${user.firstName} ${user.lastName}`
+    });
     res.json({ user });
   } catch (err) { next(err); }
 });

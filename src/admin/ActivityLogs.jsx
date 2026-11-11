@@ -64,6 +64,7 @@ export default function ActivityLogs() {
           <option value="VENUE">Venue Hire</option>
           <option value="WAITLIST">Waitlist</option>
           <option value="WAIVER">Waivers</option>
+          <option value="CMS">CMS &amp; Content</option>
           <option value="SETTINGS">Settings &amp; Config</option>
           <option value="FASHION">Fashion &amp; Retail</option>
           <option value="MENU">Café Menu</option>
@@ -114,19 +115,24 @@ export default function ActivityLogs() {
                     <span className={styles.categoryPill}>{log.category || 'OPERATIONS'}</span>
                   </td>
                   <td>
-                    <div className={styles.userCell}>
-                      <div className={styles.avatar}>
-                        {log.user?.firstName?.[0] || 'A'}
-                      </div>
-                      <div className={styles.userInfo}>
-                        <span className={styles.userName}>
-                          {log.user ? `${log.user.firstName} ${log.user.lastName}` : 'System'}
-                        </span>
-                        <span className={styles.userRole}>
-                          {log.user?.role || 'unknown'}
-                        </span>
-                      </div>
-                    </div>
+                    {(() => {
+                      const actor = log.user || log.performedBy;
+                      return (
+                        <div className={styles.userCell}>
+                          <div className={styles.avatar}>
+                            {actor?.firstName?.[0] || 'A'}
+                          </div>
+                          <div className={styles.userInfo}>
+                            <span className={styles.userName}>
+                              {actor ? `${actor.firstName} ${actor.lastName}` : 'System'}
+                            </span>
+                            <span className={styles.userRole}>
+                              {actor?.role || 'system'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className={styles.dateCell}>
                     {new Date(log.createdAt).toLocaleString([], { 

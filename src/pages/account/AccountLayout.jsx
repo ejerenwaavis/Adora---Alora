@@ -72,7 +72,7 @@ export default function AccountLayout() {
             onClick={() => setIsMobileOpen(false)}
             className={({isActive}) => isActive ? styles.navLinkActive : styles.navLink}
           >
-            Billing &amp; Memberships
+            Passes &amp; Billing
           </NavLink>
           
           <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(0,0,0,0.06)', paddingLeft: '2rem', paddingRight: '2rem' }}>

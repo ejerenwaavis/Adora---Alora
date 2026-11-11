@@ -5,6 +5,7 @@ const ClassSession = require('../models/ClassSession');
 const ClassType = require('../models/ClassType');
 const Instructor = require('../models/Instructor');
 const CreditPack = require('../models/CreditPack');
+const logActivity = require('../utils/activityLogger');
 
 // PUBLIC: Get active credit packs
 router.get('/credit-packs', async (req, res) => {
@@ -245,6 +246,14 @@ router.post('/', requireAuth, requireRole('admin', 'content_editor'), async (req
       }));
 
       const createdSessions = await ClassSession.insertMany(docsToInsert);
+      await logActivity({
+        req,
+        action: 'class_session_created',
+        category: 'CLASSES',
+        itemAffected: `Recurring series (${createdSessions.length} sessions)`,
+        entityModel: 'ClassSession',
+        entityId: seriesId
+      });
       return res.status(201).json({
         message: `Successfully created ${createdSessions.length} recurring class sessions.`,
         count: createdSessions.length,
@@ -266,7 +275,16 @@ router.post('/', requireAuth, requireRole('admin', 'content_editor'), async (req
 
     const session = new ClassSession(req.body);
     await session.save();
-    res.status(201).json(await session.populate('classType instructor'));
+    const popSession = await session.populate('classType instructor');
+    await logActivity({
+      req,
+      action: 'class_session_created',
+      category: 'CLASSES',
+      itemAffected: `${popSession.classType?.name || 'Class Session'} (${new Date(popSession.startTime).toLocaleDateString()})`,
+      entityModel: 'ClassSession',
+      entityId: popSession._id
+    });
+    res.status(201).json(popSession);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -355,6 +373,16 @@ router.patch('/:id', requireAuth, requireRole('admin', 'content_editor'), async 
         await ClassSession.insertMany(remainingDocs);
       }
 
+      await logActivity({
+        req,
+        action: 'class_series_created',
+        category: 'CLASSES',
+        itemAffected: `${updatedFirstSession?.classType?.name || 'Class'} (${occurrences.length} sessions)`,
+        entityModel: 'ClassSession',
+        entityId: updatedFirstSession?._id,
+        details: `Converted session to recurring series (${occurrences.length} sessions)`
+      });
+
       return res.json({
         message: `Successfully converted session to a recurring series with ${occurrences.length} total sessions.`,
         session: updatedFirstSession,
@@ -380,6 +408,14 @@ router.patch('/:id', requireAuth, requireRole('admin', 'content_editor'), async 
     const session = await ClassSession.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
       .populate('classType instructor');
     if (!session) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'class_session_updated',
+      category: 'CLASSES',
+      itemAffected: `${session.classType?.name || 'Class Session'} (${new Date(session.startTime).toLocaleDateString()})`,
+      entityModel: 'ClassSession',
+      entityId: session._id
+    });
     res.json(session);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -389,8 +425,16 @@ router.patch('/:id', requireAuth, requireRole('admin', 'content_editor'), async 
 // ADMIN: Delete a single class session
 router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
   try {
-    const session = await ClassSession.findByIdAndDelete(req.params.id);
+    const session = await ClassSession.findByIdAndDelete(req.params.id).populate('classType');
     if (!session) return res.status(404).json({ error: 'Not found' });
+    await logActivity({
+      req,
+      action: 'class_session_deleted',
+      category: 'CLASSES',
+      itemAffected: `${session.classType?.name || 'Class Session'} (${new Date(session.startTime).toLocaleDateString()})`,
+      entityModel: 'ClassSession',
+      entityId: session._id
+    });
     res.json({ message: 'Deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -401,6 +445,14 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res) => {
 router.delete('/series/:seriesId', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const result = await ClassSession.deleteMany({ seriesId: req.params.seriesId });
+    await logActivity({
+      req,
+      action: 'class_series_deleted',
+      category: 'CLASSES',
+      itemAffected: `Series ${req.params.seriesId} (${result.deletedCount} sessions)`,
+      entityModel: 'ClassSession',
+      entityId: req.params.seriesId
+    });
     res.json({ message: `Successfully deleted ${result.deletedCount} sessions in this recurring series.`, count: result.deletedCount });
   } catch (err) {
     res.status(500).json({ error: err.message });

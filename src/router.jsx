@@ -29,6 +29,7 @@ import Dashboard       from './pages/account/Dashboard.jsx';
 import OrdersPage      from './pages/account/OrdersPage.jsx';
 import ProfileSettings from './pages/account/ProfileSettings.jsx';
 import WaiverPage      from './pages/account/WaiverPage.jsx';
+import BillingPage     from './pages/account/BillingPage.jsx';
 
 // Admin CMS
 import AdminLayout     from './admin/AdminLayout.jsx';
@@ -146,7 +147,7 @@ const publicRouter = createBrowserRouter([
       { path: 'orders', element: <OrdersPage /> },
       { path: 'profile', element: <ProfileSettings /> },
       { path: 'waiver', element: <WaiverPage /> },
-      { path: 'billing', element: <div style={{padding: '3rem 4rem'}}>Billing coming soon</div> },
+      { path: 'billing', element: <BillingPage /> },
     ]
   },
   { path: '/developer/logs', element: <DeveloperLogs /> },

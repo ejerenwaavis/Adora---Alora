@@ -173,15 +173,16 @@ router.get('/:id', async (req, res) => {
 router.patch('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
+    const prevOrder = await Order.findById(req.params.id);
+    if (!prevOrder) {
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+
     const order = await Order.findByIdAndUpdate(
       req.params.id, 
       { status }, 
       { new: true }
     );
-    
-    if (!order) {
-      return res.status(404).json({ success: false, error: 'Order not found' });
-    }
     
     // Broadcast via WebSockets to the KDS
     const io = req.app.get('io');
@@ -193,6 +194,27 @@ router.patch('/:id/status', async (req, res) => {
     if (status === 'READY' && order.customerEmail && order.customerEmail !== 'guest@aorahouse.com') {
       sendCafeOrderReady({ order }).catch(e => console.warn('Cafe order ready email error:', e.message));
     }
+
+    // Non-blocking activity logging (extract user if token present)
+    let staffId = req.user?._id || null;
+    if (!staffId && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+      try {
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(req.headers.authorization.slice(7), process.env.JWT_SECRET || 'aora_jwt_secret_key_2026');
+        staffId = decoded?.sub || decoded?.id || null;
+      } catch (_) {}
+    }
+    const logActivity = require('../utils/activityLogger');
+    const orderShortId = order.orderNumber || `#${order._id.toString().slice(-4).toUpperCase()}`;
+    await logActivity({
+      user: staffId,
+      action: 'takeout_order_status_update',
+      category: 'CAFE',
+      itemAffected: `Takeout ${orderShortId} (${order.customerName}) → ${order.status}`,
+      entityModel: 'Order',
+      entityId: order._id,
+      description: `KDS updated takeout order ${orderShortId} (${order.customerName}) from ${prevOrder.status} to ${order.status}`
+    });
     
     res.json({ success: true, order });
   } catch (error) {

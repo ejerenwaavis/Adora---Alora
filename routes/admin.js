@@ -122,10 +122,13 @@ router.get('/logs', async (req, res) => {
   try {
     const { category, limit = 50 } = req.query;
     const filter = {};
-    if (category) filter.category = category;
+    if (category) {
+      filter.category = new RegExp(`^${category.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i');
+    }
 
     const logs = await ActivityLog.find(filter)
       .populate('user', 'firstName lastName email role')
+      .populate('performedBy', 'firstName lastName email role')
       .sort({ createdAt: -1 })
       .limit(Number(limit));
     
@@ -661,6 +664,16 @@ router.post('/waitlist', async (req, res) => {
       perkNotes: perkNotes || '',
       source: 'admin_manual',
       joinedAt: new Date()
+    });
+
+    await logActivity.entry({
+      user: req.user._id,
+      action: 'waitlist_manual_add',
+      category: 'WAITLIST',
+      itemAffected: cleanEmail,
+      entityModel: 'Waitlist',
+      entityId: entry._id,
+      description: `Manually added ${cleanEmail} to waitlist`
     });
 
     res.status(201).json(entry);
