@@ -6,10 +6,13 @@ let transporter;
 
 function getTransport() {
   if (transporter) return transporter;
+  const port = parseInt(process.env.SMTP_PORT, 10) || 587;
+  const isSecure = process.env.SMTP_SECURE === 'true';
   transporter = nodemailer.createTransport({
-    host:   process.env.SMTP_HOST || 'smtp.mailtrap.io',
-    port:   parseInt(process.env.SMTP_PORT, 10) || 465,
-    secure: process.env.SMTP_SECURE === 'true',
+    host:   process.env.SMTP_HOST || 'smtp.office365.com',
+    port,
+    secure: isSecure,
+    requireTLS: !isSecure && port === 587,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -45,8 +48,8 @@ async function send({ to, subject, html, text, attachments, bcc }) {
   }
 
   const t = getTransport();
-  const fromAddress = process.env.FROM_EMAIL || '"Aora House" <hello@adoraalora.com>';
-  const replyToAddress = process.env.REPLY_TO || 'hello@adoraalora.com';
+  const fromAddress = process.env.FROM_EMAIL || '"Aora House" <hello@aorahouse.com>';
+  const replyToAddress = process.env.REPLY_TO || 'hello@aorahouse.com';
 
   // Generate unique RFC 5322 Message-ID aligned with sending domain
   const domainMatch = fromAddress.match(/@([a-zA-Z0-9.-]+)/);
@@ -127,7 +130,7 @@ async function sendBookingConfirmation({ user, classSession, booking }) {
   const room = classSession?.classType?.room || 'Movement Studio · Level 2';
   const passRef = booking?.ticketReference || `#MB-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
 
-  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const appUrl = process.env.APP_URL || 'https://stage.aorahouse.com';
   const googleCalUrl = generateGoogleCalendarUrl({
     title: `Aora House: ${className}`,
     description: `Class: ${className}\nInstructor: ${instructor}\nRoom: ${room}\nPass Ref: ${passRef}`,
@@ -198,7 +201,7 @@ async function sendEventTicketConfirmation({ user, event, booking }) {
   const location = event?.space || 'The Loft & Events Room, Aora House';
   const ticketRef = booking?.ticketReference || `#EV-${(booking?._id || '').toString().slice(-6).toUpperCase()}`;
 
-  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const appUrl = process.env.APP_URL || 'https://stage.aorahouse.com';
   const googleCalUrl = generateGoogleCalendarUrl({
     title: `Aora House: ${eventTitle}`,
     description: `Event: ${eventTitle}\nLocation: ${location}\nTicket Ref: ${ticketRef}`,
@@ -285,7 +288,7 @@ async function sendVenueEnquiryAck({ enquiry }) {
 
 // Email verification
 async function sendEmailVerification({ user, token }) {
-  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const appUrl = process.env.APP_URL || 'https://stage.aorahouse.com';
   const url = `${appUrl}/verify-email?token=${token}`;
   return send({
     to: user.email,
@@ -303,7 +306,7 @@ async function sendEmailVerification({ user, token }) {
 
 // Password reset
 async function sendPasswordReset({ user, token }) {
-  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const appUrl = process.env.APP_URL || 'https://stage.aorahouse.com';
   const url = `${appUrl}/reset-password?token=${token}`;
   return send({
     to: user.email,
@@ -326,7 +329,7 @@ async function sendWaitlistPromotion({ user, classSession, booking, expiresMinut
   const instructor = classSession?.instructor ? `${classSession.instructor.firstName} ${classSession.instructor.lastName}` : 'Resident Instructor';
   const startTime = new Date(classSession?.startTime || Date.now());
   const room = classSession?.classType?.room || 'Movement Studio · Level 2';
-  const appUrl = process.env.APP_URL || 'https://aa.rokitonline.com';
+  const appUrl = process.env.APP_URL || 'https://stage.aorahouse.com';
   const claimUrl = `${appUrl}/account?claimBookingId=${booking._id}`;
 
   return send({
