@@ -167,7 +167,7 @@ export default function Fashion() {
 
       {/* ─── 03 THE MARKETPLACE (4 PILLARS) ─── */}
       <section className={styles.marketplaceSection}>
-        <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '3.5rem', padding: '0 var(--gutter, 32px)' }}>
           <span className={styles.sectionEyebrow}>Four Curated Categories</span>
           <h2 style={{ fontFamily: 'var(--f-display)', fontSize: 'clamp(1.8rem, 3.5vw, 2.75rem)', color: 'var(--cocoa-deep)', fontWeight: 400, margin: 0 }}>
             Every piece carries a story.
@@ -272,7 +272,7 @@ export default function Fashion() {
 
       {/* ─── 06 TRUST & VERIFICATION (DARK COCOA TRANSITION) ─── */}
       <section className={styles.trustSection}>
-        <div style={{ maxWidth: '840px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: '840px', margin: '0 auto', textAlign: 'center', padding: '0 var(--gutter, 32px)' }}>
           <span style={{ color: 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1.25rem', display: 'block' }}>
             Trust &amp; Verification
           </span>

@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: clamp(2.5rem, 6vw, 4.5rem) clamp(1.5rem, 5vw, 4rem) 2.5rem;
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 2.5rem;
   background: radial-gradient(circle at 80% 20%, rgba(200, 155, 74, 0.08), transparent 60%),
               radial-gradient(circle at 10% 80%, rgba(184, 95, 60, 0.06), transparent 50%),
               var(--paper, #FCF8F0);
@@ -50,7 +50,11 @@
   grid-template-columns: 1.15fr 0.85fr;
   gap: clamp(2rem, 5vw, 5rem);
   align-items: center;
-  margin: auto 0;
+  max-width: var(--max-width, 1180px);
+  width: 100%;
+  padding: 0 var(--gutter, 32px);
+  margin: auto;
+  box-sizing: border-box;
 }
 
 .heroTitleGroup {
@@ -187,6 +191,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  max-width: calc(var(--max-width, 1180px) - (var(--gutter, 32px) * 2));
+  width: calc(100% - (var(--gutter, 32px) * 2));
+  margin: 0 auto;
   padding-top: 2rem;
   font-size: 0.75rem;
   letter-spacing: 0.15em;
@@ -197,7 +204,7 @@
 
 /* 02 THE INTRODUCTION */
 .introSection {
-  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 10vw, 9rem) var(--gutter, 32px);
   text-align: center;
   max-width: 960px;
   margin: 0 auto;
@@ -241,7 +248,7 @@
 
 /* 03 THE MARKETPLACE (4 PILLARS) */
 .marketplaceSection {
-  padding: clamp(4rem, 8vw, 7rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(4rem, 8vw, 7rem) 0;
   background: #FAF6EF;
   border-top: 1px solid rgba(227, 211, 184, 0.7);
   border-bottom: 1px solid rgba(227, 211, 184, 0.7);
@@ -249,10 +256,13 @@
 
 .pillarsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 2rem;
-  max-width: 1280px;
+  max-width: var(--max-width, 1180px);
+  width: 100%;
+  padding: 0 var(--gutter, 32px);
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .pillarCard {
@@ -337,9 +347,11 @@
 
 /* 04 THE RAIRE EXPERIENCE (HORIZONTAL FLOW) */
 .experienceSection {
-  padding: clamp(5rem, 8vw, 7.5rem) clamp(1.5rem, 5vw, 4rem);
-  max-width: 1280px;
+  padding: clamp(5rem, 8vw, 7.5rem) var(--gutter, 32px);
+  max-width: var(--max-width, 1180px);
+  width: 100%;
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .flowTrack {
@@ -393,7 +405,7 @@
 
 /* 05 THE HUMAN PART (ASK BEFORE YOU BUY) */
 .humanSection {
-  padding: clamp(5rem, 8vw, 8rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 8vw, 8rem) 0;
   background: radial-gradient(circle at 10% 50%, rgba(200, 155, 74, 0.08), transparent 60%), #FAF6EF;
   border-top: 1px solid rgba(227, 211, 184, 0.7);
   border-bottom: 1px solid rgba(227, 211, 184, 0.7);
@@ -404,8 +416,11 @@
   grid-template-columns: 1fr 1fr;
   gap: clamp(2.5rem, 6vw, 5.5rem);
   align-items: center;
-  max-width: 1200px;
+  max-width: var(--max-width, 1180px);
+  width: 100%;
+  padding: 0 var(--gutter, 32px);
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .chatCardMockup {
@@ -457,16 +472,19 @@
 .trustSection {
   background: #20160F;
   color: #FCF8F0;
-  padding: clamp(5rem, 9vw, 8.5rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 9vw, 8.5rem) 0;
   position: relative;
 }
 
 .trustGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 2rem;
-  max-width: 1240px;
+  max-width: var(--max-width, 1180px);
+  width: 100%;
+  padding: 0 var(--gutter, 32px);
   margin: 3.5rem auto 0;
+  box-sizing: border-box;
 }
 
 .trustCard {
@@ -501,13 +519,16 @@
 
 /* 07 FLIP THE STORY (SELL ON RAIRE) */
 .sellerSection {
-  padding: clamp(5rem, 9vw, 8.5rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 9vw, 8.5rem) 0;
   background: #FCF8F0;
 }
 
 .sellerBox {
-  max-width: 1100px;
+  max-width: var(--max-width, 1180px);
+  width: 100%;
+  padding: 0 var(--gutter, 32px);
   margin: 0 auto;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: clamp(2.5rem, 5vw, 5rem);
@@ -545,7 +566,7 @@
 
 /* 08 THE JOURNEY */
 .journeySection {
-  padding: clamp(5rem, 8vw, 7.5rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 8vw, 7.5rem) var(--gutter, 32px);
   background: #FAF6EF;
   border-top: 1px solid rgba(227, 211, 184, 0.7);
   border-bottom: 1px solid rgba(227, 211, 184, 0.7);
@@ -556,7 +577,8 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
-  max-width: 1100px;
+  max-width: calc(var(--max-width, 1180px) - (var(--gutter, 32px) * 2));
+  width: 100%;
   margin: 3.5rem auto 2rem;
   position: relative;
 }
@@ -587,7 +609,7 @@
 .appRevealSection {
   background: #18110B;
   color: #FCF8F0;
-  padding: clamp(5rem, 9vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 9vw, 9rem) var(--gutter, 32px);
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -665,7 +687,7 @@
 
 /* 10 FINAL AORA HOUSE MOMENT */
 .finalSection {
-  padding: clamp(5rem, 10vw, 9rem) clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(5rem, 10vw, 9rem) var(--gutter, 32px);
   background: var(--paper, #FCF8F0);
   text-align: center;
 }
