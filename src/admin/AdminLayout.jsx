@@ -1,18 +1,24 @@
 import { useState } from 'react';
-import { Outlet, NavLink, Link, Navigate, useLocation } from 'react-router-dom';
+import { Outlet, NavLink, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Icon from '../components/ui/Icon';
 import styles from './AdminLayout.module.css';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
 
   // Basic guard (middleware also protects the API, but we protect the UI here too)
-  if (!user || (user.role !== 'admin' && user.role !== 'content_editor')) {
+  if (!user || !['admin', 'content_editor', 'finance'].includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const isAdmin = user.role === 'admin';
   const isContentEditor = user.role === 'content_editor';
@@ -211,7 +217,7 @@ export default function AdminLayout() {
             <strong>{user.firstName} {user.lastName}</strong>
             <span style={{ textTransform: 'capitalize' }}>{user.role?.replace('_', ' ')}</span>
           </div>
-          <button onClick={logout} className={styles.logoutBtn}>Log out</button>
+          <button onClick={handleLogout} className={styles.logoutBtn}>Log out</button>
         </div>
       </aside>
 

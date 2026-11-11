@@ -16,7 +16,7 @@ export default function InstructorLayout() {
         <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.9rem', color: 'var(--gold)' }}>Welcome, {user.firstName}</span>
           <Link to="/account/profile" style={{ color: 'var(--white)', textDecoration: 'none', fontSize: '0.9rem' }}>Edit Profile</Link>
-          <button onClick={() => { logout(); navigate('/'); }} style={{ background: 'none', border: 'none', color: 'var(--taupe)', cursor: 'pointer', fontSize: '0.9rem' }}>Logout</button>
+          <button onClick={async () => { await logout(); navigate('/login'); }} style={{ background: 'none', border: 'none', color: 'var(--taupe)', cursor: 'pointer', fontSize: '0.9rem' }}>Logout</button>
         </div>
       </header>
       <main style={{ flex: 1, background: '#f5f5f5', padding: '3rem 2rem' }}>

@@ -17,6 +17,7 @@ import {
   IconArrowRight
 } from '../../components/ui/LineIcons';
 import styles from './AccountLayout.module.css';
+import { hasSignedWaiver } from '../../utils/validation';
 
 function WaitlistClaimCard({ booking, onClaim, onDecline, claimingId, decliningId }) {
   const [timeLeft, setTimeLeft] = useState('');
@@ -98,7 +99,7 @@ function WaitlistClaimCard({ booking, onClaim, onDecline, claimingId, decliningI
 }
 
 export default function Dashboard({ defaultTab }) {
-  const { user, authFetch, refreshUser } = useAuth();
+  const { user, authFetch, refreshUser, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromQuery = searchParams.get('tab');
@@ -283,7 +284,9 @@ export default function Dashboard({ defaultTab }) {
     }
   };
 
-  const handleWaiverSigned = async () => {
+  const handleWaiverSigned = async (updatedUser) => {
+    if (updatedUser && updateUser) updateUser(updatedUser);
+    if (refreshUser) await refreshUser();
     setActionMessage({ text: 'Health & liability waiver signed successfully! Movement studio booking unlocked.', isError: false });
     setTimeout(() => setActionMessage(null), 4000);
     await loadUserBookings();
@@ -313,7 +316,7 @@ export default function Dashboard({ defaultTab }) {
     nextPassType = 'event';
   }
 
-  const isWaiverSigned = dashboardData.waiverSigned || user?.waiverSigned || Boolean(user?.waiverSignedAt);
+  const isWaiverSigned = hasSignedWaiver(user) || Boolean(dashboardData.waiverSigned);
 
   const cafeOrders = (dashboardData.cafeOrders || []).filter(o => o.paymentStatus === 'PAID' && o.status !== 'CANCELLED');
   const fashionOrders = (dashboardData.fashionOrders || []).filter(o => o.status !== 'CANCELLED');
@@ -362,13 +365,7 @@ export default function Dashboard({ defaultTab }) {
 
         <div>
           <button 
-            onClick={() => {
-              if (!isWaiverSigned) {
-                setIsWaiverModalOpen(true);
-              } else {
-                navigate('/movement');
-              }
-            }} 
+            onClick={() => navigate('/movement')} 
             className="btn btn-primary"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
           >
@@ -388,58 +385,6 @@ export default function Dashboard({ defaultTab }) {
           decliningId={decliningId}
         />
       ))}
-
-      {/* Waiver Warning Alert Banner (If unsigned) */}
-      {!isWaiverSigned && (
-        <div style={{
-          background: '#FFFDF9',
-          border: '1px solid rgba(164, 69, 31, 0.35)',
-          borderLeft: '4px solid var(--rust, #A4451F)',
-          borderRadius: '8px',
-          padding: '1.25rem 1.5rem',
-          marginBottom: '2.25rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-          boxShadow: '0 2px 12px rgba(164, 69, 31, 0.04)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-            <div style={{ color: 'var(--rust, #A4451F)', marginTop: '2px' }}>
-              <IconAlert size={20} color="var(--rust, #A4451F)" />
-            </div>
-            <div>
-              <strong style={{ color: 'var(--rust, #A4451F)', fontSize: '0.95rem', display: 'block', marginBottom: '2px' }}>
-                Liability &amp; Health Waiver Required
-              </strong>
-              <span style={{ fontSize: '0.85rem', color: 'var(--cocoa-deep, #2B2015)', lineHeight: 1.4 }}>
-                Please complete the digital health declaration before attending your next Movement session.
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsWaiverModalOpen(true)}
-            style={{
-              background: 'var(--rust, #A4451F)',
-              color: '#FFFFFF',
-              border: 'none',
-              padding: '9px 18px',
-              borderRadius: '4px',
-              fontSize: '0.78rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              fontWeight: 600,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            <IconPen size={13} color="#FFF" /> Sign Waiver
-          </button>
-        </div>
-      )}
 
       {/* Top Performance & Credits Matrix */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
@@ -483,21 +428,19 @@ export default function Dashboard({ defaultTab }) {
         </div>
 
         {/* Waiver Status */}
-        <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: isWaiverSigned ? '4px solid #2E6B3E' : '4px solid #A4451F' }}>
+        <div className={styles.card} style={{ margin: 0, padding: '1.5rem', borderLeft: isWaiverSigned ? '4px solid #2E6B3E' : '4px solid #C89B4A' }}>
           <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--taupe)', fontWeight: 600 }}>Studio Waiver</div>
-          <div style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', color: isWaiverSigned ? '#2E6B3E' : '#A4451F', fontWeight: 500, margin: '0.65rem 0 0.35rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {isWaiverSigned ? <IconShieldCheck size={18} color="#2E6B3E" /> : <IconAlert size={18} color="#A4451F" />}
-            <span>{isWaiverSigned ? 'Verified & Signed' : 'Unsigned'}</span>
+          <div style={{ fontSize: '1.15rem', fontFamily: 'var(--font-heading)', color: isWaiverSigned ? '#2E6B3E' : 'var(--cocoa-deep)', fontWeight: 500, margin: '0.65rem 0 0.35rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {isWaiverSigned ? <IconShieldCheck size={18} color="#2E6B3E" /> : <IconClock size={18} color="#C89B4A" />}
+            <span>{isWaiverSigned ? 'Verified & Signed' : 'Pending First Class'}</span>
           </div>
           <div style={{ fontSize: '0.8rem', color: 'var(--taupe)' }}>
             {isWaiverSigned ? (
-              <span onClick={() => setIsWaiverModalOpen(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
-                Review details
+              <span onClick={() => handleTabChange('waiver')} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+                View record
               </span>
             ) : (
-              <span onClick={() => setIsWaiverModalOpen(true)} style={{ color: 'var(--rust)', cursor: 'pointer', fontWeight: 600 }}>
-                Sign to unlock classes â†’
-              </span>
+              <span>Completed before first class booking</span>
             )}
           </div>
         </div>

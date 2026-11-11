@@ -169,6 +169,12 @@ export function AuthProvider({ children }) {
     return null;
   }, []);
 
+  const updateUser = useCallback((nextUser) => {
+    if (nextUser && typeof nextUser === 'object') {
+      setUser(nextUser);
+    }
+  }, []);
+
   const isAdmin          = user?.role === 'admin';
   const isClerk          = user?.role === 'clerk';
   const isContentEditor  = user?.role === 'content_editor';
@@ -179,7 +185,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, loading, refreshUser,
+      user, loading, refreshUser, updateUser,
       login, logout, register, authFetch, verify2FA, resend2FA,
       isAdmin, isClerk, isContentEditor, isInstructor, isFinance, isMember, isStaff,
     }}>

@@ -143,3 +143,29 @@ export function validatePhone(raw) {
     error: 'Enter a valid phone number (e.g. 0803 123 4567 or +234 803 123 4567).',
   };
 }
+
+export function hasSignedWaiver(user) {
+  if (!user) return false;
+  return Boolean(
+    user.waiver?.signed ||
+    user.waiverSigned ||
+    user.waiverSignedAt ||
+    user.waiverDate
+  );
+}
+
+export function hasValidEmergencyContact(user) {
+  if (!user) return false;
+  return Boolean(
+    user.emergencyContactName &&
+    String(user.emergencyContactName).trim().length >= 2 &&
+    user.emergencyContactPhone &&
+    String(user.emergencyContactPhone).trim().length >= 8 &&
+    user.emergencyContactRelation &&
+    String(user.emergencyContactRelation).trim().length >= 2
+  );
+}
+
+export function isSafetyGateComplete(user) {
+  return hasSignedWaiver(user) && hasValidEmergencyContact(user);
+}

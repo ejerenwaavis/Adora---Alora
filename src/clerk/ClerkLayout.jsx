@@ -6,10 +6,16 @@ import WalkinModal from './WalkinModal';
 import QRScannerModal from './QRScannerModal';
 
 export default function ClerkLayout() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [walkinOpen, setWalkinOpen] = useState(false);
   const [qrScannerOpen, setQrScannerOpen] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
   
   // Real-time clock for footer
   const [time, setTime] = useState('');
@@ -142,6 +148,30 @@ export default function ClerkLayout() {
         <div className="sb-footer">
           <div className="sb-time">{time}</div>
           <div className="sb-date">{date}</div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              marginTop: '12px',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '8px 12px',
+              background: 'rgba(184, 95, 60, 0.16)',
+              border: '1px solid rgba(184, 95, 60, 0.4)',
+              borderRadius: '4px',
+              color: '#F7EFE1',
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              cursor: 'pointer'
+            }}
+          >
+            <i className="ti ti-logout" aria-hidden="true"></i> Sign Out
+          </button>
         </div>
       </div>
       

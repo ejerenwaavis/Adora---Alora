@@ -1,10 +1,16 @@
 import React from 'react';
-import { NavLink, Link, Outlet } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import Icon from '../components/ui/Icon.jsx';
 
 export default function ConciergeLayout() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--paper)' }}>
@@ -106,7 +112,7 @@ export default function ConciergeLayout() {
             {user?.firstName} {user?.lastName}
           </div>
           <button 
-            onClick={logout}
+            onClick={handleLogout}
             style={{ 
               background: 'none', border: 'none', padding: 0, 
               color: 'var(--rust)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 500

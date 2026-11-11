@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { IconX, IconShieldCheck, IconPen, IconCheck, IconAlert } from '../../components/ui/LineIcons';
+import { validateName, validatePhone } from '../../utils/validation';
 
 const DEFAULT_WAIVER_CONTENT = `
 <div class="waiver-document" style="font-family: inherit; line-height: 1.7; color: #2B2015;">
@@ -57,7 +58,7 @@ const DEFAULT_WAIVER_CONTENT = `
 `;
 
 export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
-  const { user, authFetch, refreshUser } = useAuth();
+  const { user, authFetch, refreshUser, updateUser } = useAuth();
   const [agreed, setAgreed] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [signature, setSignature] = useState('');
@@ -128,6 +129,14 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
       setError('Please scroll through and read the entire liability waiver before signing.');
       return;
     }
+
+    const emNameCheck = validateName(emergencyName, 'Emergency contact name');
+    if (!emNameCheck.valid) { setError(emNameCheck.error); return; }
+    const emPhoneCheck = validatePhone(emergencyPhone);
+    if (!emPhoneCheck.valid) { setError(`Emergency contact phone: ${emPhoneCheck.error}`); return; }
+    const emRelCheck = validateName(emergencyRelation, 'Emergency contact relationship');
+    if (!emRelCheck.valid) { setError(emRelCheck.error); return; }
+
     if (!agreed) {
       setError('Please acknowledge and check the confirmation box.');
       return;
@@ -148,17 +157,18 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
           signatureName: signature.trim(),
           confirmed: true,
           waiverVersion,
-          emergencyContactName: emergencyName.trim(),
-          emergencyContactPhone: emergencyPhone.trim(),
-          emergencyContactRelation: emergencyRelation.trim(),
+          emergencyContactName: emNameCheck.normalized,
+          emergencyContactPhone: emPhoneCheck.normalized,
+          emergencyContactRelation: emRelCheck.normalized,
           medicalNotes: medicalNotes.trim()
         })
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
+        if (data.user && updateUser) updateUser(data.user);
         if (refreshUser) await refreshUser();
-        if (onWaiverSigned) onWaiverSigned(data.user);
+        if (onWaiverSigned) await onWaiverSigned(data.user);
         onClose();
       } else {
         setError(data.error || data.message || 'Failed to submit waiver. Please try again.');
@@ -289,40 +299,53 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
 
           {/* Emergency Contact Section */}
           <div style={{ background: '#FAF6EF', padding: '14px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.6)' }}>
-            <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe, #9C8770)', fontWeight: 600, marginBottom: '8px' }}>
-              Emergency Contact &amp; Health Info (Optional)
+            <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--rust, #A4451F)', fontWeight: 700, marginBottom: '8px' }}>
+              Emergency Contact &amp; Safety Info (Required)
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px' }}>Contact Name</label>
+                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px', fontWeight: 600 }}>Contact Name *</label>
                 <input
                   type="text"
+                  required
                   placeholder="e.g. Jane Doe"
                   value={emergencyName}
                   onChange={(e) => setEmergencyName(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px' }}>Contact Phone</label>
+                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px', fontWeight: 600 }}>Contact Phone *</label>
                 <input
                   type="tel"
-                  placeholder="e.g. +234 800 000 0000"
+                  required
+                  placeholder="e.g. +234 803 123 4567"
                   value={emergencyPhone}
                   onChange={(e) => setEmergencyPhone(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px' }}>Relationship</label>
+                <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px', fontWeight: 600 }}>Relationship *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Spouse, Sibling"
+                  required
+                  placeholder="e.g. Spouse, Parent, Sibling"
                   value={emergencyRelation}
                   onChange={(e) => setEmergencyRelation(e.target.value)}
-                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9' }}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', boxSizing: 'border-box' }}
                 />
               </div>
+            </div>
+            <div style={{ marginTop: '10px' }}>
+              <label style={{ display: 'block', fontSize: '11px', color: '#2B2015', marginBottom: '3px' }}>Medical Notes / Injuries (Optional)</label>
+              <input
+                type="text"
+                placeholder="Any injuries, pregnancy, or medical considerations for our instructors"
+                value={medicalNotes}
+                onChange={(e) => setMedicalNotes(e.target.value)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '12.5px', background: '#FFFDF9', boxSizing: 'border-box' }}
+              />
             </div>
           </div>
 
@@ -414,9 +437,9 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
             </button>
             <button
               type="submit"
-              disabled={submitting || !hasScrolledToBottom || !agreed || !signature.trim()}
+              disabled={submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()}
               style={{
-                background: (submitting || !hasScrolledToBottom || !agreed || !signature.trim()) ? 'rgba(46, 107, 62, 0.4)' : 'var(--forest, #2E6B3E)',
+                background: (submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()) ? 'rgba(46, 107, 62, 0.4)' : 'var(--forest, #2E6B3E)',
                 color: '#FFFFFF',
                 border: 'none',
                 padding: '10px 22px',
@@ -425,7 +448,7 @@ export default function WaiverModal({ isOpen, onClose, onWaiverSigned }) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 fontWeight: 600,
-                cursor: (submitting || !hasScrolledToBottom || !agreed || !signature.trim()) ? 'not-allowed' : 'pointer',
+                cursor: (submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()) ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 display: 'inline-flex',
                 alignItems: 'center',

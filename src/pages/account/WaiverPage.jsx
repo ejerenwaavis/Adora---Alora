@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { IconShieldCheck, IconCheck, IconAlert, IconArrowRight } from '../../components/ui/LineIcons';
+import { validateName, validatePhone } from '../../utils/validation';
 
 const DEFAULT_WAIVER_CONTENT = `
 <div class="waiver-document" style="font-family: inherit; line-height: 1.75; color: #2B2015;">
@@ -58,7 +59,7 @@ const DEFAULT_WAIVER_CONTENT = `
 `;
 
 export default function WaiverPage() {
-  const { user, authFetch, refreshUser } = useAuth();
+  const { user, authFetch, refreshUser, updateUser } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get('returnTo') || '/movement';
@@ -129,6 +130,13 @@ export default function WaiverPage() {
       setError('Please scroll through and read the entire liability waiver before signing.');
       return;
     }
+    const emNameCheck = validateName(emergencyName, 'Emergency contact name');
+    if (!emNameCheck.valid) { setError(emNameCheck.error); return; }
+    const emPhoneCheck = validatePhone(emergencyPhone);
+    if (!emPhoneCheck.valid) { setError(`Emergency contact phone: ${emPhoneCheck.error}`); return; }
+    const emRelCheck = validateName(emergencyRelation, 'Emergency contact relationship');
+    if (!emRelCheck.valid) { setError(emRelCheck.error); return; }
+
     if (!agreed) {
       setError('Please acknowledge and check the confirmation box.');
       return;
@@ -149,15 +157,16 @@ export default function WaiverPage() {
           signatureName: signature.trim(),
           confirmed: true,
           waiverVersion,
-          emergencyContactName: emergencyName.trim(),
-          emergencyContactPhone: emergencyPhone.trim(),
-          emergencyContactRelation: emergencyRelation.trim(),
+          emergencyContactName: emNameCheck.normalized,
+          emergencyContactPhone: emPhoneCheck.normalized,
+          emergencyContactRelation: emRelCheck.normalized,
           medicalNotes: medicalNotes.trim()
         })
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
+        if (data.user && updateUser) updateUser(data.user);
         if (refreshUser) await refreshUser();
         navigate(returnTo);
       } else {
@@ -293,38 +302,41 @@ export default function WaiverPage() {
 
             {/* Emergency Contact Information */}
             <div style={{ background: '#FAF6EF', padding: '18px 20px', borderRadius: '6px', border: '1px solid rgba(227, 211, 184, 0.75)' }}>
-              <div style={{ fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--taupe, #9C8770)', fontWeight: 600, marginBottom: '12px' }}>
-                Emergency Contact &amp; Medical Notes (Optional)
+              <div style={{ fontSize: '11.5px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--rust, #A4451F)', fontWeight: 700, marginBottom: '12px' }}>
+                Emergency Contact &amp; Safety Info (Required)
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px' }}>Contact Name</label>
+                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px', fontWeight: 600 }}>Contact Name *</label>
                   <input
                     type="text"
+                    required
                     placeholder="e.g. Jane Doe"
                     value={emergencyName}
                     onChange={(e) => setEmergencyName(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px' }}>Contact Phone</label>
+                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px', fontWeight: 600 }}>Contact Phone *</label>
                   <input
                     type="tel"
-                    placeholder="e.g. +234 800 000 0000"
+                    required
+                    placeholder="e.g. +234 803 123 4567"
                     value={emergencyPhone}
                     onChange={(e) => setEmergencyPhone(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px' }}>Relationship</label>
+                  <label style={{ display: 'block', fontSize: '11.5px', color: '#2B2015', marginBottom: '4px', fontWeight: 600 }}>Relationship *</label>
                   <input
                     type="text"
+                    required
                     placeholder="e.g. Spouse, Sibling"
                     value={emergencyRelation}
                     onChange={(e) => setEmergencyRelation(e.target.value)}
-                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9' }}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: '4px', border: '1px solid rgba(227, 211, 184, 0.9)', fontSize: '13px', background: '#FFFDF9', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -417,9 +429,9 @@ export default function WaiverPage() {
               </Link>
               <button
                 type="submit"
-                disabled={submitting || !hasScrolledToBottom || !agreed || !signature.trim()}
+                disabled={submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()}
                 style={{
-                  background: (submitting || !hasScrolledToBottom || !agreed || !signature.trim()) ? 'rgba(46, 107, 62, 0.4)' : 'var(--forest, #2E6B3E)',
+                  background: (submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()) ? 'rgba(46, 107, 62, 0.4)' : 'var(--forest, #2E6B3E)',
                   color: '#FFFFFF',
                   border: 'none',
                   padding: '12px 28px',
@@ -428,7 +440,7 @@ export default function WaiverPage() {
                   textTransform: 'uppercase',
                   letterSpacing: '0.08em',
                   fontWeight: 600,
-                  cursor: (submitting || !hasScrolledToBottom || !agreed || !signature.trim()) ? 'not-allowed' : 'pointer',
+                  cursor: (submitting || !hasScrolledToBottom || !agreed || !signature.trim() || !emergencyName.trim() || !emergencyPhone.trim() || !emergencyRelation.trim()) ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
                   display: 'inline-flex',
                   alignItems: 'center',

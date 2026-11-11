@@ -118,9 +118,6 @@ export default function Nav() {
                     <Link to="/account?tab=bookings" onClick={() => setUserMenu(false)}>My Classes &amp; Events</Link>
                     <Link to="/account/orders" onClick={() => setUserMenu(false)}>My Orders</Link>
                     <Link to="/account?tab=passes" onClick={() => setUserMenu(false)}>Digital QR Passes</Link>
-                    {!(user.waiverSigned || user.waiver?.signed || user.waiverSignedAt) && (
-                      <Link to="/account/waiver" onClick={() => setUserMenu(false)}>Liability Waiver</Link>
-                    )}
                     {isStaff && (
                       <>
                         <div style={{ height: '1px', background: 'var(--line)', margin: '4px 0' }} />

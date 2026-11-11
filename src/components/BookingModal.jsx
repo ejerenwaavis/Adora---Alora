@@ -4,9 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 import styles from './BookingModal.module.css';
 import WaiverModal from '../pages/account/WaiverModal';
 import { IconShieldCheck, IconCheck } from './ui/LineIcons';
+import { isSafetyGateComplete } from '../utils/validation';
 
 export default function BookingModal({ session, onClose }) {
-  const { user, authFetch, refreshUser } = useAuth();
+  const { user, authFetch, refreshUser, updateUser } = useAuth();
   const [step, setStep] = useState(1);
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,9 +32,9 @@ export default function BookingModal({ session, onClose }) {
     } catch (err) { console.error(err); }
   }
 
-  async function handleBook() {
-    const hasSigned = Boolean(user?.waiver?.signed || user?.waiverSigned || user?.waiverDate || user?.waiverSignedAt);
-    if (!hasSigned) {
+  async function handleBook(overrideUser = null) {
+    const activeUser = overrideUser && overrideUser._id ? overrideUser : user;
+    if (!isSafetyGateComplete(activeUser)) {
       setShowWaiver(true);
       return;
     }
@@ -50,7 +51,7 @@ export default function BookingModal({ session, onClose }) {
       if (!res.ok) {
         if (data.requiresWaiver) {
           setShowWaiver(true);
-          throw new Error(data.error || 'Please complete and sign the liability waiver before reserving your spot.');
+          throw new Error(data.error || 'Please complete your emergency contact and sign the liability waiver before reserving your spot.');
         }
         throw new Error(data.error || 'Failed to book class');
       }
@@ -66,9 +67,10 @@ export default function BookingModal({ session, onClose }) {
 
   const handleWaiverCompleted = async (updatedUser) => {
     setShowWaiver(false);
+    if (updatedUser && updateUser) updateUser(updatedUser);
     if (refreshUser) await refreshUser();
-    // Proceed with booking after waiver is signed
-    handleBook();
+    // Automatically continue with class booking using the fresh user object
+    await handleBook(updatedUser);
   };
 
   async function handlePurchasePack(packId) {
@@ -150,7 +152,7 @@ export default function BookingModal({ session, onClose }) {
                 </div>
               </div>
 
-              {!user.waiverSigned && !user.waiverDate && (
+              {!isSafetyGateComplete(user) && (
                 <div style={{
                   background: 'rgba(200, 155, 74, 0.1)',
                   border: '1px solid rgba(200, 155, 74, 0.3)',
@@ -164,13 +166,13 @@ export default function BookingModal({ session, onClose }) {
                   gap: '8px'
                 }}>
                   <IconShieldCheck size={16} color="var(--gold, #C89B4A)" />
-                  <span>Digital Liability Waiver required before first booking.</span>
+                  <span>Emergency Contact &amp; Digital Liability Waiver required before booking your first class.</span>
                 </div>
               )}
 
               <div className={styles.actions}>
                 {(user.classCredits || 0) > 0 ? (
-                  <button onClick={handleBook} disabled={loading} className="btn btn-primary">
+                  <button onClick={() => handleBook()} disabled={loading} className="btn btn-primary">
                     {loading ? 'Processing...' : (session.bookedCount >= session.maxCapacity ? 'Join Waitlist (1 Credit)' : 'Book Class (1 Credit)')}
                   </button>
                 ) : (

@@ -1,4 +1,4 @@
-﻿const WaiverVersion = require('../models/WaiverVersion');
+const WaiverVersion = require('../models/WaiverVersion');
 const Setting = require('../models/Setting');
 
 module.exports = async function requireWaiver(req, res, next) {
@@ -19,25 +19,37 @@ module.exports = async function requireWaiver(req, res, next) {
 
     // 2. Get current active waiver version
     const current = await WaiverVersion.findOne({ isActive: true });
-    if (!current) {
-      return next(); // No waiver version published yet — allow through
-    }
 
-    // 3. Check if user signed the current active version
-    const hasSigned = (user.waiver?.signed && user.waiver?.version === current.version) ||
-                      (user.waiverSigned && user.waiverVersion === current.version);
+    // 3. Check if user signed the waiver AND provided complete emergency contact info
+    const hasSigned = current
+      ? Boolean(
+          (user.waiver?.signed && (user.waiver?.version === current.version || !user.waiver?.version)) ||
+          (user.waiverSigned && (user.waiverVersion === current.version || !user.waiverVersion))
+        )
+      : Boolean(user.waiver?.signed || user.waiverSigned || user.waiverSignedAt);
 
-    if (hasSigned) {
+    const hasEmergencyContact = Boolean(
+      user.emergencyContactName &&
+      String(user.emergencyContactName).trim().length >= 2 &&
+      user.emergencyContactPhone &&
+      String(user.emergencyContactPhone).trim().length >= 8 &&
+      user.emergencyContactRelation &&
+      String(user.emergencyContactRelation).trim().length >= 2
+    );
+
+    if (hasSigned && hasEmergencyContact) {
       return next();
     }
 
-    // 4. Not signed — return 403 for API / JSON requests
+    // 4. Not complete — return 403 for API / JSON requests
     if (req.xhr || req.headers.accept?.includes('application/json') || req.baseUrl?.startsWith('/api') || req.path?.startsWith('/api/')) {
       return res.status(403).json({
         success: false,
         requiresWaiver: true,
-        error: 'You must sign the Aora House liability waiver before booking a class.',
-        waiverVersion: current.version,
+        missingWaiver: !hasSigned,
+        missingEmergencyContact: !hasEmergencyContact,
+        error: 'Please provide an emergency contact and sign the Aora House liability waiver before booking your first class.',
+        waiverVersion: current?.version || '2026-09',
       });
     }
 

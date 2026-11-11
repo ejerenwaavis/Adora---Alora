@@ -330,26 +330,41 @@ router.put('/me', requireAuth, upload.single('avatar'), async (req, res, next) =
       'firstName', 'lastName', 'phone', 
       'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation', 
       'medicalNotes',
-      'emailMarketing', 'emailTransactional', 'smsReminders',
-      'waiverVersion'
+      'emailMarketing', 'emailTransactional', 'smsReminders'
     ];
 
     const user = await User.findById(req.user._id);
-    
+    const booleanFields = new Set(['emailMarketing', 'emailTransactional', 'smsReminders']);
+
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) {
-        user[key] = req.body[key];
-        if (key === 'waiverVersion' && req.body.waiverVersion && !user.waiverSignedAt) {
-          user.waiverSignedAt = new Date();
+        if (booleanFields.has(key)) {
+          user[key] = req.body[key] === true || req.body[key] === 'true';
+        } else {
+          user[key] = req.body[key];
         }
       }
     }
+
+    const shouldRemoveAvatar =
+      req.body.removeAvatar === 'true' ||
+      req.body.removeAvatar === true ||
+      req.body.avatar === '' ||
+      req.body.avatar === null ||
+      req.body.profilePicture === null ||
+      req.body.profilePicture === '';
 
     if (req.file) {
       user.avatar = req.file.path;
       if (user.role === 'instructor') {
         const Instructor = require('../models/Instructor');
         await Instructor.findOneAndUpdate({ userId: user._id }, { photo: user.avatar });
+      }
+    } else if (shouldRemoveAvatar) {
+      user.avatar = '';
+      if (user.role === 'instructor') {
+        const Instructor = require('../models/Instructor');
+        await Instructor.findOneAndUpdate({ userId: user._id }, { photo: '' });
       }
     }
 

@@ -44,6 +44,9 @@ router.patch('/profile', async (req, res) => {
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
+    if (req.body.profilePicture === null || req.body.profilePicture === '' || req.body.avatar === null || req.body.avatar === '') {
+      updates.avatar = '';
+    }
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true });
     res.json({ message: 'Profile updated successfully', user });
   } catch (err) {
@@ -83,8 +86,18 @@ router.get('/waiver/active', async (req, res) => {
 
     const isRequired = waiverRequiredSetting ? (waiverRequiredSetting.value !== false && waiverRequiredSetting.value !== 'false') : true;
     const currentVersion = activeWaiver ? activeWaiver.version : '2026-09';
-    const hasSigned = (user.waiver?.signed && user.waiver?.version === currentVersion) ||
-                      (user.waiverSigned && user.waiverVersion === currentVersion);
+    const hasSigned = Boolean(
+      (user.waiver?.signed && (user.waiver?.version === currentVersion || !user.waiver?.version)) ||
+      (user.waiverSigned && (user.waiverVersion === currentVersion || !user.waiverVersion))
+    );
+    const hasEmergencyContact = Boolean(
+      user.emergencyContactName &&
+      String(user.emergencyContactName).trim().length >= 2 &&
+      user.emergencyContactPhone &&
+      String(user.emergencyContactPhone).trim().length >= 8 &&
+      user.emergencyContactRelation &&
+      String(user.emergencyContactRelation).trim().length >= 2
+    );
 
     res.json({
       success: true,
@@ -92,6 +105,8 @@ router.get('/waiver/active', async (req, res) => {
       isRequired,
       currentVersion,
       hasSigned,
+      hasEmergencyContact,
+      safetyGateComplete: hasSigned && hasEmergencyContact,
       userWaiver: user.waiver || {
         signed: Boolean(user.waiverSigned || user.waiverSignedAt),
         signedAt: user.waiverSignedAt || user.waiverDate,
@@ -144,13 +159,24 @@ const handleWaiverSign = async (req, res) => {
       });
     }
 
-    // Get active waiver (or requested version)
-    let waiver = null;
-    if (requestedVersion) {
-      waiver = await WaiverVersion.findOne({ version: requestedVersion });
+    const { validateName, validatePhone } = require('../utils/validation');
+    const emNameCheck = validateName(emergencyContactName, 'Emergency contact name');
+    if (!emNameCheck.valid) {
+      return res.status(400).json({ success: false, error: emNameCheck.error });
     }
-    if (!waiver) {
-      waiver = await WaiverVersion.findOne({ isActive: true });
+    const emPhoneCheck = validatePhone(emergencyContactPhone);
+    if (!emPhoneCheck.valid) {
+      return res.status(400).json({ success: false, error: `Emergency contact phone: ${emPhoneCheck.error}` });
+    }
+    const emRelCheck = validateName(emergencyContactRelation, 'Emergency contact relationship');
+    if (!emRelCheck.valid) {
+      return res.status(400).json({ success: false, error: emRelCheck.error });
+    }
+
+    // Get active waiver (always record the authoritative active version)
+    let waiver = await WaiverVersion.findOne({ isActive: true });
+    if (!waiver && requestedVersion) {
+      waiver = await WaiverVersion.findOne({ version: requestedVersion });
     }
 
     const versionId = waiver ? waiver.version : (requestedVersion || '2026-09');
@@ -175,12 +201,12 @@ const handleWaiverSign = async (req, res) => {
       waiverSignedAt: now,
       waiverSignature: sig,
       waiverVersion: versionId,
+      emergencyContactName: emNameCheck.normalized,
+      emergencyContactPhone: emPhoneCheck.normalized,
+      emergencyContactRelation: emRelCheck.normalized,
     };
 
-    if (emergencyContactName) updates.emergencyContactName = emergencyContactName.trim();
-    if (emergencyContactPhone) updates.emergencyContactPhone = emergencyContactPhone.trim();
-    if (emergencyContactRelation) updates.emergencyContactRelation = emergencyContactRelation.trim();
-    if (medicalNotes !== undefined) updates.medicalNotes = medicalNotes.trim();
+    if (medicalNotes !== undefined) updates.medicalNotes = String(medicalNotes).trim();
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true });
 
