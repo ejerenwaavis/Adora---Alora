@@ -4,11 +4,25 @@ const Order = require('../models/Order');
 const { formLimiter } = require('../middleware/rateLimiter');
 const { antiBotShield } = require('../middleware/antiBot');
 const { sendCafeOrderReceipt, sendCafeOrderReady } = require('../services/mailer');
+const { validateName, validateEmail, validatePhone } = require('../utils/validation');
 
 // Create a new order (Checkout)
 router.post('/', formLimiter, antiBotShield(), async (req, res) => {
   try {
     const { customerName, customerPhone, customerEmail, items, totalAmountKobo, user: bodyUser, userId } = req.body;
+
+    const nameCheck = validateName(customerName, 'Full name');
+    if (!nameCheck.valid) {
+      return res.status(400).json({ success: false, error: nameCheck.error });
+    }
+    const phoneCheck = validatePhone(customerPhone);
+    if (!phoneCheck.valid) {
+      return res.status(400).json({ success: false, error: phoneCheck.error });
+    }
+    const emailCheck = validateEmail(customerEmail);
+    if (!emailCheck.valid) {
+      return res.status(400).json({ success: false, error: emailCheck.error });
+    }
     
     let associatedUser = bodyUser || userId || null;
     if (!associatedUser && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
@@ -24,9 +38,9 @@ router.post('/', formLimiter, antiBotShield(), async (req, res) => {
 
     // Create the Order document in PENDING state
     const newOrder = new Order({
-      customerName,
-      customerPhone,
-      customerEmail: (customerEmail && customerEmail.trim()) || 'guest@aorahouse.com',
+      customerName: nameCheck.normalized,
+      customerPhone: phoneCheck.normalized,
+      customerEmail: emailCheck.normalized,
       user: associatedUser || undefined,
       items,
       totalAmountKobo,

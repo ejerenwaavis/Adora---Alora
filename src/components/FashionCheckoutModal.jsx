@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './FashionCheckoutModal.module.css';
+import { validateName, validateEmail, validatePhone } from '../utils/validation';
 
 export default function FashionCheckoutModal({ item, initialSize, onClose, onComplete }) {
   const { user } = useAuth();
@@ -43,15 +44,22 @@ export default function FashionCheckoutModal({ item, initialSize, onClose, onCom
       return;
     }
 
+    const nameCheck = validateName(form.customerName, 'Full name');
+    if (!nameCheck.valid) { setError(nameCheck.error); return; }
+    const emailCheck = validateEmail(form.customerEmail);
+    if (!emailCheck.valid) { setError(emailCheck.error); return; }
+    const phoneCheck = validatePhone(form.customerPhone);
+    if (!phoneCheck.valid) { setError(phoneCheck.error); return; }
+
     setLoading(true);
     setError(null);
     try {
       const res = await axios.post('/api/fashion/order', {
         itemId: item._id,
         selectedSize,
-        customerName: form.customerName,
-        customerEmail: form.customerEmail,
-        customerPhone: form.customerPhone,
+        customerName: nameCheck.normalized,
+        customerEmail: emailCheck.normalized,
+        customerPhone: phoneCheck.normalized,
         orderType: form.orderType
       });
 

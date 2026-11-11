@@ -5,6 +5,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const EventRecord = require('../models/EventRecord');
 const EventBooking = require('../models/EventBooking');
 const { sendEventTicketConfirmation } = require('../services/mailer');
+const { validateName, validateEmail, validatePhone } = require('../utils/validation');
 
 // Public event listing
 router.get('/', async (req, res) => {
@@ -43,7 +44,17 @@ router.post('/:id/book', async (req, res) => {
     }
 
     const { customerName, customerEmail, customerPhone, ticketQuantity } = req.body;
-    if (!customerName || !customerEmail) return res.status(400).json({ error: 'Name and Email are required.' });
+    const nameCheck = validateName(customerName, 'Full name');
+    if (!nameCheck.valid) return res.status(400).json({ error: nameCheck.error });
+    const emailCheck = validateEmail(customerEmail);
+    if (!emailCheck.valid) return res.status(400).json({ error: emailCheck.error });
+
+    let normalizedPhone = '';
+    if (customerPhone && String(customerPhone).trim() !== '') {
+      const phoneCheck = validatePhone(customerPhone);
+      if (!phoneCheck.valid) return res.status(400).json({ error: phoneCheck.error });
+      normalizedPhone = phoneCheck.normalized;
+    }
     
     const qty = ticketQuantity ? parseInt(ticketQuantity, 10) : 1;
     
@@ -60,16 +71,16 @@ router.post('/:id/book', async (req, res) => {
       const callbackUrl = `${req.protocol}://${req.get('host')}/payment/verify`;
 
       const pData = await paystack.initialize({
-        email: customerEmail,
+        email: emailCheck.normalized,
         amountKobo: totalKobo,
         reference,
         callbackUrl,
         metadata: {
           paymentType: 'event_ticket',
           eventId: event._id.toString(),
-          customerName,
-          customerEmail,
-          customerPhone: customerPhone || '',
+          customerName: nameCheck.normalized,
+          customerEmail: emailCheck.normalized,
+          customerPhone: normalizedPhone,
           ticketQuantity: qty,
           userId: req.user?.id || undefined
         }
@@ -86,9 +97,9 @@ router.post('/:id/book', async (req, res) => {
     // Free event: Confirm immediately
     const booking = new EventBooking({
       event: event._id,
-      customerName,
-      customerEmail,
-      customerPhone: customerPhone || '',
+      customerName: nameCheck.normalized,
+      customerEmail: emailCheck.normalized,
+      customerPhone: normalizedPhone,
       ticketQuantity: qty,
       amountPaidKobo: 0,
       paymentStatus: 'PAID',

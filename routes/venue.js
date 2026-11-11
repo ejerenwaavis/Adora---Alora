@@ -6,6 +6,7 @@ const VenueEnquiry = require('../models/VenueEnquiry');
 const { sendVenueEnquiryAck } = require('../services/mailer');
 const { formLimiter } = require('../middleware/rateLimiter');
 const { antiBotShield } = require('../middleware/antiBot');
+const { validateName, validateEmail, validatePhone } = require('../utils/validation');
 
 // Public: Get all active spaces
 router.get('/spaces', async (req, res) => {
@@ -60,16 +61,25 @@ router.post('/enquire', formLimiter, antiBotShield(), async (req, res) => {
       return res.status(400).json({ error: 'Missing required enquiry fields.' });
     }
 
+    const firstCheck = validateName(firstName, 'First name');
+    if (!firstCheck.valid) return res.status(400).json({ error: firstCheck.error });
+    const lastCheck = validateName(lastName, 'Last name');
+    if (!lastCheck.valid) return res.status(400).json({ error: lastCheck.error });
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) return res.status(400).json({ error: emailCheck.error });
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) return res.status(400).json({ error: phoneCheck.error });
+
     // Map space preference safely
     let mappedSpace = 'not_sure';
     if (spacePreference === 'the-loft' || spacePreference === 'loft') mappedSpace = 'loft';
     else if (spacePreference === 'the-cafe' || spacePreference === 'cafe') mappedSpace = 'cafe';
 
     const enquiry = new VenueEnquiry({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
-      phone: phone ? phone.trim() : '',
+      firstName: firstCheck.normalized,
+      lastName: lastCheck.normalized,
+      email: emailCheck.normalized,
+      phone: phoneCheck.normalized,
       organisation: organisation ? organisation.trim() : '',
       eventType: eventType.trim(),
       preferredDate: new Date(preferredDate),

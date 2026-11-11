@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './AccountLayout.module.css';
+import { validatePhone } from '../../utils/validation';
 
 export default function ProfileSettings() {
   const { user, authFetch } = useAuth();
@@ -29,11 +30,30 @@ export default function ProfileSettings() {
   async function handleSubmit(e) {
     e.preventDefault();
     setStatus('');
+
+    const cleanedForm = { ...formData };
+    if (cleanedForm.phone && String(cleanedForm.phone).trim() !== '') {
+      const phoneCheck = validatePhone(cleanedForm.phone);
+      if (!phoneCheck.valid) {
+        setStatus(`Error: ${phoneCheck.error}`);
+        return;
+      }
+      cleanedForm.phone = phoneCheck.normalized;
+    }
+    if (cleanedForm.emergencyContactPhone && String(cleanedForm.emergencyContactPhone).trim() !== '') {
+      const emCheck = validatePhone(cleanedForm.emergencyContactPhone);
+      if (!emCheck.valid) {
+        setStatus(`Error: Emergency contact — ${emCheck.error}`);
+        return;
+      }
+      cleanedForm.emergencyContactPhone = emCheck.normalized;
+    }
+
     setLoading(true);
     
     try {
       const payload = new FormData();
-      Object.keys(formData).forEach(key => payload.append(key, formData[key]));
+      Object.keys(cleanedForm).forEach(key => payload.append(key, cleanedForm[key]));
       if (avatarFile) payload.append('avatar', avatarFile);
       
       const res = await authFetch('/api/auth/me', {

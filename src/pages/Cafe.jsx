@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import HoneypotField from '../components/common/HoneypotField';
 import OrderConfirmationModal from '../components/OrderConfirmationModal';
 import { useToast } from '../contexts/ToastContext';
+import { validateName, validateEmail, validatePhone } from '../utils/validation';
 
 export default function Cafe() {
   const [menuData, setMenuData] = useState([]);
@@ -41,6 +42,7 @@ export default function Cafe() {
     phone: user?.phone || '',
     email: user?.email || ''
   });
+  const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check if redirected from Paystack or verify callback
@@ -304,16 +306,45 @@ export default function Cafe() {
   const cartTotal = cart.reduce((sum, item) => sum + ((item.priceKobo || 0) * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  const validateField = (field, value) => {
+    let result = { valid: true };
+    if (field === 'name') result = validateName(value, 'Full name');
+    else if (field === 'phone') result = validatePhone(value);
+    else if (field === 'email') result = validateEmail(value);
+    setFormErrors(prev => ({
+      ...prev,
+      [field]: result.valid ? undefined : result.error
+    }));
+    return result;
+  };
+
   const handleCheckout = async (e) => {
     e.preventDefault();
     if (cart.length === 0) return;
+
+    const nameCheck = validateName(checkoutForm.name, 'Full name');
+    const phoneCheck = validatePhone(checkoutForm.phone);
+    const emailCheck = validateEmail(checkoutForm.email);
+
+    const nextErrors = {
+      ...(nameCheck.valid ? {} : { name: nameCheck.error }),
+      ...(phoneCheck.valid ? {} : { phone: phoneCheck.error }),
+      ...(emailCheck.valid ? {} : { email: emailCheck.error }),
+    };
+    setFormErrors(nextErrors);
+
+    if (!nameCheck.valid || !phoneCheck.valid || !emailCheck.valid) {
+      toast.error(nameCheck.error || phoneCheck.error || emailCheck.error);
+      return;
+    }
+
     setIsSubmitting(true);
     setOrderError(null);
     setConfirmationState('redirecting');
     setConfirmedOrder({
       totalAmountKobo: cartTotal,
-      customerName: checkoutForm.name,
-      customerPhone: checkoutForm.phone,
+      customerName: nameCheck.normalized,
+      customerPhone: phoneCheck.normalized,
       items: [...cart]
     });
     setShowCart(false);
@@ -328,9 +359,9 @@ export default function Cafe() {
           ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
-          customerName: checkoutForm.name,
-          customerPhone: checkoutForm.phone,
-          customerEmail: (checkoutForm.email && checkoutForm.email.trim()) || user?.email || undefined,
+          customerName: nameCheck.normalized,
+          customerPhone: phoneCheck.normalized,
+          customerEmail: emailCheck.normalized,
           userId: user?._id,
           _aora_uid: honeypot._aora_uid,
           _aora_session: honeypot._aora_session,
@@ -727,7 +758,7 @@ export default function Cafe() {
                 <span style={{ fontSize: '1.35rem', fontWeight: 700, fontFamily: 'var(--f-display)' }}>₦{(cartTotal / 100).toLocaleString()}</span>
               </div>
               
-              <form onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <form onSubmit={handleCheckout} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 <HoneypotField values={honeypot} onChange={e => setHoneypot({ ...honeypot, [e.target.name]: e.target.value })} />
                 
                 <div>
@@ -737,21 +768,33 @@ export default function Cafe() {
                     placeholder="e.g. Jane Doe" 
                     required 
                     value={checkoutForm.name}
-                    onChange={e => setCheckoutForm({...checkoutForm, name: e.target.value})}
-                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCheckoutForm({ ...checkoutForm, name: val });
+                      if (formErrors.name) validateField('name', val);
+                    }}
+                    onBlur={e => validateField('name', e.target.value)}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: `1px solid ${formErrors.name ? '#B91C1C' : 'var(--line)'}`, borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
                   />
+                  {formErrors.name && <div style={{ color: '#B91C1C', fontSize: '11px', marginTop: '4px', fontWeight: 500 }}>{formErrors.name}</div>}
                 </div>
 
                 <div>
                   <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--cocoa)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>Phone Number *</label>
                   <input 
                     type="tel" 
-                    placeholder="e.g. +234 800 000 0000" 
+                    placeholder="e.g. +234 803 123 4567" 
                     required 
                     value={checkoutForm.phone}
-                    onChange={e => setCheckoutForm({...checkoutForm, phone: e.target.value})}
-                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCheckoutForm({ ...checkoutForm, phone: val });
+                      if (formErrors.phone) validateField('phone', val);
+                    }}
+                    onBlur={e => validateField('phone', e.target.value)}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: `1px solid ${formErrors.phone ? '#B91C1C' : 'var(--line)'}`, borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
                   />
+                  {formErrors.phone && <div style={{ color: '#B91C1C', fontSize: '11px', marginTop: '4px', fontWeight: 500 }}>{formErrors.phone}</div>}
                 </div>
 
                 <div>
@@ -761,9 +804,15 @@ export default function Cafe() {
                     placeholder="name@example.com" 
                     required 
                     value={checkoutForm.email}
-                    onChange={e => setCheckoutForm({...checkoutForm, email: e.target.value})}
-                    style={{ width: '100%', padding: '0.85rem 1rem', border: '1px solid var(--line)', borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCheckoutForm({ ...checkoutForm, email: val });
+                      if (formErrors.email) validateField('email', val);
+                    }}
+                    onBlur={e => validateField('email', e.target.value)}
+                    style={{ width: '100%', padding: '0.85rem 1rem', border: `1px solid ${formErrors.email ? '#B91C1C' : 'var(--line)'}`, borderRadius: '6px', background: '#FFFDF9', color: 'var(--cocoa-deep)', fontFamily: 'var(--f-body)', fontSize: '0.92rem', boxSizing: 'border-box' }}
                   />
+                  {formErrors.email && <div style={{ color: '#B91C1C', fontSize: '11px', marginTop: '4px', fontWeight: 500 }}>{formErrors.email}</div>}
                 </div>
 
                 <button 

@@ -149,9 +149,17 @@ router.get('/fashion', async (req, res) => {
 router.post('/fashion/order', async (req, res) => {
   try {
     const { itemId, customerName, customerEmail, customerPhone, selectedSize, orderType } = req.body;
-    if (!itemId || !customerName || !customerEmail || !customerPhone) {
-      return res.status(400).json({ error: 'Missing required customer or item information.' });
+    const { validateName, validateEmail, validatePhone } = require('../utils/validation');
+
+    if (!itemId) {
+      return res.status(400).json({ error: 'Missing required item information.' });
     }
+    const nameCheck = validateName(customerName, 'Full name');
+    if (!nameCheck.valid) return res.status(400).json({ error: nameCheck.error });
+    const emailCheck = validateEmail(customerEmail);
+    if (!emailCheck.valid) return res.status(400).json({ error: emailCheck.error });
+    const phoneCheck = validatePhone(customerPhone);
+    if (!phoneCheck.valid) return res.status(400).json({ error: phoneCheck.error });
 
     const item = await FashionItem.findById(itemId);
     if (!item) {
@@ -163,9 +171,9 @@ router.post('/fashion/order', async (req, res) => {
       itemName: item.name,
       selectedSize: selectedSize || (item.sizes && item.sizes[0]) || 'Standard',
       priceKobo: item.displayPriceKobo || 0,
-      customerName,
-      customerEmail,
-      customerPhone,
+      customerName: nameCheck.normalized,
+      customerEmail: emailCheck.normalized,
+      customerPhone: phoneCheck.normalized,
       orderType: orderType === 'RESERVATION' ? 'RESERVATION' : 'PURCHASE',
       status: 'CONFIRMED'
     });

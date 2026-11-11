@@ -24,6 +24,18 @@ router.get('/profile', async (req, res) => {
 // ── PATCH /api/user/profile ──────────────────────────────────────────────────
 router.patch('/profile', async (req, res) => {
   try {
+    const { validatePhone } = require('../utils/validation');
+    if (req.body.phone && String(req.body.phone).trim() !== '') {
+      const phoneCheck = validatePhone(req.body.phone);
+      if (!phoneCheck.valid) return res.status(400).json({ error: phoneCheck.error });
+      req.body.phone = phoneCheck.normalized;
+    }
+    if (req.body.emergencyContactPhone && String(req.body.emergencyContactPhone).trim() !== '') {
+      const emergencyCheck = validatePhone(req.body.emergencyContactPhone);
+      if (!emergencyCheck.valid) return res.status(400).json({ error: `Emergency contact: ${emergencyCheck.error}` });
+      req.body.emergencyContactPhone = emergencyCheck.normalized;
+    }
+
     const allowed = [
       'firstName', 'lastName', 'phone', 'avatar', 'dateOfBirth',
       'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation', 'medicalNotes'

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './Login.module.css'; // Reusing the same CSS module for consistency
+import { validateName, validateEmail } from '../utils/validation';
 
 export default function Register() {
   const [firstName, setFirstName] = useState('');
@@ -18,14 +19,27 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError(null);
+
+    const firstCheck = validateName(firstName, 'First name');
+    if (!firstCheck.valid) { setError(firstCheck.error); return; }
+    const lastCheck = validateName(lastName, 'Last name');
+    if (!lastCheck.valid) { setError(lastCheck.error); return; }
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) { setError(emailCheck.error); return; }
+
     setLoading(true);
     
     try {
       // Create account
-      await register({ firstName, lastName, email, password });
+      await register({
+        firstName: firstCheck.normalized,
+        lastName: lastCheck.normalized,
+        email: emailCheck.normalized,
+        password
+      });
       
       // Auto-login after registration
-      await login({ email, password });
+      await login({ email: emailCheck.normalized, password });
       
       // Redirect to new account dashboard
       navigate('/account');

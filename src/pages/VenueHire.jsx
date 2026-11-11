@@ -6,6 +6,7 @@ import Button from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { IconShieldCheck, IconCheck, IconClock, IconX } from '../components/ui/LineIcons';
 import HoneypotField from '../components/common/HoneypotField';
+import { validateName, validateEmail, validatePhone } from '../utils/validation';
 
 const FALLBACK_VENUES = {
   'the-loft': {
@@ -146,11 +147,26 @@ export default function VenueHire({ section }) {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    const firstCheck = validateName(formData.firstName, 'First name');
+    if (!firstCheck.valid) { setError(firstCheck.error); return; }
+    const lastCheck = validateName(formData.lastName, 'Last name');
+    if (!lastCheck.valid) { setError(lastCheck.error); return; }
+    const emailCheck = validateEmail(formData.email);
+    if (!emailCheck.valid) { setError(emailCheck.error); return; }
+    const phoneCheck = validatePhone(formData.phone);
+    if (!phoneCheck.valid) { setError(phoneCheck.error); return; }
+
     setSubmitting(true);
     setError('');
 
     try {
-      const res = await axios.post('/api/venue/enquire', formData);
+      const res = await axios.post('/api/venue/enquire', {
+        ...formData,
+        firstName: firstCheck.normalized,
+        lastName: lastCheck.normalized,
+        email: emailCheck.normalized,
+        phone: phoneCheck.normalized
+      });
       if (res.data.success) {
         setSubmittedEnquiry(res.data.enquiry);
       } else {

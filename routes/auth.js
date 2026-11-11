@@ -314,6 +314,18 @@ const upload = require('../middleware/upload');
 // ── PUT /api/auth/me (Update Profile) ─────────────────────────────────────────
 router.put('/me', requireAuth, upload.single('avatar'), async (req, res, next) => {
   try {
+    const { validatePhone } = require('../utils/validation');
+    if (req.body.phone && String(req.body.phone).trim() !== '') {
+      const phoneCheck = validatePhone(req.body.phone);
+      if (!phoneCheck.valid) return res.status(400).json({ error: phoneCheck.error });
+      req.body.phone = phoneCheck.normalized;
+    }
+    if (req.body.emergencyContactPhone && String(req.body.emergencyContactPhone).trim() !== '') {
+      const emergencyCheck = validatePhone(req.body.emergencyContactPhone);
+      if (!emergencyCheck.valid) return res.status(400).json({ error: `Emergency contact: ${emergencyCheck.error}` });
+      req.body.emergencyContactPhone = emergencyCheck.normalized;
+    }
+
     const allowedUpdates = [
       'firstName', 'lastName', 'phone', 
       'emergencyContactName', 'emergencyContactPhone', 'emergencyContactRelation', 

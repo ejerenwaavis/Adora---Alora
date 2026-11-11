@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './EventCheckoutModal.module.css';
+import { validateName, validateEmail, validatePhone } from '../utils/validation';
 
 export default function EventCheckoutModal({ event, onClose, onComplete }) {
   const { user } = useAuth();
@@ -37,10 +38,26 @@ export default function EventCheckoutModal({ event, onClose, onComplete }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nameCheck = validateName(form.customerName, 'Full name');
+    if (!nameCheck.valid) { setError(nameCheck.error); return; }
+    const emailCheck = validateEmail(form.customerEmail);
+    if (!emailCheck.valid) { setError(emailCheck.error); return; }
+    let normalizedPhone = '';
+    if (form.customerPhone && String(form.customerPhone).trim() !== '') {
+      const phoneCheck = validatePhone(form.customerPhone);
+      if (!phoneCheck.valid) { setError(phoneCheck.error); return; }
+      normalizedPhone = phoneCheck.normalized;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.post(`/api/events/${event._id}/book`, form);
+      const res = await axios.post(`/api/events/${event._id}/book`, {
+        ...form,
+        customerName: nameCheck.normalized,
+        customerEmail: emailCheck.normalized,
+        customerPhone: normalizedPhone
+      });
       if (res.data.requiresPayment && res.data.authorizationUrl) {
         window.location.href = res.data.authorizationUrl;
         return;
